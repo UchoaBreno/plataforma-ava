@@ -84,3 +84,117 @@ Este projeto fornece:
    ```bash
    git clone <URL_DO_REPO>
    cd <PASTA_DO_REPO>/backend
+
+
+2. Crie e ative um ambiente virtual:
+python -m venv .venv
+source .venv/bin/activate   # Linux/macOS
+.venv\Scripts\activate      # Windows
+
+
+3. Instale dependências:
+pip install -r requirements.txt
+
+
+4. Aplique migrations e crie superusuário:
+python manage.py migrate
+python manage.py createsuperuser
+
+
+5. Rode o servidor em um terminal:
+python manage.py runserver
+
+
+Front-end (React)
+1. No diretório raiz:
+   cd frontend
+
+
+2. Instale dependências:
+npm install
+# ou
+yarn install
+
+
+3. Rode o servidor de desenvolvimento em outro:
+npm start
+# ou
+yarn start
+
+
+4. Acesse http://localhost:3000.
+
+ Configuração de Variáveis de Ambiente
+
+No back-end, crie um arquivo .env (ou ajuste settings.py) contendo:
+SECRET_KEY=uma_chave_secreta
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+DATABASE_URL=postgres://user:senha@localhost:5432/dbname
+
+
+No front-end, se necessário, crie .env.local:
+REACT_APP_API_BASE_URL=http://127.0.0.1:8000/api
+
+
+/
+├── backend/
+│   ├── usuarios/
+│   │   ├── models.py       # Usuario, Aula, Entrega
+│   │   ├── serializers.py  # AulaSerializer, EntregaSerializer, etc.
+│   │   ├── views.py        # AulaView, EntregaView, etc.
+│   ├── project/            # settings.py, urls.py
+│   └── manage.py
+└── frontend/
+    ├── src/
+    │   ├── pages/
+    │   │   ├── AulasAluno.jsx
+    │   │   ├── AulasProfessor.jsx
+    │   │   ├── Home.jsx
+    │   │   └── ProfessorEntregas.jsx
+    │   ├── components/
+    │   │   ├── Sidebar.jsx
+    │   │   ├── VideoCard.jsx
+    │   │   ├── GerenciarAulasModal.jsx
+    │   │   └── EditAulaModal.jsx
+    │   └── utils/
+    └── package.json
+
+
+
+ Como Usar
+Back-end rodando em localhost:8000.
+
+Front-end rodando em localhost:3000.
+
+Acesse /login para autenticar.
+
+Professor:
+
+Menu “Aulas do Professor”: AulasProfessor.jsx.
+
+Botão flutuante “Gerenciar Aulas” abre GerenciarAulasModal.
+
+Cards de alunos atualizam entregas via polling.
+
+Aluno:
+
+Menu “Aulas do Aluno”: AulasAluno.jsx.
+
+Botão flutuante “Entregar atividade” abre modal de upload.
+
+Home: Home.jsx separa em hoje/semana/mês.
+
+🤝 Contribuição
+Fork este repositório
+
+Crie uma branch: git checkout -b feature/nome-da-feature
+
+Commit suas mudanças: git commit -m "feat: descrição"
+
+Push para a branch: git push origin feature/nome-da-feature
+
+Abra um Pull Request
+
+📄 Licença
+Este projeto está sob a MIT License.
