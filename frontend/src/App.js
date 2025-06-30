@@ -1,34 +1,84 @@
-// src/App.js
 import React from "react";
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
+import LayoutComSidebar from "./components/LayoutComSidebar";
 
-import Login          from "./pages/Login";
-import Home           from "./pages/Home";
-import Professor      from "./pages/Professor";
-import Cadastro       from "./pages/Cadastro";
-import AulasAluno     from "./pages/AulasAluno";
-import AulasProfessor from "./pages/AulasProfessor";   // ← novo import
+import Login from "./pages/Login";
+import Cadastro from "./pages/Cadastro";
+import Home from "./pages/Home";
+import AulasAluno from "./pages/AulasAluno";
+import AulasProfessor from "./pages/AulasProfessor";
+import ProfessorDashboard from "./pages/Professor";
+import ProfessorEntregas from "./pages/ProfessorEntregas";
+import Quizzes from "./pages/Quizzes";
+import QuizCreate from "./pages/QuizCreate";
+import QuizDetail from "./pages/QuizDetail";
+import EditarQuiz from "./pages/EditarQuiz";
+import AtividadesProfessor from "./pages/AtividadesProfessor";
+import AtividadeCreate from "./pages/AtividadeCreate";
+import ResponderAtividades from "./pages/ResponderAtividades";
+import ResponderAtividadeDetail from "./pages/ResponderAtividadeDetail";
+import ForumProfessor from "./pages/ForumProfessor";
+import ForumAluno from "./pages/ForumAluno";
+import DesempenhoProfessor from "./pages/DesempenhoProfessor";
+import DesempenhoAluno from "./pages/DesempenhoAluno";
+
+import { Outlet } from "react-router-dom";
+
+function RedirectAtividades() {
+  const token = localStorage.getItem("access");
+  if (!token) return <Navigate to="/login" replace />;
+
+  try {
+    const decoded = jwtDecode(token);
+    const isStaff = decoded.is_staff === true || decoded.is_staff === "true";
+    return isStaff
+      ? <Navigate to="/atividades-prof" replace />
+      : <Navigate to="/atividades-aluno" replace />;
+  } catch {
+    return <Navigate to="/login" replace />;
+  }
+}
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
-        {/* login / cadastro */}
-        <Route path="/"          element={<Login     />} />
-        <Route path="/cadastro"  element={<Cadastro  />} />
+        {/* Rotas sem sidebar */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/cadastro" element={<Cadastro />} />
 
-        {/* painel aluno */}
-        <Route path="/home"      element={<Home      />} />
-        <Route path="/aulas"     element={<AulasAluno />} />
+        {/* Rotas com sidebar */}
+        <Route element={<LayoutComSidebar />}>
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/aulas" element={<AulasAluno />} />
+          <Route path="/aulas-prof" element={<AulasProfessor />} />
+          <Route path="/professor" element={<ProfessorDashboard />} />
+          <Route path="/entregas" element={<ProfessorEntregas />} />
 
-        {/* painel professor */}
-        <Route path="/professor"    element={<Professor      />} />
-        <Route path="/aulas-prof"   element={<AulasProfessor />} />
+          {/* Quizzes */}
+          <Route path="/quizzes" element={<Quizzes />} />
+          <Route path="/quizzes/criar" element={<QuizCreate />} />
+          <Route path="/quizzes/:id" element={<QuizDetail />} />
+          <Route path="/quizzes/:id/editar" element={<EditarQuiz />} />
+
+          {/* Atividades */}
+          <Route path="/atividades" element={<RedirectAtividades />} />
+          <Route path="/atividades-prof" element={<AtividadesProfessor />} />
+          <Route path="/atividades-aluno" element={<ResponderAtividades />} />
+          <Route path="/atividades/criar" element={<AtividadeCreate />} />
+          <Route path="/atividades/:id/responder" element={<ResponderAtividadeDetail />} />
+
+          {/* Fórum */}
+          <Route path="/forum-professor" element={<ForumProfessor />} />
+          <Route path="/forum-aluno" element={<ForumAluno />} />
+
+          {/* Desempenho */}
+          <Route path="/desempenho-professor" element={<DesempenhoProfessor />} />
+          <Route path="/desempenho-aluno" element={<DesempenhoAluno />} />
+        </Route>
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
 }

@@ -1,6 +1,7 @@
 // src/components/Sidebar.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+
 import {
   FaHome,
   FaBookOpen,
@@ -9,23 +10,18 @@ import {
   FaComments,
   FaChartBar,
   FaSignOutAlt,
+  FaCamera,
 } from "react-icons/fa";
 import { jwtDecode } from "jwt-decode";
 
-/**
- * Props opcionais:
- *   • isStaff = true  → força modo professor
- *   • isAluno = true  → força modo aluno
- */
 export default function Sidebar({ isStaff = undefined, isAluno = undefined }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const fileInputRef = useRef();
 
-  /* ───────── define (uma só vez) se é professor ───────── */
   const defaultIsStaff = useMemo(() => {
     if (isStaff === true) return true;
     if (isAluno === true) return false;
-
     try {
       const tok = localStorage.getItem("access");
       if (!tok) return false;
@@ -36,47 +32,56 @@ export default function Sidebar({ isStaff = undefined, isAluno = undefined }) {
   }, [isStaff, isAluno]);
 
   const [staff, setStaff] = useState(defaultIsStaff);
+  const [fotoPerfil, setFotoPerfil] = useState(localStorage.getItem("fotoPerfil"));
+
   useEffect(() => setStaff(defaultIsStaff), [defaultIsStaff]);
 
-  /* ───────── menus ───────── */
+  const handleImagemSelecionada = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      localStorage.setItem("fotoPerfil", reader.result);
+      setFotoPerfil(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const alunoMenu = [
-    { path: "/home",         label: "Início",        icon: <FaHome /> },
-    { path: "/aulas",        label: "Aulas",         icon: <FaBookOpen /> },
-    { path: "/quizzes",      label: "Quizzes",       icon: <FaPuzzlePiece /> },
-    { path: "/avaliacoes",   label: "Avaliação",     icon: <FaClipboardCheck /> },
-    { path: "/forum",        label: "Fórum",         icon: <FaComments /> },
-    { path: "/desempenho",   label: "Desempenho",    icon: <FaChartBar /> },
+    { path: "/", label: "Início", icon: <FaHome /> },
+    { path: "/aulas", label: "Aulas", icon: <FaBookOpen /> },
+    { path: "/quizzes", label: "Quizzes", icon: <FaPuzzlePiece /> },
+    { path: "/atividades", label: "Atividades", icon: <FaClipboardCheck /> }, // CORRIGIDO AQUI
+    { path: "/forum-aluno", label: "Fórum", icon: <FaComments /> },
+    { path: "/desempenho-aluno", label: "Desempenho", icon: <FaChartBar /> },
   ];
 
   const profMenu = [
-    { path: "/professor",    label: "Início",        icon: <FaHome /> },
-    { path: "/aulas-prof",   label: "Aulas",         icon: <FaBookOpen /> },  // ← corrigido
-    { path: "/quizzes",      label: "Quizzes",       icon: <FaPuzzlePiece /> },
-    { path: "/atividades",   label: "Atividades",    icon: <FaClipboardCheck /> },
-    { path: "/forum",        label: "Fórum",         icon: <FaComments /> },
-    { path: "/desempenho",   label: "Desempenho",    icon: <FaChartBar /> },
+    { path: "/professor", label: "Início", icon: <FaHome /> },
+    { path: "/aulas-prof", label: "Aulas", icon: <FaBookOpen /> },
+    { path: "/quizzes", label: "Quizzes", icon: <FaPuzzlePiece /> },
+    { path: "/atividades", label: "Atividades", icon: <FaClipboardCheck /> },
+    { path: "/forum-professor", label: "Fórum", icon: <FaComments /> },
+    { path: "/desempenho-professor", label: "Desempenho", icon: <FaChartBar /> },
   ];
 
-  const items     = staff ? profMenu : alunoMenu;
-  const sidebarBg = staff ? "bg-blue-200" : "bg-gray-200";
-  const hoverBg   = staff ? "hover:bg-blue-300" : "hover:bg-gray-300";
+  const items = staff ? profMenu : alunoMenu;
 
-  /* ───────── render ───────── */
   return (
-    <div className={`fixed top-0 left-0 flex h-screen w-64 flex-col ${sidebarBg}`}>
-      {/* logo */}
-      <div className="border-b border-gray-300 p-6 text-2xl font-bold">
+    <div className="fixed top-0 left-0 flex h-screen w-64 flex-col bg-gray-900">
+      <div className="border-b border-gray-700 p-6 text-2xl font-bold text-white">
         Plataforma<span className="text-green-500">AVA</span>
       </div>
 
-      {/* links */}
       <nav className="flex-1 space-y-4 overflow-y-auto p-4">
         {items.map(({ path, label, icon }) => (
           <button
-            key={path}
+            key={path + label}
             onClick={() => navigate(path)}
-            className={`flex w-full items-center gap-2 rounded px-4 py-2 text-left ${hoverBg} ${
-              location.pathname === path ? "font-semibold text-green-700" : "text-black"
+            className={`flex w-full items-center gap-2 rounded px-4 py-2 text-left hover:bg-gray-700 transition ${
+              location.pathname === path
+                ? "font-semibold text-green-500"
+                : "text-white"
             }`}
           >
             {icon}
@@ -85,12 +90,42 @@ export default function Sidebar({ isStaff = undefined, isAluno = undefined }) {
         ))}
       </nav>
 
-      {/* sair */}
-      <div className="border-t border-gray-300 p-4">
+      <div className="border-t border-gray-700 p-4 flex flex-col items-center">
+        <div className="relative w-16 h-16 mb-2">
+          <img
+            src={fotoPerfil || "https://www.gravatar.com/avatar?d=mp&s=200"}
+            alt="Perfil"
+            className="w-16 h-16 rounded-full object-cover border-2 border-green-500"
+          />
+          <button
+            onClick={() => fileInputRef.current.click()}
+            className="absolute bottom-0 right-0 bg-green-600 hover:bg-green-700 p-1 rounded-full text-white text-xs"
+            title="Alterar foto"
+          >
+            <FaCamera />
+          </button>
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleImagemSelecionada}
+            className="hidden"
+          />
+        </div>
+        <span className="text-sm text-white text-center">
+  {staff ? "Professor" : "Aluno"}<br />
+  <span className="text-gray-400">{localStorage.getItem("username")}</span>
+</span>
+      </div>
+
+      <div className="border-t border-gray-700 p-4">
         <button
           onClick={() => {
-            localStorage.clear();
-            navigate("/");
+            localStorage.removeItem("access");
+            localStorage.removeItem("refresh");
+            localStorage.removeItem("username");
+            localStorage.removeItem("fotoPerfil");
+            navigate("/login");
           }}
           className="flex w-full items-center justify-center gap-2 rounded bg-red-500 py-2 text-white hover:bg-red-600"
         >
