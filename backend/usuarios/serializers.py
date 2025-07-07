@@ -10,6 +10,32 @@ from .models import (
     ComentarioForum, RespostaForum
 )
 
+class UsuarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Usuario
+        fields = [
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'email',
+            'password',
+            'foto_perfil',
+            'is_staff',
+            'is_active'
+        ]
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'is_active': {'default': True}
+        }
+
+def create(self, validated_data):
+        password = validated_data.pop('password')
+        user = Usuario(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
+
 # ─── Aulas ─────────────────────────────────────────────────────
 class AulaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -19,7 +45,7 @@ class AulaSerializer(serializers.ModelSerializer):
 
 # ─── Entregas ──────────────────────────────────────────────────
 class EntregaSerializer(serializers.ModelSerializer):
-    aluno_nome  = serializers.CharField(source="aluno.username", read_only=True)
+    aluno_nome = serializers.CharField(source="aluno.username", read_only=True)
     aula_titulo = serializers.CharField(source="aula.titulo", read_only=True)
 
     class Meta:
@@ -31,9 +57,11 @@ class EntregaSerializer(serializers.ModelSerializer):
             "aula",
             "aula_titulo",
             "arquivo",
-            "enviado_em",
+            "data_envio",
+            "resposta_texto",
         ]
         extra_kwargs = {"aluno": {"read_only": True}}
+        
 
 # ─── Alternativas ──────────────────────────────────────────────
 class AlternativaSerializer(serializers.ModelSerializer):
@@ -164,3 +192,12 @@ class DesempenhoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Desempenho
         fields = ['id', 'titulo', 'descricao', 'nota', 'aluno', 'aluno_nome']
+
+
+from .models import SolicitacaoProfessor
+
+class SolicitacaoProfessorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SolicitacaoProfessor
+        fields = "__all__"
+        read_only_fields = ["aprovado", "data_solicitacao"]

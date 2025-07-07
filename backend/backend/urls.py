@@ -1,10 +1,8 @@
-# backend/urls.py
 from django.contrib import admin
 from django.urls import path
 from django.conf import settings
-from usuarios.views import AtividadeDetailView
 from django.conf.urls.static import static
-from usuarios.views import DesempenhoCreateListView, DesempenhoDetailView
+from rest_framework.routers import DefaultRouter
 
 from usuarios.views import (
     LoginView,
@@ -21,9 +19,23 @@ from usuarios.views import (
     QuizSubmitView,
     RespostaQuizView,
     AtividadeView,
+    AtividadeDetailView,
     AtividadesDisponiveisView,
     ForumAPIView,
-    ResponderComentarioAPIView
+    ResponderComentarioAPIView,
+    DesempenhoCreateListView,
+    DesempenhoDetailView,
+    AulasDisponiveisView,
+    SolicitacaoProfessorCreateView,       # ✅ corrigido
+    SolicitacaoProfessorAdminViewSet
+)
+
+# 🔷 Router para admin endpoints
+router = DefaultRouter()
+router.register(
+    r"api/admin/solicitacoes-professor", 
+    SolicitacaoProfessorAdminViewSet, 
+    basename="admin-solicitacoes-professor"
 )
 
 urlpatterns = [
@@ -44,6 +56,7 @@ urlpatterns = [
     # Aulas
     path("api/aulas/", AulaView.as_view()),
     path("api/aulas/<int:pk>/", AulaDetailView.as_view()),
+    path("api/aulas-aluno/", AulasDisponiveisView.as_view()),
 
     # Entregas
     path("api/entregas/", EntregaView.as_view()),
@@ -56,19 +69,30 @@ urlpatterns = [
     # Respostas de Quiz
     path("api/respostas/", RespostaQuizView.as_view()),
 
-    # Atividades
+    # Atividades (professor)
     path("api/atividades/", AtividadeView.as_view()),
-    path("api/atividades-aluno/", AtividadesDisponiveisView.as_view()),
     path("api/atividades/<int:pk>/", AtividadeDetailView.as_view(), name="atividade-detail"),
+
+    # Atividades (aluno)
+    path("api/atividades-aluno/", AtividadesDisponiveisView.as_view()),
 
     # Fórum - Comentários e Respostas
     path("api/forum/", ForumAPIView.as_view()),                          # GET, POST
     path("api/forum/<int:pk>/", ForumAPIView.as_view()),                # PUT, DELETE (comentários)
     path("api/forum/<int:pk>/responder/", ResponderComentarioAPIView.as_view()),  # POST resposta
     path("api/forum/<int:pk>/resposta/<int:resposta_id>/", ResponderComentarioAPIView.as_view()),  # PUT, DELETE (respostas)
+
+    # Desempenho
     path("api/desempenhos/", DesempenhoCreateListView.as_view()),
     path("api/desempenhos/<int:pk>/", DesempenhoDetailView.as_view()),
+
+    # Solicitação pública de professor
+    path("api/solicitacoes-professor/", SolicitacaoProfessorCreateView.as_view()),  # ✅ corrigido
 ]
 
+# 🔷 Inclui rotas do ViewSet de admin
+urlpatterns += router.urls
+
+# Media para DEBUG
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
