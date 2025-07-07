@@ -1,13 +1,14 @@
 import axios from "axios";
 
+// 🔷 Aqui você troca a baseURL para o domínio do Render:
 const axiosInstance = axios.create({
-  baseURL: "http://127.0.0.1:8000/api/",
+  baseURL: "https://plataforma-ava2.onrender.com/api/",
   headers: {
     Authorization: `Bearer ${localStorage.getItem("access")}`,
   },
 });
 
-// Atualiza token em caso de 401
+// 🔷 Atualiza token em caso de 401
 axiosInstance.interceptors.response.use(
   (res) => res,
   (err) => {
