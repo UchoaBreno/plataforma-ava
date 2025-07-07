@@ -14,42 +14,34 @@ export default function Cadastro() {
   const navigate = useNavigate();
 
   const handleCadastro = async () => {
-    setErroCadastro("");
+    setErroCadastro('');
 
     if (!nome || !sobrenome || !email || !username || !senha) {
       setErroCadastro("Por favor, preencha todos os campos.");
       return;
     }
 
+    const payload = {
+      first_name: nome,
+      last_name: sobrenome,
+      email,
+      username,
+      password: senha
+    };
+
     try {
       if (role === 'professor') {
-        // Envia solicitação para ser professor (com nomes corretos)
-        await axios.post('https://plataforma-ava2.onrender.com/api/solicitacoes-professor/', {
-          first_name: nome,
-          last_name: sobrenome,
-          email,
-          username,
-          password: senha,
-        });
+        await axios.post('https://plataforma-ava2.onrender.com/api/solicitacoes-professor/', payload);
         alert('Solicitação enviada! Aguarde a aprovação do administrador.');
-        navigate('/login');
       } else {
-        // Cria conta de aluno diretamente
-        await axios.post('https://plataforma-ava2.onrender.com/api/usuarios/', {
-          first_name: nome,
-          last_name: sobrenome,
-          email,
-          username,
-          password: senha,
-          is_staff: false,
-          is_active: true,
-        });
+        await axios.post('https://plataforma-ava2.onrender.com/api/usuarios/', payload);
         alert('Conta de aluno criada com sucesso!');
-        navigate('/login');
       }
-    } catch (error) {
-      console.error('Erro ao criar conta:', error.response?.data || error.message);
-      setErroCadastro("Erro ao criar conta. Verifique os dados e tente novamente.");
+      navigate('/login');
+    } catch (err) {
+      console.error('Erro ao criar conta:', err.response?.data || err.message);
+      const msg = err.response?.data?.detail || 'Erro ao criar conta. Verifique os dados e tente novamente.';
+      setErroCadastro(msg);
     }
   };
 
