@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,7 +30,10 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'plataforma-ava2.onrender.com',
     'www.plataforma-ava2.onrender.com',
-    ]
+    '192.168.0.3',
+    'localhost',
+    '127.0.0.1',
+]
 
 
 # Application definition
@@ -41,9 +46,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
     'rest_framework',
-    'usuarios'
+    'usuarios',
 ]
 
 MIDDLEWARE = [
@@ -123,19 +128,17 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     )
 }
+
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
+
 CORS_ALLOW_ALL_ORIGINS = True
 
-import os
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-ALLOWED_HOSTS = ["192.168.0.3", "localhost", "127.0.0.1"]
-
-from datetime import timedelta
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=8),  # antes era 5 minutos por padrão
