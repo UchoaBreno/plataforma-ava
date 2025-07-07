@@ -13,19 +13,36 @@ export default function Cadastro() {
 
   const navigate = useNavigate();
 
+  const validarUsername = (user) => {
+    const regex = /^[\w.@+-]+$/;
+    return regex.test(user);
+  };
+
   const handleCadastro = async () => {
     setErroCadastro('');
 
-    if (!nome || !sobrenome || !email || !username || !senha) {
+    const trimmedNome = nome.trim();
+    const trimmedSobrenome = sobrenome.trim();
+    const trimmedEmail = email.trim();
+    const trimmedUsername = username.trim();
+
+    if (!trimmedNome || !trimmedSobrenome || !trimmedEmail || !trimmedUsername || !senha) {
       setErroCadastro("Por favor, preencha todos os campos.");
       return;
     }
 
+    if (!validarUsername(trimmedUsername)) {
+      setErroCadastro(
+        "O nome de usuário só pode conter letras, números e os caracteres @/./+/-/_"
+      );
+      return;
+    }
+
     const payload = {
-      first_name: nome,
-      last_name: sobrenome,
-      email,
-      username,
+      first_name: trimmedNome,
+      last_name: trimmedSobrenome,
+      email: trimmedEmail,
+      username: trimmedUsername,
       password: senha
     };
 
@@ -40,7 +57,22 @@ export default function Cadastro() {
       navigate('/login');
     } catch (err) {
       console.error('Erro ao criar conta:', err.response?.data || err.message);
-      const msg = err.response?.data?.detail || 'Erro ao criar conta. Verifique os dados e tente novamente.';
+
+      let msg = 'Erro ao criar conta. Verifique os dados e tente novamente.';
+
+      if (err.response?.data) {
+        const data = err.response.data;
+        if (typeof data === 'string') {
+          msg = data;
+        } else if (data.detail) {
+          msg = data.detail;
+        } else if (data.username?.length > 0) {
+          msg = `Usuário: ${data.username[0]}`;
+        } else if (data.email?.length > 0) {
+          msg = `Email: ${data.email[0]}`;
+        }
+      }
+
       setErroCadastro(msg);
     }
   };

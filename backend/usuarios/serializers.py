@@ -2,6 +2,8 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.core.validators import RegexValidator
+
 from .models import (
     Usuario, Aula, Entrega, Quiz, Questao,
     Alternativa, RespostaQuiz, Atividade,
@@ -11,6 +13,15 @@ from .models import (
 
 class UsuarioSerializer(serializers.ModelSerializer):
     foto_perfil = serializers.ImageField(required=False, allow_null=True)
+
+    username = serializers.CharField(
+        validators=[
+            RegexValidator(
+                regex=r'^[\w.@+-]+$',
+                message="O nome de usuário só pode conter letras, números e os caracteres @/./+/-/_"
+            )
+        ]
+    )
 
     class Meta:
         model = Usuario
@@ -155,6 +166,8 @@ class DesempenhoSerializer(serializers.ModelSerializer):
 
 
 class SolicitacaoProfessorSerializer(serializers.ModelSerializer):
+    senha = serializers.CharField(write_only=True)
+
     class Meta:
         model = SolicitacaoProfessor
         fields = "__all__"
