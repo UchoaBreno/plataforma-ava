@@ -23,19 +23,19 @@ export default function Cadastro() {
 
     try {
       if (role === 'professor') {
-        // Envia solicitação para ser professor
-        await axios.post('http://127.0.0.1:8000/api/solicitacoes-professor/', {
-          nome,
-          sobrenome,
+        // Envia solicitação para ser professor (com nomes corretos)
+        await axios.post('https://plataforma-ava2.onrender.com/api/solicitacoes-professor/', {
+          first_name: nome,
+          last_name: sobrenome,
           email,
           username,
-          senha
+          password: senha,
         });
         alert('Solicitação enviada! Aguarde a aprovação do administrador.');
         navigate('/login');
       } else {
         // Cria conta de aluno diretamente
-        await axios.post('http://127.0.0.1:8000/api/usuarios/', {
+        await axios.post('https://plataforma-ava2.onrender.com/api/usuarios/', {
           first_name: nome,
           last_name: sobrenome,
           email,
