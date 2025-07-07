@@ -23,6 +23,21 @@ import ForumAluno from "./pages/ForumAluno";
 import DesempenhoProfessor from "./pages/DesempenhoProfessor";
 import DesempenhoAluno from "./pages/DesempenhoAluno";
 
+// Protected Route component
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem("access");
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  try {
+    jwtDecode(token); // só pra validar se o token é válido
+  } catch {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
+
+// Redirecionamento inteligente para atividades
 function RedirectAtividades() {
   const token = localStorage.getItem("access");
   if (!token) return <Navigate to="/login" replace />;
@@ -47,12 +62,18 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        {/* Rotas sem sidebar */}
+        {/* Rotas públicas */}
         <Route path="/login" element={<Login />} />
         <Route path="/cadastro" element={<Cadastro />} />
 
-        {/* Rotas com sidebar */}
-        <Route element={<LayoutComSidebar />}>
+        {/* Rotas protegidas */}
+        <Route
+          element={
+            <ProtectedRoute>
+              <LayoutComSidebar />
+            </ProtectedRoute>
+          }
+        >
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home" element={<Home />} />
           <Route path="/aulas" element={<AulasAluno />} />
