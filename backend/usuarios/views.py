@@ -48,19 +48,6 @@ class EntregaView(ListCreateAPIView):
         serializer.save(aluno=self.request.user)
 
 
-class EntregaSerializer(serializers.ModelSerializer):
-    aluno_nome = serializers.CharField(source="aluno.username", read_only=True)
-    aula_titulo = serializers.CharField(source="aula.titulo", read_only=True)
-
-    class Meta:
-        model = Entrega
-        fields = [
-            "id", "aluno", "aluno_nome", "aula", "aula_titulo",
-            "arquivo", "data_envio", "resposta_texto"
-        ]
-        extra_kwargs = {"aluno": {"read_only": True}}
-
-
 # ─── Aulas ────────────────────────────────
 class AulaView(ListCreateAPIView):
     queryset = Aula.objects.all()
@@ -152,6 +139,14 @@ class UsuarioListCreateView(ListCreateAPIView):
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
     permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            print("🚨 Erros de validação no cadastro:", serializer.errors)
+            return Response(serializer.errors, status=400)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=201)
 
 
 class UsuarioDetailView(APIView):
