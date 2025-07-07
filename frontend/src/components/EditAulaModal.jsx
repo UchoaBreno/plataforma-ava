@@ -4,13 +4,13 @@ import DeleteConfirmModal from "./DeleteConfirmModal";
 
 export default function EditAulaModal({ aula, onClose, onSaved, onDeleted }) {
   const token = localStorage.getItem("access");
-  const auth  = { headers: { Authorization: `Bearer ${token}` } };
+  const auth = { headers: { Authorization: `Bearer ${token}` } };
 
-  const [titulo,     setTitulo]    = useState(aula.titulo);
-  const [descricao,  setDescricao] = useState(aula.descricao || "");
-  const [dataPost,   setDataPost]  = useState(aula.data_postagem);
-  const [slide,      setSlide]     = useState(null);
-  const [showDel,    setShowDel]   = useState(false);          // pop‑up apagar
+  const [titulo, setTitulo] = useState(aula.titulo);
+  const [descricao, setDescricao] = useState(aula.descricao || "");
+  const [dataPost, setDataPost] = useState(aula.data_postagem);
+  const [slide, setSlide] = useState(null);
+  const [showDel, setShowDel] = useState(false);
 
   const salvar = async (e) => {
     e.preventDefault();
@@ -26,7 +26,7 @@ export default function EditAulaModal({ aula, onClose, onSaved, onDeleted }) {
         fd,
         auth
       );
-      onSaved();        // volta para a lista
+      onSaved();
     } catch {
       alert("Erro ao salvar alterações");
     }
@@ -34,34 +34,37 @@ export default function EditAulaModal({ aula, onClose, onSaved, onDeleted }) {
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-        <div className="relative w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2">
+        <div className="relative w-full max-w-lg rounded-lg bg-white dark:bg-gray-800 text-black dark:text-white p-6 shadow-xl">
           <button
             onClick={onClose}
-            className="absolute right-4 top-3 text-lg text-gray-500 hover:text-gray-700"
+            className="absolute right-4 top-3 text-lg text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
           >
             ✖
           </button>
 
-          <h2 className="mb-4 text-xl font-semibold text-green-600">
+          <h2 className="mb-4 text-xl font-semibold text-green-600 dark:text-green-400">
             Editar aula
           </h2>
 
-          <form onSubmit={salvar} className="space-y-3 max-h-[65vh] overflow-auto">
+          <form
+            onSubmit={salvar}
+            className="space-y-3 max-h-[65vh] overflow-auto"
+          >
             <input
-              className="w-full rounded border px-3 py-2"
+              className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
               required
             />
             <textarea
-              className="w-full rounded border px-3 py-2"
+              className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
             />
             <input
               type="date"
-              className="w-full rounded border px-3 py-2"
+              className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
               value={dataPost}
               onChange={(e) => setDataPost(e.target.value)}
               required
@@ -69,7 +72,7 @@ export default function EditAulaModal({ aula, onClose, onSaved, onDeleted }) {
             <input
               type="file"
               accept=".pdf"
-              className="w-full"
+              className="w-full text-sm"
               onChange={(e) => setSlide(e.target.files[0])}
             />
 
@@ -77,14 +80,14 @@ export default function EditAulaModal({ aula, onClose, onSaved, onDeleted }) {
               <button
                 type="button"
                 onClick={() => setShowDel(true)}
-                className="rounded bg-red-500 px-4 py-2 font-medium text-white hover:bg-red-600"
+                className="rounded bg-red-600 hover:bg-red-700 px-4 py-2 font-medium text-white"
               >
                 Apagar aula
               </button>
 
               <button
                 type="submit"
-                className="rounded bg-green-500 px-4 py-2 font-medium text-white hover:bg-green-600"
+                className="rounded bg-green-600 hover:bg-green-700 px-4 py-2 font-medium text-white"
               >
                 Salvar
               </button>
@@ -93,7 +96,6 @@ export default function EditAulaModal({ aula, onClose, onSaved, onDeleted }) {
         </div>
       </div>
 
-      {/* confirmação de deleção */}
       {showDel && (
         <DeleteConfirmModal
           texto={`Apagar a aula “${aula.titulo}”?`}
@@ -105,7 +107,7 @@ export default function EditAulaModal({ aula, onClose, onSaved, onDeleted }) {
                 auth
               );
               setShowDel(false);
-              onDeleted(); // volta para lista e recarrega
+              onDeleted();
             } catch {
               alert("Erro ao apagar");
             }

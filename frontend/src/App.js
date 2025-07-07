@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import LayoutComSidebar from "./components/LayoutComSidebar";
-
+import AdminDashboard from "./pages/AdminDashboard";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import Home from "./pages/Home";
@@ -23,8 +23,6 @@ import ForumAluno from "./pages/ForumAluno";
 import DesempenhoProfessor from "./pages/DesempenhoProfessor";
 import DesempenhoAluno from "./pages/DesempenhoAluno";
 
-import { Outlet } from "react-router-dom";
-
 function RedirectAtividades() {
   const token = localStorage.getItem("access");
   if (!token) return <Navigate to="/login" replace />;
@@ -41,6 +39,11 @@ function RedirectAtividades() {
 }
 
 export default function App() {
+  useEffect(() => {
+    // Força a classe dark no body ao carregar a aplicação
+    document.body.classList.add("dark");
+  }, []);
+
   return (
     <Router>
       <Routes>
@@ -77,6 +80,8 @@ export default function App() {
           {/* Desempenho */}
           <Route path="/desempenho-professor" element={<DesempenhoProfessor />} />
           <Route path="/desempenho-aluno" element={<DesempenhoAluno />} />
+
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
         </Route>
       </Routes>
     </Router>

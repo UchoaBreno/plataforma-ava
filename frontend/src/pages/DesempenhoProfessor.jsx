@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import Sidebar from "../components/Sidebar";
 
 export default function DesempenhoProfessor() {
   const [notas, setNotas] = useState([]);
@@ -72,7 +73,6 @@ export default function DesempenhoProfessor() {
     fetchNotas();
   };
 
-  // Agrupa notas por nome do aluno
   const notasPorAluno = notas.reduce((acc, nota) => {
     const nome = nota.aluno_nome || "Sem nome";
     if (!acc[nome]) acc[nome] = [];
@@ -81,92 +81,100 @@ export default function DesempenhoProfessor() {
   }, {});
 
   return (
-    <div className="p-6 ml-64 text-black">
-      <h1 className="text-2xl font-bold text-green-600 mb-4">
-        {editandoId ? "Editar Nota" : "Postar Desempenho"}
-      </h1>
+    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      <Sidebar isStaff />
+      <main className="ml-64 flex-1 p-6">
+        <h1 className="text-3xl font-bold text-green-600 dark:text-green-400 mb-4">
+          {editandoId ? "Editar Nota" : "Postar Desempenho"}
+        </h1>
 
-      <input
-        placeholder="Título"
-        value={titulo}
-        onChange={(e) => setTitulo(e.target.value)}
-        className="w-full p-2 mb-2 border rounded"
-      />
-      <textarea
-        placeholder="Descrição"
-        value={descricao}
-        onChange={(e) => setDescricao(e.target.value)}
-        className="w-full p-2 mb-2 border rounded"
-      />
-      <input
-        type="number"
-        placeholder="Nota"
-        value={nota}
-        onChange={(e) => setNota(e.target.value)}
-        className="w-full p-2 mb-2 border rounded"
-      />
-      <select
-        value={aluno}
-        onChange={(e) => setAluno(e.target.value)}
-        className="w-full p-2 mb-4 border rounded"
-      >
-        <option value="">Selecione o aluno</option>
-        {alunos.map((a) => (
-          <option key={a.id} value={a.id}>
-            {a.username}
-          </option>
-        ))}
-      </select>
-
-      <div className="flex gap-2 mb-6">
-        <button
-          onClick={salvarNota}
-          className="bg-green-600 text-white py-2 px-6 rounded"
-        >
-          {editandoId ? "Salvar Alterações" : "Salvar Nota"}
-        </button>
-        {editandoId && (
-          <button
-            onClick={resetForm}
-            className="bg-gray-400 text-white py-2 px-4 rounded"
+        <div className="max-w-lg space-y-3 mb-6">
+          <input
+            placeholder="Título"
+            value={titulo}
+            onChange={(e) => setTitulo(e.target.value)}
+            className="w-full p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-gray-100"
+          />
+          <textarea
+            placeholder="Descrição"
+            value={descricao}
+            onChange={(e) => setDescricao(e.target.value)}
+            className="w-full p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-gray-100"
+          />
+          <input
+            type="number"
+            placeholder="Nota"
+            value={nota}
+            onChange={(e) => setNota(e.target.value)}
+            className="w-full p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-gray-100"
+          />
+          <select
+            value={aluno}
+            onChange={(e) => setAluno(e.target.value)}
+            className="w-full p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-gray-100"
           >
-            Cancelar
-          </button>
-        )}
-      </div>
+            <option value="">Selecione o aluno</option>
+            {alunos.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.username}
+              </option>
+            ))}
+          </select>
 
-      <h2 className="text-xl font-semibold mb-4">Notas lançadas por aluno</h2>
-
-      {Object.entries(notasPorAluno).map(([alunoNome, notasAluno]) => (
-        <div key={alunoNome} className="mb-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-2">{alunoNome}</h3>
-          {notasAluno.map((n) => (
-            <div
-              key={n.id}
-              className="border p-3 rounded mb-2 flex justify-between items-center bg-white"
+          <div className="flex gap-2">
+            <button
+              onClick={salvarNota}
+              className="bg-green-600 hover:bg-green-700 text-white py-2 px-6 rounded"
             >
-              <div>
-                <strong>{n.titulo}</strong>: {n.nota}
-                <p className="text-sm text-gray-600">{n.descricao}</p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => iniciarEdicao(n)}
-                  className="text-blue-600 hover:underline"
-                >
-                  Editar
-                </button>
-                <button
-                  onClick={() => deletarNota(n.id)}
-                  className="text-red-600 hover:underline"
-                >
-                  Apagar
-                </button>
-              </div>
-            </div>
-          ))}
+              {editandoId ? "Salvar Alterações" : "Salvar Nota"}
+            </button>
+            {editandoId && (
+              <button
+                onClick={resetForm}
+                className="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded"
+              >
+                Cancelar
+              </button>
+            )}
+          </div>
         </div>
-      ))}
+
+        <h2 className="text-2xl font-semibold mb-4">Notas lançadas por aluno</h2>
+
+        {Object.entries(notasPorAluno).map(([alunoNome, notasAluno]) => (
+          <div key={alunoNome} className="mb-6">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">
+              {alunoNome}
+            </h3>
+            {notasAluno.map((n) => (
+              <div
+                key={n.id}
+                className="border border-gray-300 dark:border-gray-700 p-3 rounded mb-2 flex justify-between items-center bg-white dark:bg-gray-800 text-black dark:text-gray-100"
+              >
+                <div>
+                  <strong>{n.titulo}</strong>:{" "}
+                  <span className="text-green-700 dark:text-green-400">{n.nota}</span>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">{n.descricao}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => iniciarEdicao(n)}
+                    className="text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => deletarNota(n.id)}
+                    className="text-red-600 dark:text-red-400 hover:underline"
+                  >
+                    Apagar
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </main>
     </div>
   );
 }

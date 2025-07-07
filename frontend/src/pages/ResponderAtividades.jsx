@@ -17,16 +17,17 @@ export default function ResponderAtividades() {
     if (!token) return;
 
     try {
-      console.log("Token atual:", token);
-      const response = await axios.get("http://127.0.0.1:8000/api/atividades-aluno/", {
-  headers: {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  }
-});
-console.log("RESPOSTA DA API:", response.data); // <--- ADICIONE
-setAtividades(response.data);
+      const response = await axios.get(
+        "http://127.0.0.1:8000/api/atividades-aluno/",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+      setAtividades(response.data);
     } catch (error) {
       console.error("Erro ao buscar atividades:", error);
     }
@@ -54,26 +55,35 @@ setAtividades(response.data);
   const handleResponder = (id) => navigate(`/atividades/${id}/responder`);
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <Sidebar isStaff={false} isAluno={true} />
-      <main className="ml-64 flex-1 bg-gray-900 text-white p-6">
-        <h1 className="text-green-600 text-3xl font-bold mb-6">Atividades Recebidas</h1>
+      <main className="ml-64 flex-1 p-6">
+        <h1 className="text-green-600 dark:text-green-400 text-3xl font-bold mb-6">
+          Atividades Recebidas
+        </h1>
 
         {atividades.length === 0 ? (
-          <p className="text-gray-400">Nenhuma atividade disponível no momento.</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            Nenhuma atividade disponível no momento.
+          </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {atividades.map((atividade) => (
               <div
                 key={atividade.id}
                 onClick={() => handleResponder(atividade.id)}
-                className="bg-white text-black rounded p-4 border border-green-300 shadow hover:shadow-md transition cursor-pointer"
+                className="bg-white dark:bg-gray-800 text-black dark:text-gray-100 rounded p-4 border border-green-300 dark:border-green-600 shadow hover:shadow-md transition cursor-pointer"
               >
-                <h2 className="text-xl font-semibold text-green-800">{atividade.titulo}</h2>
-                <p className="mt-2 text-sm text-gray-600">
-                  Prazo: {dayjs(atividade.data_entrega).format("DD/MM/YYYY")}
+                <h2 className="text-xl font-semibold text-green-800 dark:text-green-400">
+                  {atividade.titulo}
+                </h2>
+                <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
+                  Prazo:{" "}
+                  {dayjs(atividade.data_entrega).format("DD/MM/YYYY")}
                 </p>
-                <p className="text-sm mt-1">{atividade.descricao}</p>
+                <p className="text-sm mt-1 text-gray-700 dark:text-gray-300">
+                  {atividade.descricao}
+                </p>
               </div>
             ))}
           </div>

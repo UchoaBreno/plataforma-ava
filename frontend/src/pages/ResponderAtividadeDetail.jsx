@@ -1,4 +1,3 @@
-// src/pages/ResponderAtividadeDetail.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -65,9 +64,24 @@ export default function ResponderAtividadeDetail() {
               Responder Atividade: {atividade.titulo}
             </h1>
             <p className="mb-2">{atividade.descricao}</p>
-            <p className="text-sm text-gray-400 mb-6">
+            <p className="text-sm text-gray-400 mb-2">
               Prazo: {atividade.data_entrega} até {atividade.hora_entrega}
             </p>
+
+            {/* ✅ Mostra o arquivo do professor, se houver */}
+            {atividade.arquivo && (
+              <p className="mb-4">
+                Arquivo do professor:{" "}
+                <a
+                  href={atividade.arquivo}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 underline"
+                >
+                  Clique aqui para abrir
+                </a>
+              </p>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>

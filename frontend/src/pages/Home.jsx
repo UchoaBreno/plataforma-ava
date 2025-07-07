@@ -1,4 +1,3 @@
-// src/pages/Home.jsx
 import React, { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import dayjs from "dayjs";
@@ -114,10 +113,13 @@ export default function Home() {
   const renderLista = lista => (
     <div className="space-y-4">
       {lista.map(a => (
-        <div key={a.id} className="rounded border border-green-300 bg-green-50 p-4 shadow-sm">
-          <h3 className="text-xl font-bold text-green-800">{a.titulo}</h3>
-          <p className="mb-2 text-gray-700">{a.descricao}</p>
-          <p className="text-sm text-gray-600">
+        <div
+          key={a.id}
+          className="rounded border border-green-300 bg-green-50 dark:bg-gray-800 dark:border-green-600 p-4 shadow-sm"
+        >
+          <h3 className="text-xl font-bold text-green-800 dark:text-green-400">{a.titulo}</h3>
+          <p className="mb-2 text-gray-700 dark:text-gray-300">{a.descricao}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             📅 {a.data_postagem ? `Postada em ${dayjs(a.data_postagem).format("DD/MM/YYYY")}` : "Vídeo-amostra"}
           </p>
         </div>
@@ -126,15 +128,14 @@ export default function Home() {
   );
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
       <Sidebar isAluno />
 
-      <main className="ml-64 flex-1 bg-gray-900 text-white p-6 relative">
-        {/* top bar apenas com nome e cargo */}
-        <h1 className="mb-6 text-3xl font-bold text-green-600">Página Inicial</h1>
+      <main role="main" className="ml-64 flex-1 p-6 relative">
+        <h1 className="mb-6 text-3xl font-bold text-green-600 dark:text-green-400">
+          Página Inicial
+        </h1>
 
-
-        {/* cards topo */}
         <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
           {[["hoje", "📅 Aulas de Hoje", aulasHoje],
             ["semana", "🗓️ Aulas da Semana", aulasSemana],
@@ -142,16 +143,15 @@ export default function Home() {
               <div
                 key={key}
                 onClick={() => setModalAberto(key)}
-                className="cursor-pointer rounded-xl border border-green-300 bg-green-100 p-6 text-center shadow hover:shadow-md"
+                className="cursor-pointer rounded-xl border border-green-300 bg-green-100 dark:bg-gray-800 dark:border-green-600 p-6 text-center shadow hover:shadow-md"
               >
-                <h2 className="text-xl font-semibold text-green-800">{titulo}</h2>
-                <p className="mt-2 text-gray-600">{lista.length} aula(s)</p>
+                <h2 className="text-xl font-semibold text-green-800 dark:text-green-400">{titulo}</h2>
+                <p className="mt-2 text-gray-600 dark:text-gray-300">{lista.length} aula(s)</p>
               </div>
             ))}
         </div>
 
-        {/* aulas pendentes */}
-        <h2 className="mb-3 text-2xl font-semibold text-green-700">
+        <h2 className="mb-3 text-2xl font-semibold text-green-700 dark:text-green-400">
           Aulas que você ainda não viu
         </h2>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -165,17 +165,16 @@ export default function Home() {
           ))}
         </div>
 
-        {/* modal de períodos */}
         {modalAberto && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2">
-            <div className="relative w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl">
+            <div className="relative w-full max-w-2xl rounded-lg bg-white dark:bg-gray-800 p-6 shadow-xl">
               <button
                 onClick={() => setModalAberto(null)}
-                className="absolute right-4 top-3 text-lg text-gray-500 hover:text-gray-700"
+                className="absolute right-4 top-3 text-lg text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
               >
                 ✖
               </button>
-              <h2 className="mb-4 text-2xl font-bold">
+              <h2 className="mb-4 text-2xl font-bold text-green-700 dark:text-green-400">
                 {modalAberto === "hoje" && "Aulas de Hoje"}
                 {modalAberto === "semana" && "Aulas da Semana"}
                 {modalAberto === "mes" && "Aulas do Mês"}

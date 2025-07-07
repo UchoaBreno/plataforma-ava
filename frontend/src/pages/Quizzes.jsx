@@ -13,7 +13,6 @@ export default function Quizzes() {
   const [quizzes, setQuizzes] = useState([]);
   const [isStaff, setIsStaff] = useState(false);
 
-  // Função para buscar os quizzes da API
   const fetchQuizzes = async () => {
     try {
       const { data } = await axios.get("http://127.0.0.1:8000/api/quizzes/", {
@@ -25,7 +24,6 @@ export default function Quizzes() {
     }
   };
 
-  // Verifica token e inicia carregamento e intervalo de atualização
   useEffect(() => {
     if (!token) {
       navigate("/login");
@@ -39,9 +37,8 @@ export default function Quizzes() {
       setIsStaff(false);
     }
 
-    fetchQuizzes(); // Carrega inicialmente
+    fetchQuizzes();
 
-    // Atualiza a lista de quizzes a cada 15 segundos
     const intervalId = setInterval(fetchQuizzes, 15000);
     return () => clearInterval(intervalId);
   }, [token]);
@@ -65,7 +62,7 @@ export default function Quizzes() {
   return (
     <div className="flex">
       <Sidebar isStaff={isStaff} isAluno={!isStaff} />
-      <main className="ml-64 flex-1 bg-gray-900 text-white p-6 relative">
+      <main className="ml-64 flex-1 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white p-6 relative">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-green-600">Quizzes Disponíveis</h1>
           {isStaff && (
@@ -79,20 +76,20 @@ export default function Quizzes() {
         </div>
 
         {quizzes.length === 0 ? (
-          <p className="text-gray-400">Nenhum quiz disponível.</p>
+          <p className="text-gray-600 dark:text-gray-300">Nenhum quiz disponível.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {quizzes.map((q) => (
               <div
                 key={q.id}
-                className="flex flex-col justify-between rounded border border-green-300 bg-white p-4 shadow hover:shadow-md transition"
+                className="flex flex-col justify-between rounded border border-green-300 bg-white dark:bg-gray-800 dark:border-gray-600 p-4 shadow hover:shadow-md transition"
               >
                 <div onClick={() => handleStart(q.id)} className="cursor-pointer">
-                  <h2 className="text-xl font-semibold text-green-800">{q.title}</h2>
-                  <p className="mt-2 text-sm text-gray-500">
+                  <h2 className="text-xl font-semibold text-green-800 dark:text-green-300">{q.title}</h2>
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
                     Criado em {dayjs(q.created_at).format("DD/MM/YYYY")}
                   </p>
-                  <p className="text-sm text-gray-600 mt-1">{q.description}</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-400 mt-1">{q.description}</p>
                 </div>
 
                 {isStaff && (

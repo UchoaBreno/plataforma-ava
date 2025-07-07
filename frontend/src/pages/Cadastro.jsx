@@ -3,79 +3,140 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 export default function Cadastro() {
-  const [first_name, setFirstName] = useState('');
-  const [last_name, setLastName] = useState('');
+  const [nome, setNome] = useState('');
+  const [sobrenome, setSobrenome] = useState('');
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [senha, setSenha] = useState('');
+  const [role, setRole] = useState('aluno');
+  const [erroCadastro, setErroCadastro] = useState('');
+
   const navigate = useNavigate();
 
   const handleCadastro = async () => {
+    setErroCadastro("");
+
+    if (!nome || !sobrenome || !email || !username || !senha) {
+      setErroCadastro("Por favor, preencha todos os campos.");
+      return;
+    }
+
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/usuarios/', {
-        
-        first_name,
-        last_name,
-        email,
-        username,
-        password,
-      });
-      console.log(response.data);
-      
-      alert('Conta criada com sucesso!');
-      navigate('/');
+      if (role === 'professor') {
+        // Envia solicitação para ser professor
+        await axios.post('http://127.0.0.1:8000/api/solicitacoes-professor/', {
+          nome,
+          sobrenome,
+          email,
+          username,
+          senha
+        });
+        alert('Solicitação enviada! Aguarde a aprovação do administrador.');
+        navigate('/login');
+      } else {
+        // Cria conta de aluno diretamente
+        await axios.post('http://127.0.0.1:8000/api/usuarios/', {
+          first_name: nome,
+          last_name: sobrenome,
+          email,
+          username,
+          password: senha,
+          is_staff: false,
+          is_active: true,
+        });
+        alert('Conta de aluno criada com sucesso!');
+        navigate('/login');
+      }
     } catch (error) {
       console.error('Erro ao criar conta:', error.response?.data || error.message);
-      alert('Erro ao criar conta. Verifique os dados.');
+      setErroCadastro("Erro ao criar conta. Verifique os dados e tente novamente.");
     }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="bg-white border border-gray-300 rounded-lg p-8 w-full max-w-md shadow-lg">
-        <h2 className="text-2xl font-semibold mb-2">
+    <div className="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900">
+      <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-8 w-full max-w-md shadow-lg">
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-1">
           Plataforma<span className="text-green-500">AVA</span>
         </h2>
-        <p className="text-black">Crie sua conta</p>
-        <p className="text-sm text-gray-600 mb-6">Preencha os campos abaixo</p>
+        <p className="text-black dark:text-gray-300">Crie sua conta</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          Preencha os campos abaixo
+        </p>
+
+        {erroCadastro && (
+          <div className="text-red-700 bg-red-100 dark:bg-red-900/50 dark:text-red-300 border border-red-300 dark:border-red-600 px-4 py-2 rounded text-center mb-4">
+            {erroCadastro}
+          </div>
+        )}
 
         <input
-          className="w-full mb-3 px-4 py-2 border border-gray-300 rounded"
+          className="w-full mb-3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-black dark:text-white"
           placeholder="Nome"
-          onChange={(e) => setFirstName(e.target.value)}
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
         />
         <input
-          className="w-full mb-3 px-4 py-2 border border-gray-300 rounded"
+          className="w-full mb-3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-black dark:text-white"
           placeholder="Sobrenome"
-          onChange={(e) => setLastName(e.target.value)}
+          value={sobrenome}
+          onChange={(e) => setSobrenome(e.target.value)}
         />
         <input
-          className="w-full mb-3 px-4 py-2 border border-gray-300 rounded"
+          className="w-full mb-3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-black dark:text-white"
           placeholder="E-mail"
+          value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
         <input
-          className="w-full mb-3 px-4 py-2 border border-gray-300 rounded"
+          className="w-full mb-3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-black dark:text-white"
           placeholder="Usuário"
+          value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
         <input
-          className="w-full mb-4 px-4 py-2 border border-gray-300 rounded"
+          className="w-full mb-4 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-black dark:text-white"
           type="password"
           placeholder="Senha"
-          onChange={(e) => setPassword(e.target.value)}
+          value={senha}
+          onChange={(e) => setSenha(e.target.value)}
         />
+
+        <div className="flex flex-col gap-2 mb-4 text-black dark:text-white">
+          <label className="flex items-center">
+            <input
+              type="radio"
+              name="role"
+              value="aluno"
+              checked={role === 'aluno'}
+              onChange={() => setRole('aluno')}
+              className="mr-2"
+            />
+            Sou aluno
+          </label>
+          <label className="flex items-center">
+            <input
+              type="radio"
+              name="role"
+              value="professor"
+              checked={role === 'professor'}
+              onChange={() => setRole('professor')}
+              className="mr-2"
+            />
+            Sou professor (aguarda aprovação do admin)
+          </label>
+        </div>
 
         <button
           onClick={handleCadastro}
-          className="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600 mb-3"
+          className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-500 mb-3"
         >
           Cadastrar
         </button>
 
         <button
-          onClick={() => navigate('/')}
-          className="w-full bg-white text-black py-2 border border-gray-400 rounded"
+          onClick={() => navigate('/login')}
+          className="w-full border border-gray-400 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-black dark:text-white py-2 rounded"
         >
           Já tenho uma conta
         </button>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import Sidebar from "../components/Sidebar";
 
 export default function DesempenhoAluno() {
   const [notas, setNotas] = useState([]);
@@ -21,18 +22,37 @@ export default function DesempenhoAluno() {
   }, [token]);
 
   return (
-    <div className="p-6 ml-64 text-black">
-      <h1 className="text-2xl font-bold text-green-600 mb-4">Minhas Notas</h1>
-      {notas.length === 0 ? (
-        <p>Nenhuma nota registrada ainda.</p>
-      ) : (
-        notas.map((n) => (
-          <div key={n.id} className="border-b py-2">
-            <strong>{n.titulo}</strong>: {n.nota}
-            <p className="text-sm text-gray-600">{n.descricao}</p>
+    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      <Sidebar isAluno />
+      <main className="ml-64 flex-1 p-6">
+        <h1 className="text-2xl font-bold text-green-600 dark:text-green-400 mb-4">
+          Minhas Notas
+        </h1>
+        {notas.length === 0 ? (
+          <p className="text-gray-700 dark:text-gray-300">
+            Nenhuma nota registrada ainda.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {notas.map((n) => (
+              <div
+                key={n.id}
+                className="border-b border-gray-300 dark:border-gray-700 pb-2"
+              >
+                <p className="font-semibold">
+                  {n.titulo}:{" "}
+                  <span className="text-green-700 dark:text-green-400">
+                    {n.nota}
+                  </span>
+                </p>
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  {n.descricao}
+                </p>
+              </div>
+            ))}
           </div>
-        ))
-      )}
+        )}
+      </main>
     </div>
   );
 }

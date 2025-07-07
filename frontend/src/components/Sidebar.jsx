@@ -1,7 +1,5 @@
-// src/components/Sidebar.jsx
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-
 import {
   FaHome,
   FaBookOpen,
@@ -51,7 +49,7 @@ export default function Sidebar({ isStaff = undefined, isAluno = undefined }) {
     { path: "/", label: "Início", icon: <FaHome /> },
     { path: "/aulas", label: "Aulas", icon: <FaBookOpen /> },
     { path: "/quizzes", label: "Quizzes", icon: <FaPuzzlePiece /> },
-    { path: "/atividades", label: "Atividades", icon: <FaClipboardCheck /> }, // CORRIGIDO AQUI
+    { path: "/atividades", label: "Atividades", icon: <FaClipboardCheck /> },
     { path: "/forum-aluno", label: "Fórum", icon: <FaComments /> },
     { path: "/desempenho-aluno", label: "Desempenho", icon: <FaChartBar /> },
   ];
@@ -68,7 +66,7 @@ export default function Sidebar({ isStaff = undefined, isAluno = undefined }) {
   const items = staff ? profMenu : alunoMenu;
 
   return (
-    <div className="fixed top-0 left-0 flex h-screen w-64 flex-col bg-gray-900">
+    <div className="fixed top-0 left-0 flex h-screen w-64 flex-col bg-gray-900 dark:bg-gray-800">
       <div className="border-b border-gray-700 p-6 text-2xl font-bold text-white">
         Plataforma<span className="text-green-500">AVA</span>
       </div>
@@ -78,10 +76,10 @@ export default function Sidebar({ isStaff = undefined, isAluno = undefined }) {
           <button
             key={path + label}
             onClick={() => navigate(path)}
-            className={`flex w-full items-center gap-2 rounded px-4 py-2 text-left hover:bg-gray-700 transition ${
+            className={`flex w-full items-center gap-2 rounded px-4 py-2 text-left transition ${
               location.pathname === path
-                ? "font-semibold text-green-500"
-                : "text-white"
+                ? "font-semibold text-green-500 bg-gray-800"
+                : "text-white hover:bg-gray-700"
             }`}
           >
             {icon}
@@ -113,9 +111,10 @@ export default function Sidebar({ isStaff = undefined, isAluno = undefined }) {
           />
         </div>
         <span className="text-sm text-white text-center">
-  {staff ? "Professor" : "Aluno"}<br />
-  <span className="text-gray-400">{localStorage.getItem("username")}</span>
-</span>
+          {staff ? "Professor" : "Aluno"}
+          <br />
+          <span className="text-gray-400">{localStorage.getItem("username")}</span>
+        </span>
       </div>
 
       <div className="border-t border-gray-700 p-4">

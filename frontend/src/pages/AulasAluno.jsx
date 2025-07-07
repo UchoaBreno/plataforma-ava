@@ -11,7 +11,6 @@ const LIMITE_BAIXA = 31;
 export default function AulasAluno() {
   const token = localStorage.getItem("access");
 
-  const [username, setUsername] = useState("Usuário");
   const [alunoId, setAlunoId] = useState(null);
 
   const [alta, setAlta] = useState([]);
@@ -27,9 +26,6 @@ export default function AulasAluno() {
       decoded = jwtDecode(token);
     } catch {}
 
-    const uLS = localStorage.getItem("username");
-    setUsername(decoded.username || uLS || "Usuário");
-
     const id = decoded.user_id ?? decoded.id;
     if (id) setAlunoId(id);
   }, [token]);
@@ -44,7 +40,7 @@ export default function AulasAluno() {
   async function carregarPrioridades() {
     try {
       const [aulasRes, entregasRes] = await Promise.all([
-        axios.get("http://127.0.0.1:8000/api/aulas/", {
+        axios.get("http://127.0.0.1:8000/api/aulas-aluno/", {
           headers: { Authorization: `Bearer ${token}` },
         }),
         axios.get("http://127.0.0.1:8000/api/entregas/", {
@@ -65,7 +61,7 @@ export default function AulasAluno() {
       aulas
         .filter(a => !minhasEntregasIds.has(Number(a.id)))
         .forEach(a => {
-          const limite = a.data_agendada || a.data_postagem;
+          const limite = a.data;
           if (!limite) return;
           const diff = dayjs(limite).startOf("day").diff(hoje, "day");
           if (diff <= 0) _alta.push(a);
@@ -82,20 +78,20 @@ export default function AulasAluno() {
   }
 
   const CardPrioridade = ({ titulo, corBg, corBorda, lista }) => (
-    <div className={`rounded-xl border ${corBorda} ${corBg} p-5 shadow`}>
-      <h2 className="mb-3 text-xl font-bold">{titulo}</h2>
+    <div className={`rounded-xl border ${corBorda} ${corBg} dark:bg-gray-800 dark:border-gray-600 p-5 shadow`}>
+      <h2 className="mb-3 text-xl font-bold text-green-600 dark:text-green-400">{titulo}</h2>
       {lista.length === 0 ? (
-        <p className="text-gray-600">Nenhuma aula nesta prioridade.</p>
+        <p className="text-gray-600 dark:text-gray-300">Nenhuma aula nesta prioridade.</p>
       ) : (
         <div className="max-h-[50vh] space-y-3 overflow-auto pr-1">
           {lista.map(a => {
             let link = "#";
-            if (a.slide) {
-              link = a.slide.startsWith("http")
-                ? a.slide
-                : `http://127.0.0.1:8000${a.slide}`;
-            } else if (a.link_reuniao) {
-              link = a.link_reuniao;
+            if (a.arquivo) {
+              link = a.arquivo.startsWith("http")
+                ? a.arquivo
+                : `http://127.0.0.1:8000${a.arquivo}`;
+            } else if (a.video_url) {
+              link = a.video_url;
             }
             return (
               <a
@@ -103,14 +99,14 @@ export default function AulasAluno() {
                 href={link}
                 target={link !== "#" ? "_blank" : "_self"}
                 rel="noopener noreferrer"
-                className="block rounded border border-white/40 bg-white/70 px-4 py-3 hover:bg-white"
+                className="block rounded border border-white/10 bg-white/80 dark:bg-gray-700 dark:border-gray-600 px-4 py-3 hover:bg-white dark:hover:bg-gray-600"
               >
-                <p className="font-semibold text-green-800">{a.titulo}</p>
-                <p className="text-sm text-gray-600">
-                  Prazo: {dayjs(a.data_agendada || a.data_postagem).format("DD/MM/YYYY")}
+                <p className="font-semibold text-green-800 dark:text-green-300">{a.titulo}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Prazo: {dayjs(a.data).format("DD/MM/YYYY")}
                 </p>
                 {a.descricao && (
-                  <p className="mt-1 line-clamp-2 text-sm text-gray-700">
+                  <p className="mt-1 line-clamp-2 text-sm text-gray-700 dark:text-gray-400">
                     {a.descricao}
                   </p>
                 )}
@@ -164,18 +160,18 @@ export default function AulasAluno() {
         />
         <form
           onSubmit={enviar}
-          className="relative z-10 w-full max-w-sm rounded-lg bg-white p-5 shadow-lg"
+          className="relative z-10 w-full max-w-sm rounded-lg bg-white dark:bg-gray-800 p-5 shadow-lg"
         >
-          <h3 className="mb-4 text-lg font-semibold text-green-700">
+          <h3 className="mb-4 text-lg font-semibold text-green-700 dark:text-green-400">
             Entregar atividade
           </h3>
-          <label className="mb-2 block text-sm font-medium">
+          <label className="text-green-600 dark:text-green-300 mb-2 block text-sm font-medium">
             Selecione a aula:
           </label>
           <select
             value={selAula}
             onChange={(e) => setSelAula(e.target.value)}
-            className="mb-4 w-full rounded border px-3 py-2"
+            className="mb-4 w-full rounded border px-3 py-2 dark:bg-gray-700 dark:text-white"
             required
           >
             <option value="">-- escolha --</option>
@@ -185,7 +181,9 @@ export default function AulasAluno() {
               </option>
             ))}
           </select>
-          <label className="mb-2 block text-sm font-medium">Arquivo</label>
+          <label className="text-green-600 dark:text-green-300 mb-2 block text-sm font-medium">
+            Arquivo
+          </label>
           <input
             type="file"
             onChange={(e) => setSelArquivo(e.target.files[0] || null)}
@@ -196,7 +194,7 @@ export default function AulasAluno() {
             <button
               type="button"
               onClick={() => setShowEntrega(false)}
-              className="rounded bg-gray-300 px-3 py-1 hover:bg-gray-400"
+              className="rounded bg-gray-300 dark:bg-gray-600 px-3 py-1 hover:bg-gray-400 dark:hover:bg-gray-500"
             >
               Cancelar
             </button>
@@ -216,7 +214,7 @@ export default function AulasAluno() {
     <div className="flex">
       <Sidebar isAluno />
 
-      <main className="ml-64 flex-1 bg-gray-900 text-white p-6 relative">
+      <main className="ml-64 flex-1 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white p-6 relative">
         <h1 className="mb-6 text-3xl font-bold text-green-600">Minhas Aulas</h1>
 
         <button
@@ -226,7 +224,7 @@ export default function AulasAluno() {
           Entregar atividade
         </button>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="mb-3 grid grid-cols-1 gap-6 lg:grid-cols-3">
           <CardPrioridade
             titulo="Alta prioridade (vence hoje)"
             corBg="bg-red-50"

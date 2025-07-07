@@ -1,19 +1,16 @@
-// src/components/CriarAulaModal.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 export default function CriarAulaModal({ isOpen, onClose, onSaved }) {
-  /* ───────────── estados ───────────── */
-  const [titulo,         setTitulo]        = useState("");
-  const [descricao,      setDescricao]     = useState("");
-  const [dataPostagem,   setDataPostagem]  = useState("");
-  const [agendar,        setAgendar]       = useState(false);
-  const [dataAgendada,   setDataAgendada]  = useState("");
-  const [linkReuniao,    setLinkReuniao]   = useState("");
-  const [slide,          setSlide]         = useState(null);
-  const [loading,        setLoading]       = useState(false);
+  const [titulo, setTitulo] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [dataPostagem, setDataPostagem] = useState("");
+  const [agendar, setAgendar] = useState(false);
+  const [dataAgendada, setDataAgendada] = useState("");
+  const [linkReuniao, setLinkReuniao] = useState("");
+  const [slide, setSlide] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  /* Zera campos sempre que o modal é aberto/fechado */
   useEffect(() => {
     if (!isOpen) {
       setTitulo("");
@@ -29,7 +26,6 @@ export default function CriarAulaModal({ isOpen, onClose, onSaved }) {
 
   if (!isOpen) return null;
 
-  /* ─────────── submit ─────────── */
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
@@ -46,8 +42,8 @@ export default function CriarAulaModal({ isOpen, onClose, onSaved }) {
     formData.append("data_postagem", dataPostagem);
     formData.append("agendada", agendar);
     if (agendar && dataAgendada) formData.append("data_agendada", dataAgendada);
-    if (linkReuniao)            formData.append("link_reuniao", linkReuniao);
-    if (slide)                  formData.append("slide", slide);
+    if (linkReuniao) formData.append("link_reuniao", linkReuniao);
+    if (slide) formData.append("slide", slide);
 
     try {
       setLoading(true);
@@ -58,10 +54,8 @@ export default function CriarAulaModal({ isOpen, onClose, onSaved }) {
         },
       });
 
-      // avisa o componente pai
       if (onSaved) onSaved(res.data);
-
-      onClose(); // fecha modal
+      onClose();
     } catch (err) {
       console.error("Erro ao criar aula:", err.response?.data || err.message);
       alert("Erro ao publicar aula. Confira os dados e tente novamente.");
@@ -70,11 +64,10 @@ export default function CriarAulaModal({ isOpen, onClose, onSaved }) {
     }
   };
 
-  /* ─────────── UI ─────────── */
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-xl rounded bg-white p-6 shadow-md">
-        <h2 className="mb-4 text-2xl font-semibold text-green-600">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2">
+      <div className="w-full max-w-xl rounded-lg bg-white dark:bg-gray-800 text-black dark:text-white p-6 shadow-xl">
+        <h2 className="mb-4 text-2xl font-semibold text-green-600 dark:text-green-400">
           Criar Nova Aula
         </h2>
 
@@ -83,7 +76,7 @@ export default function CriarAulaModal({ isOpen, onClose, onSaved }) {
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
             placeholder="Título da aula"
-            className="w-full rounded border px-3 py-2"
+            className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
             required
           />
 
@@ -91,21 +84,21 @@ export default function CriarAulaModal({ isOpen, onClose, onSaved }) {
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
             placeholder="Descrição"
-            className="w-full rounded border px-3 py-2"
+            className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
           />
 
-          <label className="block">
+          <label className="block text-sm">
             Data de postagem:
             <input
               type="date"
               value={dataPostagem}
               onChange={(e) => setDataPostagem(e.target.value)}
-              className="mt-1 w-full rounded border px-3 py-2"
+              className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
               required
             />
           </label>
 
-          <label className="flex items-center gap-2">
+          <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
               checked={agendar}
@@ -119,7 +112,7 @@ export default function CriarAulaModal({ isOpen, onClose, onSaved }) {
               type="datetime-local"
               value={dataAgendada}
               onChange={(e) => setDataAgendada(e.target.value)}
-              className="w-full rounded border px-3 py-2"
+              className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
             />
           )}
 
@@ -128,22 +121,21 @@ export default function CriarAulaModal({ isOpen, onClose, onSaved }) {
             value={linkReuniao}
             onChange={(e) => setLinkReuniao(e.target.value)}
             placeholder="Link da reunião (opcional)"
-            className="w-full rounded border px-3 py-2"
+            className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
           />
 
           <input
             type="file"
             accept=".pdf"
             onChange={(e) => setSlide(e.target.files[0])}
-            className="w-full"
+            className="w-full text-sm"
           />
 
-          {/* Botões */}
           <div className="flex justify-between">
             <button
               type="submit"
               disabled={loading}
-              className="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600 disabled:opacity-50"
+              className="rounded bg-green-600 hover:bg-green-700 px-4 py-2 text-white disabled:opacity-50"
             >
               {loading ? "Publicando..." : "Publicar Aula"}
             </button>
@@ -151,7 +143,7 @@ export default function CriarAulaModal({ isOpen, onClose, onSaved }) {
             <button
               type="button"
               onClick={onClose}
-              className="rounded bg-gray-300 px-4 py-2 text-black hover:bg-gray-400"
+              className="rounded bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 px-4 py-2 text-black dark:text-white"
             >
               Cancelar
             </button>

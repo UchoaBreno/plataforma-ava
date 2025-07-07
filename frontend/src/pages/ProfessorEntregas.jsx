@@ -1,4 +1,3 @@
-// src/pages/ProfessorEntregas.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
@@ -7,11 +6,10 @@ import Sidebar from "../components/Sidebar";
 export default function ProfessorEntregas() {
   const token = localStorage.getItem("access");
 
-  const [students, setStudents] = useState([]);          // lista de alunos
-  const [entregas, setEntregas] = useState([]);          // todas as entregas
-  const [selectedStudent, setSelectedStudent] = useState(null); // aluno do modal
+  const [students, setStudents] = useState([]);
+  const [entregas, setEntregas] = useState([]);
+  const [selectedStudent, setSelectedStudent] = useState(null);
 
-  // busca alunos
   const fetchStudents = async () => {
     try {
       const { data } = await axios.get("http://127.0.0.1:8000/api/alunos/", {
@@ -30,7 +28,6 @@ export default function ProfessorEntregas() {
     }
   };
 
-  // busca entregas e retorna o array (para uso em openModal)
   const fetchEntregas = async () => {
     try {
       const { data } = await axios.get("http://127.0.0.1:8000/api/entregas/", {
@@ -43,35 +40,31 @@ export default function ProfessorEntregas() {
     }
   };
 
-  // retorna só as entregas de um aluno
   const entregasForStudent = studentId =>
     entregas.filter(e => Number(e.aluno) === Number(studentId));
 
-  // abre modal: primeiro re-fetch de entregas para garantir lista atual
   const openModalForStudent = student => {
-    fetchEntregas().then(() => {
-      setSelectedStudent(student);
-    });
+    fetchEntregas().then(() => setSelectedStudent(student));
   };
 
-  // fecha o modal
   const closeModal = () => setSelectedStudent(null);
 
-  // monta polling e carga inicial
   useEffect(() => {
     if (!token) return;
     fetchStudents();
     fetchEntregas();
-    const intervalo = setInterval(fetchEntregas, 5 * 1000); // agora 5s
+    const intervalo = setInterval(fetchEntregas, 5000);
     return () => clearInterval(intervalo);
   }, [token]);
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
       <Sidebar isStaff />
 
-      <main className="ml-64 flex-1 bg-gray-50 p-6 text-black">
-        <h1 className="text-3xl font-bold mb-6">Entregas dos Alunos</h1>
+      <main className="ml-64 flex-1 p-6">
+        <h1 className="text-3xl font-bold text-green-600 dark:text-green-400 mb-6">
+          Entregas dos Alunos
+        </h1>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {students.map(student => {
@@ -80,11 +73,13 @@ export default function ProfessorEntregas() {
               <button
                 key={student.id}
                 onClick={() => openModalForStudent(student)}
-                className="flex flex-col justify-between bg-white dark:bg-gray-800 rounded-2xl shadow p-4 hover:bg-primary/10 transition cursor-pointer"
+                className="flex flex-col justify-between bg-white dark:bg-gray-800 rounded-2xl shadow p-4 hover:bg-green-50 dark:hover:bg-gray-700 transition cursor-pointer"
               >
                 <div>
-                  <p className="font-medium text-green-800">{student.name}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="font-medium text-green-800 dark:text-green-400">
+                    {student.name}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     Entregas: {count}
                   </p>
                 </div>
@@ -95,9 +90,9 @@ export default function ProfessorEntregas() {
       </main>
 
       {selectedStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white bg-gray-300 rounded-2xl shadow-xl w-full max-w-lg p-6 relative">
-            <h2 className="text-xl font-semibold mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-6 relative">
+            <h2 className="text-xl font-semibold mb-4 text-green-700 dark:text-green-400">
               Entregas de {selectedStudent.name}
             </h2>
             <ul className="divide-y divide-gray-200 dark:divide-gray-700 max-h-96 overflow-y-auto pr-2">
@@ -108,7 +103,7 @@ export default function ProfessorEntregas() {
                 >
                   <div>
                     <p className="font-medium">{sub.aula_titulo}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
                       Enviado em{" "}
                       {dayjs(sub.enviado_em).format("DD/MM/YYYY HH:mm")}
                     </p>
@@ -121,7 +116,7 @@ export default function ProfessorEntregas() {
                     }
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-primary underline text-sm"
+                    className="text-green-700 dark:text-green-400 underline text-sm"
                   >
                     Abrir arquivo
                   </a>
@@ -130,7 +125,7 @@ export default function ProfessorEntregas() {
             </ul>
             <button
               onClick={closeModal}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
             >
               ✕
             </button>

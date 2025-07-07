@@ -1,4 +1,3 @@
-// src/components/GerenciarAulasModal.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
@@ -7,27 +6,16 @@ import EditAulaModal from "./EditAulaModal";
 export default function GerenciarAulasModal({ isOpen, onClose }) {
   const token = localStorage.getItem("access");
 
-  /* ─────────── state ─────────── */
-  const [aba, setAba] = useState("listar"); // listar | aula | atv
+  const [aba, setAba] = useState("listar");
   const [aulas, setAulas] = useState([]);
   const [editAula, setEditAula] = useState(null);
 
-  /* form aula */
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
-  const [dataPost, setDataPost] = useState("");
+  const [data, setData] = useState("");
+  const [hora, setHora] = useState("");
   const [slide, setSlide] = useState(null);
 
-  /* form atividade (apenas visual) */
-  const [descAtv, setDescAtv] = useState("");
-  const [dataEnt, setDataEnt] = useState("");
-  const [horaEnt, setHoraEnt] = useState("");
-  const [pont, setPont] = useState("");
-
-  /* entregas reais */
-  const [entregues, setEntregues] = useState([]);
-
-  /* ─────────── helpers ─────────── */
   const recarregarAulas = async () => {
     try {
       const { data } = await axios.get("http://127.0.0.1:8000/api/aulas/", {
@@ -35,18 +23,7 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
       });
       setAulas(data);
     } catch {
-      // silenciar
-    }
-  };
-
-  const recarregarEntregas = async () => {
-    try {
-      const { data } = await axios.get("http://127.0.0.1:8000/api/entregas/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setEntregues(data);
-    } catch {
-      // silenciar
+      console.error("Erro ao buscar aulas.");
     }
   };
 
@@ -55,8 +32,9 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
     const fd = new FormData();
     fd.append("titulo", titulo);
     fd.append("descricao", descricao);
-    fd.append("data_postagem", dataPost);
-    if (slide) fd.append("slide", slide);
+    fd.append("data", data);
+    fd.append("hora", hora);
+    if (slide) fd.append("arquivo", slide);
 
     try {
       await axios.post("http://127.0.0.1:8000/api/aulas/", fd, {
@@ -67,22 +45,12 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
       setAba("listar");
       setTitulo("");
       setDescricao("");
-      setDataPost("");
+      setData("");
+      setHora("");
       setSlide(null);
     } catch {
-      alert("Erro ao publicar aula");
+      alert("Erro ao publicar aula.");
     }
-  };
-
-  const publicarAtividade = (e) => {
-    e.preventDefault();
-    // aqui você pode postar sua atividade via API, se tiver
-    alert("Atividade publicada (exemplo)!");
-    setAba("listar");
-    setDescAtv("");
-    setDataEnt("");
-    setHoraEnt("");
-    setPont("");
   };
 
   const apagarAula = async (id) => {
@@ -93,43 +61,39 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
       });
       recarregarAulas();
     } catch {
-      alert("Erro ao apagar");
+      alert("Erro ao apagar aula.");
     }
   };
 
-  /* ─────────── carregamento inicial ─────────── */
   useEffect(() => {
     if (!token) return;
     recarregarAulas();
-    recarregarEntregas();
   }, [token]);
 
   if (!isOpen) return null;
 
-  /* ─────────── render ─────────── */
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="relative flex h-[80vh] w-full max-w-3xl flex-col rounded-lg bg-white shadow-xl">
-        {/* fechar */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2">
+      <div className="relative flex h-[80vh] w-full max-w-3xl flex-col rounded-lg bg-white dark:bg-gray-800 text-black dark:text-white shadow-xl">
         <button
           onClick={onClose}
-          className="absolute right-4 top-3 text-lg text-gray-500 hover:text-gray-700"
+          className="absolute right-4 top-3 text-lg text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
         >
           ✖
         </button>
 
-        {/* abas */}
-        <div className="flex flex-wrap gap-2 border-b border-gray-200 p-4">
+        <div className="flex flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700 p-4">
           {[
             ["listar", "Ver aulas publicadas"],
             ["aula", "Publicar aula"],
-            ["atv", "Publicar atividade"],
           ].map(([key, rotulo]) => (
             <button
               key={key}
               onClick={() => setAba(key)}
               className={`rounded px-3 py-1 text-sm font-medium ${
-                aba === key ? "bg-green-500 text-white" : "bg-gray-200 text-gray-800"
+                aba === key
+                  ? "bg-green-600 text-white"
+                  : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white"
               }`}
             >
               {rotulo}
@@ -137,33 +101,33 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
           ))}
         </div>
 
-        {/* conteúdo com scroll */}
         <div className="flex-1 overflow-y-auto p-5">
-          {/* LISTAR */}
           {aba === "listar" && (
             <div className="space-y-3">
               {aulas.length === 0 ? (
-                <p className="text-gray-600">Nenhuma aula cadastrada.</p>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Nenhuma aula cadastrada.
+                </p>
               ) : (
                 aulas.map((a) => (
                   <div
                     key={a.id}
-                    className="rounded border border-green-300 bg-green-50 p-3 shadow"
+                    className="rounded border border-green-300 bg-green-50 dark:bg-gray-700 p-3 shadow"
                   >
                     <p className="font-semibold">{a.titulo}</p>
-                    <p className="mb-2 text-sm text-gray-600">
-                      Publicada em {dayjs(a.data_postagem).format("DD/MM/YYYY")}
+                    <p className="mb-2 text-sm text-gray-600 dark:text-gray-300">
+                      Agendada para {dayjs(a.data).format("DD/MM/YYYY")}
                     </p>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setEditAula(a)}
-                        className="rounded bg-yellow-500 px-3 py-1 text-white hover:bg-yellow-600"
+                        className="rounded bg-yellow-500 hover:bg-yellow-600 px-3 py-1 text-white"
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => apagarAula(a.id)}
-                        className="rounded bg-red-500 px-3 py-1 text-white hover:bg-red-600"
+                        className="rounded bg-red-600 hover:bg-red-700 px-3 py-1 text-white"
                       >
                         Apagar
                       </button>
@@ -174,84 +138,47 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
             </div>
           )}
 
-          {/* PUBLICAR AULA */}
           {aba === "aula" && (
             <form onSubmit={publicarAula} className="space-y-3">
               <input
                 value={titulo}
                 onChange={(e) => setTitulo(e.target.value)}
-                className="w-full rounded border px-3 py-2"
+                className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
                 placeholder="Título"
                 required
               />
               <textarea
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
-                className="w-full rounded border px-3 py-2"
+                className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
                 placeholder="Descrição"
               />
               <input
                 type="date"
-                value={dataPost}
-                onChange={(e) => setDataPost(e.target.value)}
-                className="w-full rounded border px-3 py-2"
+                value={data}
+                onChange={(e) => setData(e.target.value)}
+                className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
                 required
+              />
+              <input
+                type="time"
+                value={hora}
+                onChange={(e) => setHora(e.target.value)}
+                className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
               />
               <input
                 type="file"
                 accept=".pdf"
-                className="w-full"
+                className="w-full text-sm"
                 onChange={(e) => setSlide(e.target.files[0])}
               />
-              <button className="rounded bg-green-500 px-4 py-2 font-medium text-white hover:bg-green-600">
+              <button className="rounded bg-green-600 hover:bg-green-700 px-4 py-2 font-medium text-white">
                 Publicar Aula
-              </button>
-            </form>
-          )}
-
-          {/* PUBLICAR ATIVIDADE */}
-          {aba === "atv" && (
-            <form onSubmit={publicarAtividade} className="space-y-3">
-              <textarea
-                value={descAtv}
-                onChange={(e) => setDescAtv(e.target.value)}
-                className="w-full rounded border px-3 py-2"
-                placeholder="Descrição da atividade"
-                required
-              />
-              <label className="block text-sm font-medium">Data de entrega</label>
-              <input
-                type="date"
-                value={dataEnt}
-                onChange={(e) => setDataEnt(e.target.value)}
-                className="w-full rounded border px-3 py-2"
-                required
-              />
-              <label className="block text-sm font-medium">Hora de entrega</label>
-              <input
-                type="time"
-                value={horaEnt}
-                onChange={(e) => setHoraEnt(e.target.value)}
-                className="w-full rounded border px-3 py-2"
-                required
-              />
-              <input
-                type="number"
-                min="0"
-                value={pont}
-                onChange={(e) => setPont(e.target.value)}
-                className="w-full rounded border px-3 py-2"
-                placeholder="Pontuação"
-                required
-              />
-              <button className="rounded bg-green-500 px-4 py-2 font-medium text-white hover:bg-green-600">
-                Publicar Atividade
               </button>
             </form>
           )}
         </div>
 
-        {/* modal edição de aula */}
         {editAula && (
           <EditAulaModal
             aula={editAula}

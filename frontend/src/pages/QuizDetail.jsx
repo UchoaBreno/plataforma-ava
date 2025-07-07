@@ -57,7 +57,7 @@ export default function QuizDetail() {
 
   if (!quiz) {
     return (
-      <div className="flex">
+      <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
         <Sidebar isAluno />
         <main className="ml-64 flex-1 p-6">Carregando quiz…</main>
       </div>
@@ -66,16 +66,20 @@ export default function QuizDetail() {
 
   if (result) {
     return (
-      <div className="flex">
+      <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
         <Sidebar isAluno />
         <main className="ml-64 flex-1 p-6">
           <h1 className="text-3xl font-bold mb-4">Resultado</h1>
           <p className="text-xl">
-            Você acertou {result.score} de {quiz.questions.length} perguntas.
+            Você acertou{" "}
+            <span className="font-semibold text-green-600 dark:text-green-400">
+              {result.score}
+            </span>{" "}
+            de {quiz.questions.length} perguntas.
           </p>
           <button
             onClick={() => navigate("/quizzes")}
-            className="mt-6 rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
+            className="mt-6 rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700"
           >
             Voltar aos quizzes
           </button>
@@ -85,19 +89,25 @@ export default function QuizDetail() {
   }
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <Sidebar isAluno />
       <main className="ml-64 flex-1 p-6">
         <h1 className="text-3xl font-bold mb-4">{quiz.title}</h1>
         <form onSubmit={handleSubmit} className="space-y-6">
           {quiz.questions.map((question, index) => (
-            <div key={question.id} className="p-4 border rounded">
+            <div
+              key={question.id}
+              className="p-4 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800"
+            >
               <p className="font-medium mb-2">
                 {index + 1}. {question.text}
               </p>
               <div className="space-y-2">
                 {question.choices.map((choice) => (
-                  <label key={choice.id} className="flex items-center space-x-2">
+                  <label
+                    key={choice.id}
+                    className="flex items-center space-x-2 cursor-pointer"
+                  >
                     <input
                       type="radio"
                       name={`question-${question.id}`}
@@ -105,6 +115,7 @@ export default function QuizDetail() {
                       checked={answers[question.id] === choice.id}
                       onChange={() => handleChoice(question.id, choice.id)}
                       required
+                      className="accent-green-600"
                     />
                     <span>{choice.text}</span>
                   </label>
@@ -115,7 +126,7 @@ export default function QuizDetail() {
           <button
             type="submit"
             disabled={submitting}
-            className="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600 disabled:opacity-50"
+            className="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:opacity-50"
           >
             {submitting ? "Enviando…" : "Enviar respostas"}
           </button>

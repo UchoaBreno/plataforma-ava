@@ -1,4 +1,3 @@
-// src/pages/AtividadesProfessor.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -80,56 +79,70 @@ export default function AtividadesProfessor() {
   };
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <Sidebar isStaff={true} isAluno={false} />
-      <main className="ml-64 flex-1 bg-gray-900 text-white p-6 relative">
-        <h1 className="text-3xl font-bold text-green-400 mb-4">Atividades Avaliativas</h1>
+      <main className="ml-64 flex-1 p-6 relative">
+        <h1 className="text-3xl font-bold text-green-600 dark:text-green-400 mb-4">
+          Atividades Avaliativas
+        </h1>
 
         {atividades.map((a) => (
-          <div key={a.id} className="bg-gray-800 p-4 rounded shadow mb-4">
+          <div key={a.id} className="bg-white dark:bg-gray-800 p-4 rounded shadow mb-4">
             {editandoId === a.id ? (
               <>
                 <input
                   name="titulo"
                   value={form.titulo}
                   onChange={handleInputChange}
-                  className="w-full p-2 mb-2 text-black"
+                  className="w-full p-2 mb-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-black dark:text-gray-100 rounded"
                 />
                 <textarea
                   name="descricao"
                   value={form.descricao}
                   onChange={handleInputChange}
-                  className="w-full p-2 mb-2 text-black"
+                  className="w-full p-2 mb-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-black dark:text-gray-100 rounded"
                 />
                 <input
                   type="date"
                   name="data_entrega"
                   value={form.data_entrega}
                   onChange={handleInputChange}
-                  className="w-full p-2 mb-2 text-black"
+                  className="w-full p-2 mb-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-black dark:text-gray-100 rounded"
                 />
                 <input
                   type="time"
                   name="hora_entrega"
                   value={form.hora_entrega}
                   onChange={handleInputChange}
-                  className="w-full p-2 mb-2 text-black"
+                  className="w-full p-2 mb-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-black dark:text-gray-100 rounded"
                 />
                 <input
                   type="number"
                   name="pontos"
                   value={form.pontos}
                   onChange={handleInputChange}
-                  className="w-full p-2 mb-2 text-black"
+                  className="w-full p-2 mb-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-black dark:text-gray-100 rounded"
                 />
-                <button onClick={handleEditSubmit} className="bg-green-500 text-white px-4 py-1 rounded mr-2">Salvar</button>
-                <button onClick={() => setEditandoId(null)} className="bg-gray-500 text-white px-4 py-1 rounded">Cancelar</button>
+                <button
+                  onClick={handleEditSubmit}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded mr-2"
+                >
+                  Salvar
+                </button>
+                <button
+                  onClick={() => setEditandoId(null)}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-1 rounded"
+                >
+                  Cancelar
+                </button>
               </>
             ) : (
               <>
                 <h2 className="text-xl font-semibold">{a.titulo}</h2>
                 <p>{a.descricao}</p>
-                <p>Entrega até: {a.data_entrega} às {a.hora_entrega}</p>
+                <p>
+                  Entrega até: {a.data_entrega} às {a.hora_entrega}
+                </p>
                 <p>Vale: {a.pontos} pontos</p>
                 <div className="flex gap-2 mt-2">
                   <button

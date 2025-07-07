@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import Sidebar from "../components/Sidebar";
 
 export default function EditarQuiz() {
   const { id } = useParams();
@@ -63,38 +64,45 @@ export default function EditarQuiz() {
   };
 
   return (
-    <div className="p-6 text-white max-w-2xl mx-auto">
-      <h1 className="text-2xl mb-6 text-green-500 font-bold">Editar Quiz</h1>
+    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      <Sidebar isStaff />
+      <main className="ml-64 flex-1 p-6 flex justify-center">
+        <div className="w-full max-w-2xl">
+          <h1 className="text-3xl mb-6 text-green-600 dark:text-green-400 font-bold">
+            Editar Quiz
+          </h1>
 
-      <label className="block mb-2">Título</label>
-      <input
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="block w-full p-2 mb-4 text-black rounded border border-gray-300"
-      />
+          <label className="block mb-2">Título</label>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="block w-full p-2 mb-4 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-gray-100"
+          />
 
-      <label className="block mb-2">Descrição</label>
-      <textarea
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        className="block w-full p-2 mb-6 text-black rounded border border-gray-300"
-      />
+          <label className="block mb-2">Descrição</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="block w-full p-2 mb-6 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-gray-100"
+          />
 
-      <div className="flex gap-4">
-        <button
-          onClick={handleUpdate}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
-        >
-          Salvar Alterações
-        </button>
+          <div className="flex gap-4">
+            <button
+              onClick={handleUpdate}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+            >
+              Salvar Alterações
+            </button>
 
-        <button
-          onClick={handleDelete}
-          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
-        >
-          Excluir Quiz
-        </button>
-      </div>
+            <button
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+            >
+              Excluir Quiz
+            </button>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

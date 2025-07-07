@@ -1,4 +1,3 @@
-// src/pages/AulasProfessor.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
@@ -8,19 +7,21 @@ import Sidebar from "../components/Sidebar";
 function DeliveriesModal({ student, deliveries, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 relative">
+      <div className="bg-white dark:bg-gray-800 text-black dark:text-gray-100 rounded-2xl shadow-xl w-full max-w-lg p-6 relative">
         <h2 className="text-xl font-semibold mb-4">
           Entregas de {student.nome}
         </h2>
         {deliveries.length === 0 ? (
-          <p className="text-gray-600">Nenhuma entrega encontrada.</p>
+          <p className="text-gray-600 dark:text-gray-300">
+            Nenhuma entrega encontrada.
+          </p>
         ) : (
-          <ul className="divide-y divide-gray-200 max-h-80 overflow-y-auto pr-2">
+          <ul className="divide-y divide-gray-200 dark:divide-gray-700 max-h-80 overflow-y-auto pr-2">
             {deliveries.map((e) => (
               <li key={e.id} className="py-3 flex justify-between items-center">
                 <div>
                   <p className="font-medium">{e.aula_titulo}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     Enviado em {dayjs(e.enviado_em).format("DD/MM/YYYY HH:mm")}
                   </p>
                 </div>
@@ -28,7 +29,7 @@ function DeliveriesModal({ student, deliveries, onClose }) {
                   href={`http://127.0.0.1:8000${e.arquivo}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-green-600 underline text-sm"
+                  className="text-green-600 dark:text-green-400 underline text-sm"
                 >
                   Abrir arquivo
                 </a>
@@ -39,7 +40,7 @@ function DeliveriesModal({ student, deliveries, onClose }) {
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-black"
+          className="absolute top-4 right-4 text-gray-500 hover:text-black dark:hover:text-white"
         >
           ✕
         </button>
@@ -74,20 +75,20 @@ export default function AulasProfessor() {
       return;
     }
 
-    // ALUNOS
     axios
       .get("http://127.0.0.1:8000/api/alunos/", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(({ data }) => {
-        setAlunos(data.map((u) => ({ id: u.id, nome: u.first_name || u.username })));
+        setAlunos(
+          data.map((u) => ({ id: u.id, nome: u.first_name || u.username }))
+        );
       })
       .catch((err) => {
         console.error("Erro ao buscar alunos:", err);
         setAlunos([]);
       });
 
-    // ENTREGAS + polling
     fetchEntregas();
     const interval = setInterval(fetchEntregas, 5000);
     return () => clearInterval(interval);
@@ -97,28 +98,32 @@ export default function AulasProfessor() {
     entregas.filter((e) => Number(e.aluno) === Number(alunoId));
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <Sidebar isStaff />
 
-      <main className="ml-64 flex-1 bg-gray-900 text-white p-6 relative">
-        <h1 className="mb-6 text-3xl font-bold text-green-600">Minhas Aulas</h1>
+      <main className="ml-64 flex-1 p-6 relative">
+        <h1 className="mb-6 text-3xl font-bold text-green-600 dark:text-green-400">
+          Minhas Aulas
+        </h1>
 
-        <div className="space-y-3 rounded-xl border border-blue-300 bg-blue-50 p-4 shadow max-w-md mx-auto">
+        <div className="space-y-3 rounded-xl border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-gray-800 p-4 shadow max-w-md mx-auto">
           <h2 className="mb-2 text-lg font-bold">Alunos</h2>
           {alunos.length === 0 ? (
-            <p className="text-gray-600">Nenhum aluno encontrado.</p>
+            <p className="text-gray-600 dark:text-gray-300">
+              Nenhum aluno encontrado.
+            </p>
           ) : (
             alunos.map((al) => (
               <button
                 key={al.id}
                 type="button"
                 onClick={() => setModalStudent(al)}
-                className="w-full flex justify-between items-center rounded border px-3 py-2 bg-white hover:bg-gray-100 transition"
+                className="w-full flex justify-between items-center rounded border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition"
               >
-                <p className="truncate font-medium text-green-800">
+                <p className="truncate font-medium text-green-800 dark:text-green-400">
                   {al.nome}
                 </p>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
                   Entregas: {entregasPorAluno(al.id).length}
                 </span>
               </button>
