@@ -25,7 +25,10 @@ SECRET_KEY = 'django-insecure-)vw9ds9egj=ov(j-=sqy!*pe4(g1wrv&dg8e082!u7*dx4wt^k
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'plataforma-ava2.onrender.com',
+    'www.plataforma-ava2.onrender.com',
+    ]
 
 
 # Application definition
