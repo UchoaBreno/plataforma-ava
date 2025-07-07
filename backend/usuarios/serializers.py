@@ -2,46 +2,41 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
 from .models import (
     Usuario, Aula, Entrega, Quiz, Questao,
     Alternativa, RespostaQuiz, Atividade,
-    ComentarioForum, RespostaForum, Desempenho,
-    SolicitacaoProfessor
+    ComentarioForum, RespostaForum, Desempenho, SolicitacaoProfessor
 )
 
-# ─── Usuário ───────────────────────────────────────────────────
+
 class UsuarioSerializer(serializers.ModelSerializer):
     foto_perfil = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Usuario
         fields = [
-            'id',
-            'username',
-            'first_name',
-            'last_name',
-            'email',
-            'password',
-            'foto_perfil',
-            'is_staff',
-            'is_active'
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "is_staff",
+            "foto_perfil",
+            "password",
         ]
         extra_kwargs = {
-            'password': {'write_only': True},
-            'is_staff': {'read_only': True},
-            'is_active': {'default': True}
+            "password": {"write_only": True},
+            "is_staff": {"read_only": True},
         }
 
     def create(self, validated_data):
-        password = validated_data.pop('password')
+        password = validated_data.pop("password")
         user = Usuario(**validated_data)
         user.set_password(password)
         user.save()
         return user
 
 
-# ─── Aulas ─────────────────────────────────────────────────────
 class AulaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Aula
@@ -49,7 +44,6 @@ class AulaSerializer(serializers.ModelSerializer):
         extra_kwargs = {"professor": {"read_only": True}}
 
 
-# ─── Entregas ──────────────────────────────────────────────────
 class EntregaSerializer(serializers.ModelSerializer):
     aluno_nome = serializers.CharField(source="aluno.username", read_only=True)
     aula_titulo = serializers.CharField(source="aula.titulo", read_only=True)
@@ -58,19 +52,17 @@ class EntregaSerializer(serializers.ModelSerializer):
         model = Entrega
         fields = [
             "id", "aluno", "aluno_nome", "aula", "aula_titulo",
-            "arquivo", "data_envio", "resposta_texto"
+            "arquivo", "data_envio", "resposta_texto",
         ]
         extra_kwargs = {"aluno": {"read_only": True}}
 
 
-# ─── Alternativas ──────────────────────────────────────────────
 class AlternativaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Alternativa
         fields = ["id", "text"]
 
 
-# ─── Questões ──────────────────────────────────────────────────
 class QuestaoSerializer(serializers.ModelSerializer):
     choices = AlternativaSerializer(many=True, read_only=True)
 
@@ -79,7 +71,6 @@ class QuestaoSerializer(serializers.ModelSerializer):
         fields = ["id", "text", "choices"]
 
 
-# ─── Quizzes ───────────────────────────────────────────────────
 class QuizSerializer(serializers.ModelSerializer):
     questions = QuestaoSerializer(many=True, read_only=True)
 
@@ -88,7 +79,6 @@ class QuizSerializer(serializers.ModelSerializer):
         fields = ["id", "title", "description", "created_at", "questions"]
 
 
-# ─── Respostas de Quiz ─────────────────────────────────────────
 class RespostaQuizSerializer(serializers.ModelSerializer):
     aluno_nome = serializers.CharField(source="aluno.username", read_only=True)
     quiz_titulo = serializers.CharField(source="quiz.title", read_only=True)
@@ -97,7 +87,7 @@ class RespostaQuizSerializer(serializers.ModelSerializer):
         model = RespostaQuiz
         fields = [
             "id", "quiz", "quiz_titulo", "aluno", "aluno_nome",
-            "resposta", "nota", "respondido_em"
+            "resposta", "nota", "respondido_em",
         ]
         extra_kwargs = {
             "aluno": {"read_only": True},
@@ -106,7 +96,6 @@ class RespostaQuizSerializer(serializers.ModelSerializer):
         }
 
 
-# ─── Login ─────────────────────────────────────────────────────
 class CustomLoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
@@ -124,7 +113,6 @@ class CustomLoginSerializer(serializers.Serializer):
         raise serializers.ValidationError("Credenciais inválidas")
 
 
-# ─── Token JWT com extras ──────────────────────────────────────
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
@@ -134,7 +122,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         return token
 
 
-# ─── Atividades ────────────────────────────────────────────────
 class AtividadeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Atividade
@@ -142,7 +129,6 @@ class AtividadeSerializer(serializers.ModelSerializer):
         extra_kwargs = {"professor": {"read_only": True}}
 
 
-# ─── Fórum ─────────────────────────────────────────────────────
 class RespostaForumSerializer(serializers.ModelSerializer):
     autor_nome = serializers.CharField(source="autor.username", read_only=True)
 
@@ -160,7 +146,6 @@ class ComentarioForumSerializer(serializers.ModelSerializer):
         fields = ["id", "texto", "autor_nome", "criado_em", "respostas"]
 
 
-# ─── Desempenho ────────────────────────────────────────────────
 class DesempenhoSerializer(serializers.ModelSerializer):
     aluno_nome = serializers.CharField(source='aluno.username', read_only=True)
 
@@ -169,7 +154,6 @@ class DesempenhoSerializer(serializers.ModelSerializer):
         fields = ['id', 'titulo', 'descricao', 'nota', 'aluno', 'aluno_nome']
 
 
-# ─── Solicitação de Professor ──────────────────────────────────
 class SolicitacaoProfessorSerializer(serializers.ModelSerializer):
     class Meta:
         model = SolicitacaoProfessor
