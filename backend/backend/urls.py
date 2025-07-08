@@ -3,6 +3,7 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
+from django.urls import path, include
 
 from usuarios.views import (
     LoginView,
@@ -44,6 +45,9 @@ urlpatterns = [
     path("api/login/", LoginView.as_view()),
     path("api/token/", CustomTokenObtainPairView.as_view()),
 
+    path('api/', include('djoser.urls')),
+    path('api/', include('djoser.urls.jwt')),
+    
     # Usuários
     path("api/usuarios/", UsuarioListCreateView.as_view()),
     path("api/usuarios/<str:username>/", UsuarioDetailView.as_view()),
