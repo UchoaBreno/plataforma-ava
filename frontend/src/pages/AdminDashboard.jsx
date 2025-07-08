@@ -1,114 +1,249 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "../api/axiosInstance";
 
 export default function AdminDashboard() {
-  const [solicitacoes, setSolicitacoes] = useState([]);
+  const [tab, setTab] = useState("solicitacoes");
   const [loading, setLoading] = useState(false);
-  const token = localStorage.getItem("access");
+
+  const [solicitacoes, setSolicitacoes] = useState([]);
+  const [usuarios, setUsuarios] = useState([]);
+  const [aulas, setAulas] = useState([]);
+  const [atividades, setAtividades] = useState([]);
+  const [quizzes, setQuizzes] = useState([]);
+  const [desempenhos, setDesempenhos] = useState([]);
 
   useEffect(() => {
-    fetchSolicitacoes();
+    fetchAll();
   }, []);
+
+  const fetchAll = () => {
+    fetchSolicitacoes();
+    fetchUsuarios();
+    fetchAulas();
+    fetchAtividades();
+    fetchQuizzes();
+    fetchDesempenhos();
+  };
 
   const fetchSolicitacoes = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get(
-        "http://127.0.0.1:8000/admin/solicitacoes-professor/",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (Array.isArray(data)) {
-        setSolicitacoes(data);
-      } else if (Array.isArray(data.results)) {
-        setSolicitacoes(data.results);
-      } else {
-        setSolicitacoes([]);
-      }
+      const { data } = await axiosInstance.get("admin/solicitacoes-professor/");
+      setSolicitacoes(data);
     } catch (err) {
       console.error("Erro ao buscar solicitações", err);
-      setSolicitacoes([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const aprovar = async (id) => {
+  const fetchUsuarios = async () => {
+    setLoading(true);
     try {
-      await axios.post(
-        `http://127.0.0.1:8000/admin/solicitacoes-professor/${id}/aprovar/`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      fetchSolicitacoes();
+      const { data } = await axiosInstance.get("usuarios/");
+      setUsuarios(data);
     } catch (err) {
-      console.error("Erro ao aprovar", err);
+      console.error("Erro ao buscar usuários", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const rejeitar = async (id) => {
+  const fetchAulas = async () => {
+    setLoading(true);
     try {
-      await axios.post(
-        `http://127.0.0.1:8000/admin/solicitacoes-professor/${id}/rejeitar/`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      fetchSolicitacoes();
+      const { data } = await axiosInstance.get("aulas/");
+      setAulas(data);
     } catch (err) {
-      console.error("Erro ao rejeitar", err);
+      console.error("Erro ao buscar aulas", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAtividades = async () => {
+    setLoading(true);
+    try {
+      const { data } = await axiosInstance.get("atividades/");
+      setAtividades(data);
+    } catch (err) {
+      console.error("Erro ao buscar atividades", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchQuizzes = async () => {
+    setLoading(true);
+    try {
+      const { data } = await axiosInstance.get("quizzes/");
+      setQuizzes(data);
+    } catch (err) {
+      console.error("Erro ao buscar quizzes", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDesempenhos = async () => {
+    setLoading(true);
+    try {
+      const { data } = await axiosInstance.get("desempenhos/");
+      setDesempenhos(data);
+    } catch (err) {
+      console.error("Erro ao buscar desempenhos", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const aprovarSolicitacao = async (id) => {
+    await axiosInstance.post(`admin/solicitacoes-professor/${id}/aprovar/`);
+    fetchSolicitacoes();
+  };
+
+  const rejeitarSolicitacao = async (id) => {
+    await axiosInstance.post(`admin/solicitacoes-professor/${id}/rejeitar/`);
+    fetchSolicitacoes();
+  };
+
+  const deleteItem = async (endpoint, id) => {
+    await axiosInstance.delete(`${endpoint}/${id}/`);
+    fetchAll();
+  };
+
+  const renderTab = () => {
+    if (loading) return <p>🔄 Carregando...</p>;
+
+    switch (tab) {
+      case "solicitacoes":
+        return (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Solicitações de Professores</h2>
+            {solicitacoes.map((s) => (
+              <div key={s.id} className="border p-3 mb-2 rounded bg-white dark:bg-gray-800">
+                <p>
+                  {s.nome} {s.sobrenome} - {s.email}
+                </p>
+                <p>Status: {s.aprovado ? "✅ Aprovado" : "⏳ Pendente"}</p>
+                {!s.aprovado && (
+                  <div className="flex gap-2 mt-2">
+                    <button onClick={() => aprovarSolicitacao(s.id)} className="bg-green-600 text-white px-3 py-1 rounded">
+                      Aprovar
+                    </button>
+                    <button onClick={() => rejeitarSolicitacao(s.id)} className="bg-red-600 text-white px-3 py-1 rounded">
+                      Rejeitar
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        );
+
+      case "usuarios":
+        return (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Usuários</h2>
+            {usuarios.map((u) => (
+              <div key={u.id} className="border p-3 mb-2 rounded bg-white dark:bg-gray-800 flex justify-between">
+                <span>{u.username} ({u.is_staff ? "Professor" : "Aluno"})</span>
+                <button onClick={() => deleteItem("usuarios", u.username)} className="bg-red-600 text-white px-3 py-1 rounded">
+                  Deletar
+                </button>
+              </div>
+            ))}
+          </div>
+        );
+
+      case "aulas":
+        return (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Aulas</h2>
+            {aulas.map((a) => (
+              <div key={a.id} className="border p-3 mb-2 rounded bg-white dark:bg-gray-800 flex justify-between">
+                <span>{a.titulo}</span>
+                <button onClick={() => deleteItem("aulas", a.id)} className="bg-red-600 text-white px-3 py-1 rounded">
+                  Deletar
+                </button>
+              </div>
+            ))}
+          </div>
+        );
+
+      case "atividades":
+        return (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Atividades</h2>
+            {atividades.map((a) => (
+              <div key={a.id} className="border p-3 mb-2 rounded bg-white dark:bg-gray-800 flex justify-between">
+                <span>{a.titulo}</span>
+                <button onClick={() => deleteItem("atividades", a.id)} className="bg-red-600 text-white px-3 py-1 rounded">
+                  Deletar
+                </button>
+              </div>
+            ))}
+          </div>
+        );
+
+      case "quizzes":
+        return (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Quizzes</h2>
+            {quizzes.map((q) => (
+              <div key={q.id} className="border p-3 mb-2 rounded bg-white dark:bg-gray-800 flex justify-between">
+                <span>{q.title}</span>
+                <button onClick={() => deleteItem("quizzes", q.id)} className="bg-red-600 text-white px-3 py-1 rounded">
+                  Deletar
+                </button>
+              </div>
+            ))}
+          </div>
+        );
+
+      case "desempenhos":
+        return (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Desempenhos</h2>
+            {desempenhos.map((d) => (
+              <div key={d.id} className="border p-3 mb-2 rounded bg-white dark:bg-gray-800">
+                <p>{d.titulo} - Nota: {d.nota}</p>
+              </div>
+            ))}
+          </div>
+        );
+
+      default:
+        return null;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-black dark:text-white p-6 flex flex-col items-center">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-black dark:text-white p-6">
       <h1 className="text-3xl font-bold mb-6">Painel Administrativo</h1>
-      <h2 className="text-xl font-semibold mb-4">Solicitações de Professores</h2>
 
-      {loading ? (
-        <p>🔄 Carregando...</p>
-      ) : solicitacoes.length === 0 ? (
-        <p className="text-gray-600">Nenhuma solicitação encontrada.</p>
-      ) : (
-        <div className="space-y-4 w-full max-w-2xl">
-          {solicitacoes.map((s) => (
-            <div
-              key={s.id}
-              className="rounded border p-4 bg-white dark:bg-gray-800 shadow flex justify-between items-center"
-            >
-              <div>
-                <p className="font-medium">
-                  {s.nome} {s.sobrenome}
-                </p>
-                <p className="text-sm text-gray-600">{s.email}</p>
-                <p className="text-sm text-gray-600">
-                  Status:{" "}
-                  {s.aprovado ? (
-                    <span className="text-green-600">✅ Aprovado</span>
-                  ) : (
-                    <span className="text-yellow-600">⏳ Pendente</span>
-                  )}
-                </p>
-              </div>
-              {!s.aprovado && (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => aprovar(s.id)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
-                  >
-                    Aprovar
-                  </button>
-                  <button
-                    onClick={() => rejeitar(s.id)}
-                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
-                  >
-                    Rejeitar
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="flex gap-2 mb-6">
+        <button onClick={() => setTab("solicitacoes")} className="px-3 py-1 bg-green-600 text-white rounded">
+          Solicitações
+        </button>
+        <button onClick={() => setTab("usuarios")} className="px-3 py-1 bg-green-600 text-white rounded">
+          Usuários
+        </button>
+        <button onClick={() => setTab("aulas")} className="px-3 py-1 bg-green-600 text-white rounded">
+          Aulas
+        </button>
+        <button onClick={() => setTab("atividades")} className="px-3 py-1 bg-green-600 text-white rounded">
+          Atividades
+        </button>
+        <button onClick={() => setTab("quizzes")} className="px-3 py-1 bg-green-600 text-white rounded">
+          Quizzes
+        </button>
+        <button onClick={() => setTab("desempenhos")} className="px-3 py-1 bg-green-600 text-white rounded">
+          Desempenhos
+        </button>
+      </div>
+
+      {renderTab()}
     </div>
   );
 }

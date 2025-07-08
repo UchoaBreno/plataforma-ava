@@ -10,10 +10,13 @@ export default function Login() {
   const handleLogin = async () => {
     setErroLogin("");
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/token/", {
-        username,
-        password,
-      });
+      const response = await axios.post(
+        "https://plataforma-ava2.onrender.com/api/token/",
+        {
+          username,
+          password,
+        }
+      );
 
       const { access, refresh } = response.data;
       const decoded = jwtDecode(access);
@@ -33,7 +36,11 @@ export default function Login() {
       }
     } catch (error) {
       console.error("Erro no login:", error);
-      setErroLogin("Usuário ou senha incorretos. Tente novamente.");
+      if (error.response?.status === 401) {
+        setErroLogin("Usuário ou senha incorretos. Tente novamente.");
+      } else {
+        setErroLogin("Erro de rede ou servidor. Tente mais tarde.");
+      }
     }
   };
 
@@ -43,7 +50,9 @@ export default function Login() {
         <h1 className="text-3xl font-semibold text-gray-800 dark:text-white mb-1">
           Plataforma<span className="text-green-500">AVA</span>
         </h1>
-        <p className="text-black dark:text-gray-300 text-base mb-1">Entre com sua conta</p>
+        <p className="text-black dark:text-gray-300 text-base mb-1">
+          Entre com sua conta
+        </p>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
           Informe seu usuário e senha para entrar
         </p>
