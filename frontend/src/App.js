@@ -30,7 +30,7 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/login" replace />;
   }
   try {
-    jwtDecode(token); // só pra validar se o token é válido
+    jwtDecode(token);
   } catch {
     return <Navigate to="/login" replace />;
   }
@@ -53,9 +53,22 @@ function RedirectAtividades() {
   }
 }
 
+// Redirecionamento para login ou home na raiz /
+function RedirectRoot() {
+  const token = localStorage.getItem("access");
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  try {
+    jwtDecode(token);
+    return <Navigate to="/home" replace />;
+  } catch {
+    return <Navigate to="/login" replace />;
+  }
+}
+
 export default function App() {
   useEffect(() => {
-    // Força a classe dark no body ao carregar a aplicação
     document.body.classList.add("dark");
   }, []);
 
@@ -65,6 +78,7 @@ export default function App() {
         {/* Rotas públicas */}
         <Route path="/login" element={<Login />} />
         <Route path="/cadastro" element={<Cadastro />} />
+        <Route path="/" element={<RedirectRoot />} />
 
         {/* Rotas protegidas */}
         <Route
@@ -74,7 +88,6 @@ export default function App() {
             </ProtectedRoute>
           }
         >
-          <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home" element={<Home />} />
           <Route path="/aulas" element={<AulasAluno />} />
           <Route path="/aulas-prof" element={<AulasProfessor />} />
