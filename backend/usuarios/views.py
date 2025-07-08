@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, serializers, viewsets
+from rest_framework import status, viewsets
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
@@ -21,6 +21,7 @@ from .models import (
     ComentarioForum, RespostaForum, Desempenho,
     SolicitacaoProfessor
 )
+
 from .serializers import (
     CustomLoginSerializer,
     UsuarioSerializer,
@@ -47,6 +48,7 @@ class EntregaView(ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(aluno=self.request.user)
 
+
 # ─── Aulas ────────────────────────────────
 class AulaView(ListCreateAPIView):
     queryset = Aula.objects.all()
@@ -55,6 +57,7 @@ class AulaView(ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(professor=self.request.user)
+
 
 class AulaDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = AulaSerializer
@@ -65,6 +68,7 @@ class AulaDetailView(RetrieveUpdateDestroyAPIView):
             return Aula.objects.filter(professor=self.request.user)
         return Aula.objects.none()
 
+
 class AulasDisponiveisView(ListAPIView):
     serializer_class = AulaSerializer
     permission_classes = [IsAuthenticated]
@@ -73,12 +77,9 @@ class AulasDisponiveisView(ListAPIView):
         user = self.request.user
         if user.is_staff:
             return Aula.objects.none()
-        entregas = Entrega.objects.filter(
-            aula=OuterRef('pk'), aluno=user
-        )
-        return Aula.objects.annotate(
-            ja_entregue=Exists(entregas)
-        ).filter(ja_entregue=False).order_by('-criada_em')
+        entregas = Entrega.objects.filter(aula=OuterRef('pk'), aluno=user)
+        return Aula.objects.annotate(ja_entregue=Exists(entregas)).filter(ja_entregue=False).order_by('-criada_em')
+
 
 # ─── Quizzes ──────────────────────────────
 class QuizListCreateView(ListCreateAPIView):
@@ -86,10 +87,12 @@ class QuizListCreateView(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     queryset = Quiz.objects.all()
 
+
 class QuizDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = QuizSerializer
     permission_classes = [IsAuthenticated]
     queryset = Quiz.objects.all()
+
 
 class QuizSubmitView(APIView):
     permission_classes = [IsAuthenticated]
@@ -111,12 +114,14 @@ class QuizSubmitView(APIView):
         )
         return Response({"message": "Respostas enviadas.", "score": acertos})
 
+
 class RespostaQuizView(ListAPIView):
     serializer_class = RespostaQuizSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return RespostaQuiz.objects.filter(aluno=self.request.user)
+
 
 # ─── Usuários ─────────────────────────────
 class AlunoListView(ListAPIView):
@@ -125,6 +130,7 @@ class AlunoListView(ListAPIView):
 
     def get_queryset(self):
         return Usuario.objects.filter(is_staff=False, is_active=True)
+
 
 class UsuarioListCreateView(ListCreateAPIView):
     queryset = Usuario.objects.filter(is_active=True)
@@ -139,6 +145,7 @@ class UsuarioListCreateView(ListCreateAPIView):
         self.perform_create(serializer)
         return Response(serializer.data, status=201)
 
+
 class UsuarioDetailView(RetrieveUpdateDestroyAPIView):
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
@@ -146,9 +153,10 @@ class UsuarioDetailView(RetrieveUpdateDestroyAPIView):
 
     def delete(self, request, *args, **kwargs):
         usuario = self.get_object()
-        usuario.is_active = False  # marca como inativo em vez de excluir de verdade
+        usuario.is_active = False
         usuario.save()
         return Response({"detail": "Usuário desativado"}, status=204)
+
 
 # ─── Foto Perfil ──────────────────────────
 class AtualizarFotoPerfilView(APIView):
@@ -161,9 +169,11 @@ class AtualizarFotoPerfilView(APIView):
         user.save()
         return Response({"foto_url": user.foto_perfil.url})
 
+
 # ─── Login/Token ──────────────────────────
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
 
 class LoginView(APIView):
     def post(self, request):
@@ -171,6 +181,7 @@ class LoginView(APIView):
         if serializer.is_valid():
             return Response(serializer.validated_data)
         return Response(serializer.errors, status=400)
+
 
 # ─── Atividades ───────────────────────────
 class AtividadeView(ListCreateAPIView):
@@ -184,6 +195,7 @@ class AtividadeView(ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(professor=self.request.user)
 
+
 class AtividadesDisponiveisView(ListAPIView):
     serializer_class = AtividadeSerializer
     permission_classes = [IsAuthenticated]
@@ -194,6 +206,7 @@ class AtividadesDisponiveisView(ListAPIView):
             return Atividade.objects.filter(data_entrega__gte=now()).order_by("data_entrega")
         return Atividade.objects.none()
 
+
 class AtividadeDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = AtividadeSerializer
     permission_classes = [IsAuthenticated]
@@ -201,6 +214,7 @@ class AtividadeDetailView(RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         user = self.request.user
         return Atividade.objects.filter(professor=user) if user.is_staff else Atividade.objects.all()
+
 
 # ─── Fórum ────────────────────────────────
 class ForumAPIView(APIView):
@@ -212,8 +226,11 @@ class ForumAPIView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        comentario = ComentarioForum.objects.create(autor=request.user, texto=request.data.get("texto"))
+        comentario = ComentarioForum.objects.create(
+            autor=request.user, texto=request.data.get("texto")
+        )
         return Response({"id": comentario.id})
+
 
 class ResponderComentarioAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -222,8 +239,11 @@ class ResponderComentarioAPIView(APIView):
         comentario = ComentarioForum.objects.filter(pk=pk).first()
         if not comentario:
             return Response({"error": "Comentário não encontrado"}, status=404)
-        resposta = RespostaForum.objects.create(comentario=comentario, autor=request.user, texto=request.data.get("texto"))
+        resposta = RespostaForum.objects.create(
+            comentario=comentario, autor=request.user, texto=request.data.get("texto")
+        )
         return Response({"id": resposta.id})
+
 
 # ─── Desempenho ───────────────────────────
 class DesempenhoCreateListView(ListCreateAPIView):
@@ -234,16 +254,19 @@ class DesempenhoCreateListView(ListCreateAPIView):
         user = self.request.user
         return Desempenho.objects.all() if user.is_staff else Desempenho.objects.filter(aluno=user)
 
+
 class DesempenhoDetailView(RetrieveUpdateDestroyAPIView):
     queryset = Desempenho.objects.all()
     serializer_class = DesempenhoSerializer
     permission_classes = [IsAuthenticated]
+
 
 # ─── Solicitação de Professores ───────────
 class SolicitacaoProfessorCreateView(ListCreateAPIView):
     queryset = SolicitacaoProfessor.objects.all()
     serializer_class = SolicitacaoProfessorSerializer
     permission_classes = [AllowAny]
+
 
 class SolicitacaoProfessorAdminViewSet(viewsets.ViewSet):
     permission_classes = [IsAdminUser]

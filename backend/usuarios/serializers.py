@@ -10,6 +10,7 @@ from .models import (
     ComentarioForum, RespostaForum, Desempenho, SolicitacaoProfessor
 )
 
+
 class UsuarioSerializer(serializers.ModelSerializer):
     foto_perfil = serializers.ImageField(required=False, allow_null=True)
 
@@ -61,11 +62,13 @@ class UsuarioSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
 class AulaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Aula
         fields = "__all__"
         extra_kwargs = {"professor": {"read_only": True}}
+
 
 class EntregaSerializer(serializers.ModelSerializer):
     aluno_nome = serializers.CharField(source="aluno.username", read_only=True)
@@ -79,10 +82,12 @@ class EntregaSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {"aluno": {"read_only": True}}
 
+
 class AlternativaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Alternativa
         fields = ["id", "text"]
+
 
 class QuestaoSerializer(serializers.ModelSerializer):
     choices = AlternativaSerializer(many=True, read_only=True)
@@ -91,12 +96,14 @@ class QuestaoSerializer(serializers.ModelSerializer):
         model = Questao
         fields = ["id", "text", "choices"]
 
+
 class QuizSerializer(serializers.ModelSerializer):
     questions = QuestaoSerializer(many=True, read_only=True)
 
     class Meta:
         model = Quiz
         fields = ["id", "title", "description", "created_at", "questions"]
+
 
 class RespostaQuizSerializer(serializers.ModelSerializer):
     aluno_nome = serializers.CharField(source="aluno.username", read_only=True)
@@ -114,6 +121,7 @@ class RespostaQuizSerializer(serializers.ModelSerializer):
             "respondido_em": {"read_only": True},
         }
 
+
 class CustomLoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
@@ -127,8 +135,10 @@ class CustomLoginSerializer(serializers.Serializer):
                 "access": str(refresh.access_token),
                 "username": user.username,
                 "is_staff": user.is_staff,
+                "is_superuser": user.is_superuser,
             }
         raise serializers.ValidationError("Credenciais inválidas")
+
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -136,7 +146,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token = super().get_token(user)
         token["username"] = user.username
         token["is_staff"] = user.is_staff
+        token["is_superuser"] = user.is_superuser
         return token
+
 
 class AtividadeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -144,12 +156,14 @@ class AtividadeSerializer(serializers.ModelSerializer):
         fields = "__all__"
         extra_kwargs = {"professor": {"read_only": True}}
 
+
 class RespostaForumSerializer(serializers.ModelSerializer):
     autor_nome = serializers.CharField(source="autor.username", read_only=True)
 
     class Meta:
         model = RespostaForum
         fields = ["id", "texto", "autor_nome", "criado_em"]
+
 
 class ComentarioForumSerializer(serializers.ModelSerializer):
     autor_nome = serializers.CharField(source="autor.username", read_only=True)
@@ -159,12 +173,14 @@ class ComentarioForumSerializer(serializers.ModelSerializer):
         model = ComentarioForum
         fields = ["id", "texto", "autor_nome", "criado_em", "respostas"]
 
+
 class DesempenhoSerializer(serializers.ModelSerializer):
     aluno_nome = serializers.CharField(source='aluno.username', read_only=True)
 
     class Meta:
         model = Desempenho
         fields = ['id', 'titulo', 'descricao', 'nota', 'aluno', 'aluno_nome']
+
 
 class SolicitacaoProfessorSerializer(serializers.ModelSerializer):
     senha = serializers.CharField(write_only=True)
