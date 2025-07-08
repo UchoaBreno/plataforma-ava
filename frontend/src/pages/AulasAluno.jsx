@@ -71,13 +71,15 @@ export default function AulasAluno() {
     }
   }
 
-  const CardPrioridade = ({ titulo, corBg, corBorda, lista }) => (
-    <div className={`rounded-xl border ${corBorda} ${corBg} dark:bg-gray-800 dark:border-gray-600 p-5 shadow`}>
-      <h2 className="mb-3 text-xl font-bold text-green-600 dark:text-green-400">{titulo}</h2>
+  const CardPrioridade = ({ titulo, lista, borda, bg }) => (
+    <div className={`flex flex-col justify-between rounded border ${borda} bg-white dark:bg-gray-800 dark:border-gray-600 p-4 shadow hover:shadow-md transition`}>
+      <h2 className="text-lg font-semibold text-green-800 dark:text-green-300 mb-2">
+        {titulo}
+      </h2>
       {lista.length === 0 ? (
-        <p className="text-gray-600 dark:text-gray-300">Nenhuma aula nesta prioridade.</p>
+        <p className="text-sm text-gray-600 dark:text-gray-300">Nenhuma aula nesta prioridade.</p>
       ) : (
-        <div className="max-h-[50vh] space-y-3 overflow-auto pr-1">
+        <div className="space-y-3 max-h-[50vh] overflow-auto pr-1">
           {lista.map(a => {
             let link = "#";
             if (a.arquivo) {
@@ -89,16 +91,18 @@ export default function AulasAluno() {
               <a
                 key={a.id}
                 href={link}
-                target={link !== "#" ? "_blank" : "_self"}
+                target="_blank"
                 rel="noopener noreferrer"
-                className="block rounded border border-white/10 bg-white/80 dark:bg-gray-700 dark:border-gray-600 px-4 py-3 hover:bg-white dark:hover:bg-gray-600"
+                className="block rounded border border-green-100 bg-green-50 dark:bg-gray-700 dark:border-gray-600 px-3 py-2 hover:bg-green-100 dark:hover:bg-gray-600"
               >
-                <p className="font-semibold text-green-800 dark:text-green-300">{a.titulo}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
+                <p className="font-medium text-green-900 dark:text-green-300 text-sm">
+                  {a.titulo}
+                </p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
                   Prazo: {dayjs(a.data).format("DD/MM/YYYY")}
                 </p>
                 {a.descricao && (
-                  <p className="mt-1 line-clamp-2 text-sm text-gray-700 dark:text-gray-400">
+                  <p className="text-xs mt-1 text-gray-700 dark:text-gray-400">
                     {a.descricao}
                   </p>
                 )}
@@ -114,7 +118,7 @@ export default function AulasAluno() {
     const [selAula, setSelAula] = useState("");
     const [selArquivo, setSelArquivo] = useState(null);
 
-    const enviar = async (e) => {
+  const enviar = async (e) => {
       e.preventDefault();
       if (!selAula || !selArquivo) {
         alert("Escolha aula e arquivo.");
@@ -138,54 +142,52 @@ export default function AulasAluno() {
     };
 
     return (
-      <div className="fixed inset-0 z-50 flex justify-end pt-6 pr-6">
+      <div className="fixed inset-0 z-50 flex justify-center items-center p-4">
         <div
           className="absolute inset-0 bg-black/40"
           onClick={() => setShowEntrega(false)}
         />
         <form
           onSubmit={enviar}
-          className="relative z-10 w-full max-w-sm rounded-lg bg-white dark:bg-gray-800 p-5 shadow-lg"
+          className="relative z-10 w-full max-w-sm rounded-lg bg-white dark:bg-gray-800 p-4 shadow-lg"
         >
-          <h3 className="mb-4 text-lg font-semibold text-green-700 dark:text-green-400">
+          <h3 className="text-green-700 dark:text-green-400 text-base font-medium mb-2">
             Entregar atividade
           </h3>
-          <label className="text-green-600 dark:text-green-300 mb-2 block text-sm font-medium">
-            Selecione a aula:
+          <label className="block text-sm text-green-700 dark:text-green-400 mb-1">
+            Aula:
           </label>
           <select
             value={selAula}
             onChange={(e) => setSelAula(e.target.value)}
-            className="mb-4 w-full rounded border px-3 py-2 dark:bg-gray-700 dark:text-white"
+            className="w-full border rounded px-2 py-1 mb-3 dark:bg-gray-700 dark:text-white"
             required
           >
             <option value="">-- escolha --</option>
             {[...alta, ...media, ...baixa].map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.titulo}
-              </option>
+              <option key={a.id} value={a.id}>{a.titulo}</option>
             ))}
           </select>
-          <label className="text-green-600 dark:text-green-300 mb-2 block text-sm font-medium">
-            Arquivo
+          <label className="block text-sm text-green-700 dark:text-green-400 mb-1">
+            Arquivo:
           </label>
           <input
             type="file"
             onChange={(e) => setSelArquivo(e.target.files[0] || null)}
-            className="mb-4 w-full"
+            className="mb-3"
             required
           />
           <div className="flex justify-end gap-2">
             <button
               type="button"
               onClick={() => setShowEntrega(false)}
-              className="rounded bg-gray-300 dark:bg-gray-600 px-3 py-1 hover:bg-gray-400 dark:hover:bg-gray-500"
+              className="px-3 py-1 rounded bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="rounded bg-green-500 px-4 py-1 font-medium text-white hover:bg-green-600"
+              className="px-4 py-1 rounded bg-green-600 text-white hover:bg-green-700"
             >
               Enviar
             </button>
@@ -196,35 +198,38 @@ export default function AulasAluno() {
   };
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <Sidebar isAluno />
-      <main className="ml-64 flex-1 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white p-6 relative">
-        <h1 className="mb-6 text-3xl font-bold text-green-600">Minhas Aulas</h1>
+      <main className="ml-64 flex-1 p-6 relative">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-green-600 dark:text-green-400">
+            Minhas Aulas
+          </h1>
+          <button
+            onClick={() => setShowEntrega(true)}
+            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          >
+            Entregar atividade
+          </button>
+        </div>
 
-        <button
-          onClick={() => setShowEntrega(true)}
-          className="fixed right-6 top-5 z-40 rounded-full bg-green-600 px-4 py-2 font-medium text-white shadow-lg hover:bg-green-700"
-        >
-          Entregar atividade
-        </button>
-
-        <div className="mb-3 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <CardPrioridade
             titulo="Alta prioridade (vence hoje)"
-            corBg="bg-red-50"
-            corBorda="border-red-300"
+            borda="border-red-300"
+            bg="bg-white"
             lista={alta}
           />
           <CardPrioridade
             titulo="Média prioridade (próx. 7 dias)"
-            corBg="bg-yellow-50"
-            corBorda="border-yellow-300"
+            borda="border-yellow-300"
+            bg="bg-white"
             lista={media}
           />
           <CardPrioridade
             titulo="Baixa prioridade (até 31 dias)"
-            corBg="bg-blue-50"
-            corBorda="border-blue-300"
+            borda="border-blue-300"
+            bg="bg-white"
             lista={baixa}
           />
         </div>

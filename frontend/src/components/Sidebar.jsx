@@ -50,21 +50,21 @@ export default function Sidebar({ isStaff = undefined, isAluno = undefined }) {
   };
 
   const alunoMenu = [
-    { path: "/", label: "Início", icon: <FaHome /> },
-    { path: "/aulas", label: "Aulas", icon: <FaBookOpen /> },
-    { path: "/quizzes", label: "Quizzes", icon: <FaPuzzlePiece /> },
-    { path: "/atividades", label: "Atividades", icon: <FaClipboardCheck /> },
-    { path: "/forum-aluno", label: "Fórum", icon: <FaComments /> },
-    { path: "/desempenho-aluno", label: "Desempenho", icon: <FaChartBar /> },
+    { path: "/", match: "/", label: "Início", icon: <FaHome /> },
+    { path: "/aulas", match: "/aulas", label: "Aulas", icon: <FaBookOpen /> },
+    { path: "/quizzes", match: "/quizzes", label: "Quizzes", icon: <FaPuzzlePiece /> },
+    { path: "/atividades", match: "/atividades", label: "Atividades", icon: <FaClipboardCheck /> },
+    { path: "/forum-aluno", match: "/forum-aluno", label: "Fórum", icon: <FaComments /> },
+    { path: "/desempenho-aluno", match: "/desempenho-aluno", label: "Desempenho", icon: <FaChartBar /> },
   ];
 
   const profMenu = [
-    { path: "/professor", label: "Início", icon: <FaHome /> },
-    { path: "/aulas-prof", label: "Aulas", icon: <FaBookOpen /> },
-    { path: "/quizzes", label: "Quizzes", icon: <FaPuzzlePiece /> },
-    { path: "/atividades", label: "Atividades", icon: <FaClipboardCheck /> },
-    { path: "/forum-professor", label: "Fórum", icon: <FaComments /> },
-    { path: "/desempenho-professor", label: "Desempenho", icon: <FaChartBar /> },
+    { path: "/professor", match: "/professor", label: "Início", icon: <FaHome /> },
+    { path: "/aulas-prof", match: "/aulas-prof", label: "Aulas", icon: <FaBookOpen /> },
+    { path: "/quizzes", match: "/quizzes", label: "Quizzes", icon: <FaPuzzlePiece /> },
+    { path: "/atividades", match: "/atividades", label: "Atividades", icon: <FaClipboardCheck /> },
+    { path: "/forum-professor", match: "/forum-professor", label: "Fórum", icon: <FaComments /> },
+    { path: "/desempenho-professor", match: "/desempenho-professor", label: "Desempenho", icon: <FaChartBar /> },
   ];
 
   const items = staff ? profMenu : alunoMenu;
@@ -92,39 +92,44 @@ export default function Sidebar({ isStaff = undefined, isAluno = undefined }) {
       </div>
 
       <nav className="flex-1 space-y-4 overflow-y-auto p-4">
-        {items.map(({ path, label, icon }) => (
-          <button
-            key={path + label}
-            onClick={() => {
-              navigate(path);
-              setMenuOpen(false);
-            }}
-            className={`flex w-full items-center gap-2 rounded px-4 py-2 text-left transition ${
-              location.pathname === path
-                ? "font-semibold text-green-500 bg-gray-800"
-                : "text-white hover:bg-gray-700"
-            }`}
-          >
-            {icon}
-            {label}
-          </button>
-        ))}
+        {items.map(({ path, match, label, icon }) => {
+          const active = location.pathname.startsWith(match);
+          return (
+            <button
+              key={path + label}
+              onClick={() => {
+                navigate(path);
+                setMenuOpen(false);
+              }}
+              className={`flex w-full items-center gap-2 rounded px-4 py-2 text-left transition ${
+                active
+                  ? "font-semibold text-green-500 bg-gray-800"
+                  : "text-white hover:bg-gray-700"
+              }`}
+            >
+              {icon}
+              {label}
+            </button>
+          );
+        })}
       </nav>
 
-      <div className="border-t border-gray-700 p-4 flex flex-col items-center">
-        <div className="relative w-16 h-16 mb-2">
+      <div
+        className="border-t border-gray-700 p-4 flex flex-col items-center"
+        onClick={() => fileInputRef.current.click()}
+      >
+        <div
+          className="relative w-16 h-16 mb-2 cursor-pointer group"
+          title="Alterar foto"
+        >
           <img
             src={fotoPerfil || "https://www.gravatar.com/avatar?d=mp&s=200"}
             alt="Perfil"
             className="w-16 h-16 rounded-full object-cover border-2 border-green-500"
           />
-          <button
-            onClick={() => fileInputRef.current.click()}
-            className="absolute bottom-0 right-0 bg-green-600 hover:bg-green-700 p-1 rounded-full text-white text-xs"
-            title="Alterar foto"
-          >
+          <div className="absolute bottom-0 right-0 bg-green-600 group-hover:bg-green-700 p-1 rounded-full text-white text-xs">
             <FaCamera />
-          </button>
+          </div>
           <input
             type="file"
             accept="image/*"
@@ -153,7 +158,6 @@ export default function Sidebar({ isStaff = undefined, isAluno = undefined }) {
 
   return (
     <>
-      {/* botão toggle mobile */}
       <button
         className="fixed top-4 left-4 z-50 lg:hidden bg-gray-900 p-2 rounded text-white"
         onClick={() => setMenuOpen(true)}
@@ -161,12 +165,10 @@ export default function Sidebar({ isStaff = undefined, isAluno = undefined }) {
         <FaBars />
       </button>
 
-      {/* Sidebar desktop */}
       <div className="hidden lg:flex fixed top-0 left-0 flex-col h-screen w-64 bg-gray-900 dark:bg-gray-800">
         <SidebarContent />
       </div>
 
-      {/* Sidebar mobile */}
       {menuOpen && (
         <div className="fixed top-0 left-0 z-50 flex flex-col h-screen w-64 bg-gray-900 dark:bg-gray-800 shadow-lg lg:hidden">
           <SidebarContent />
