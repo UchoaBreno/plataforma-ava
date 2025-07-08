@@ -1,4 +1,3 @@
-// src/pages/ResponderAtividades.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
@@ -39,43 +38,48 @@ export default function ResponderAtividades() {
 
     const intervalId = setInterval(fetchAtividades, 15000);
     return () => clearInterval(intervalId);
-  }, [token]);
+  }, [token, navigate]);
 
   const handleResponder = (id) => navigate(`/atividades/${id}/responder`);
 
   return (
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <Sidebar isAluno isStaff={false} />
-      <main className="ml-64 flex-1 p-6">
-        <h1 className="text-green-600 dark:text-green-400 text-3xl font-bold mb-6">
-          Atividades Recebidas
-        </h1>
+      <main className="ml-64 flex-1 p-4 sm:p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-400">
+            Atividades Recebidas
+          </h1>
+        </div>
 
         {atividades.length === 0 ? (
           <p className="text-gray-600 dark:text-gray-400">
             Nenhuma atividade disponível no momento.
           </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {atividades.map((atividade) => (
               <div
                 key={atividade.id}
                 onClick={() => handleResponder(atividade.id)}
-                className="bg-white dark:bg-gray-800 text-black dark:text-gray-100 rounded-lg p-4 border border-green-300 dark:border-green-600 shadow hover:shadow-md transition cursor-pointer"
+                className="flex flex-col justify-between rounded border border-green-300 bg-white dark:bg-gray-800 dark:border-green-600 p-4 shadow hover:shadow-md transition cursor-pointer"
               >
-                <h2 className="text-xl font-semibold text-green-800 dark:text-green-400">
-                  {atividade.titulo}
-                </h2>
-                <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-                  Prazo:{" "}
-                  {dayjs(atividade.data_entrega).format("DD/MM/YYYY")}{" "}
-                  {atividade.hora_entrega && (
-                    <>às {atividade.hora_entrega}</>
+                <div>
+                  <h2 className="text-lg font-semibold text-green-800 dark:text-green-300">
+                    {atividade.titulo}
+                  </h2>
+                  <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
+                    Prazo: {dayjs(atividade.data_entrega).format("DD/MM/YYYY")}{" "}
+                    {atividade.hora_entrega && (
+                      <>às {atividade.hora_entrega}</>
+                    )}
+                  </p>
+                  {atividade.descricao && (
+                    <p className="text-sm mt-1 text-gray-700 dark:text-gray-400 line-clamp-2">
+                      {atividade.descricao}
+                    </p>
                   )}
-                </p>
-                <p className="text-sm mt-1 text-gray-700 dark:text-gray-300 line-clamp-2">
-                  {atividade.descricao}
-                </p>
+                </div>
               </div>
             ))}
           </div>

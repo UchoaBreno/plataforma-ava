@@ -4,7 +4,6 @@ import dayjs from "dayjs";
 import axios from "axios";
 
 import Sidebar from "../components/Sidebar";
-import VideoCard from "../components/VideoCard";
 
 export default function Home() {
   const [username, setUsername] = useState("Usuário");
@@ -42,10 +41,10 @@ export default function Home() {
     async function fetchData() {
       try {
         const [aulasRes, entregasRes] = await Promise.all([
-          axios.get("http://127.0.0.1:8000/api/aulas/", {
+          axios.get("/api/aulas/", {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get("http://127.0.0.1:8000/api/entregas/", {
+          axios.get("/api/entregas/", {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
@@ -87,40 +86,17 @@ export default function Home() {
     fetchData();
   }, [alunoId]);
 
-  const demos = [
-    {
-      id: -1,
-      titulo: "Introdução à Biologia",
-      descricao: "Vídeo de amostra – introdução ao curso.",
-      thumb: "https://placehold.co/600x340?text=Biologia",
-    },
-    {
-      id: -2,
-      titulo: "História do Brasil",
-      descricao: "Conheça os principais fatos históricos.",
-      thumb: "https://placehold.co/600x340?text=História",
-    },
-    {
-      id: -3,
-      titulo: "Fundamentos de Matemática",
-      descricao: "Revisão de conceitos básicos.",
-      thumb: "https://placehold.co/600x340?text=Matemática",
-    },
-  ];
-
-  const pendentes = aulasSemana.length === 0 ? demos : aulasSemana;
-
   const renderLista = lista => (
     <div className="space-y-4">
       {lista.map(a => (
         <div
           key={a.id}
-          className="rounded border border-green-300 bg-green-50 dark:bg-gray-800 dark:border-green-600 p-4 shadow-sm"
+          className="rounded border border-green-300 bg-white dark:bg-gray-800 p-4 shadow"
         >
-          <h3 className="text-xl font-bold text-green-800 dark:text-green-400">{a.titulo}</h3>
-          <p className="mb-2 text-gray-700 dark:text-gray-300">{a.descricao}</p>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            📅 {a.data_postagem ? `Postada em ${dayjs(a.data_postagem).format("DD/MM/YYYY")}` : "Vídeo-amostra"}
+          <h3 className="text-lg font-semibold text-green-700 dark:text-green-400">{a.titulo}</h3>
+          <p className="text-sm text-gray-700 dark:text-gray-300">{a.descricao}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            📅 {a.data_postagem ? dayjs(a.data_postagem).format("DD/MM/YYYY") : ""}
           </p>
         </div>
       ))}
@@ -131,50 +107,58 @@ export default function Home() {
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
       <Sidebar isAluno />
 
-      <main role="main" className="ml-64 flex-1 p-6 relative">
-        <h1 className="mb-6 text-3xl font-bold text-green-600 dark:text-green-400">
+      <main className="ml-64 flex-1 p-4 sm:p-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400 mb-4">
           Página Inicial
         </h1>
 
-        <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
-          {[["hoje", "📅 Aulas de Hoje", aulasHoje],
-            ["semana", "🗓️ Aulas da Semana", aulasSemana],
-            ["mes", "📘 Aulas do Mês", aulasMes]].map(([key, titulo, lista]) => (
-              <div
-                key={key}
-                onClick={() => setModalAberto(key)}
-                className="cursor-pointer rounded-xl border border-green-300 bg-green-100 dark:bg-gray-800 dark:border-green-600 p-6 text-center shadow hover:shadow-md"
-              >
-                <h2 className="text-xl font-semibold text-green-800 dark:text-green-400">{titulo}</h2>
-                <p className="mt-2 text-gray-600 dark:text-gray-300">{lista.length} aula(s)</p>
-              </div>
-            ))}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+          {[
+            { key: "hoje", label: "Aulas de Hoje", lista: aulasHoje },
+            { key: "semana", label: "Aulas da Semana", lista: aulasSemana },
+            { key: "mes", label: "Aulas do Mês", lista: aulasMes },
+          ].map(({ key, label, lista }) => (
+            <button
+              key={key}
+              onClick={() => setModalAberto(key)}
+              className="rounded-lg border border-green-300 bg-white dark:bg-gray-800 p-4 text-left shadow hover:shadow-md"
+            >
+              <h2 className="text-lg font-bold text-green-700 dark:text-green-400">
+                {label}
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+                {lista.length} aula(s)
+              </p>
+            </button>
+          ))}
         </div>
 
-        <h2 className="mb-3 text-2xl font-semibold text-green-700 dark:text-green-400">
-          Aulas que você ainda não viu
+        <h2 className="text-xl font-semibold text-green-700 dark:text-green-400 mb-3">
+          Aulas Recentes
         </h2>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {pendentes.map(a => (
-            <VideoCard
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {(aulasSemana.length ? aulasSemana : aulasMes).map(a => (
+            <div
               key={a.id}
-              aula={a}
-              thumb={a.thumb}
-              onAssistir={() => (window.location.href = "/aulas")}
-            />
+              className="rounded border border-green-300 bg-white dark:bg-gray-800 p-3 shadow"
+            >
+              <h3 className="font-semibold text-green-700 dark:text-green-400">{a.titulo}</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">{a.descricao}</p>
+            </div>
           ))}
         </div>
 
         {modalAberto && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2">
-            <div className="relative w-full max-w-2xl rounded-lg bg-white dark:bg-gray-800 p-6 shadow-xl">
+            <div className="relative w-full max-w-md rounded-lg bg-white dark:bg-gray-800 p-4 shadow-lg">
               <button
                 onClick={() => setModalAberto(null)}
-                className="absolute right-4 top-3 text-lg text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
+                className="absolute top-2 right-2 text-gray-500 hover:text-black dark:hover:text-white"
               >
                 ✖
               </button>
-              <h2 className="mb-4 text-2xl font-bold text-green-700 dark:text-green-400">
+              <h2 className="text-xl font-bold text-green-700 dark:text-green-400 mb-3">
                 {modalAberto === "hoje" && "Aulas de Hoje"}
                 {modalAberto === "semana" && "Aulas da Semana"}
                 {modalAberto === "mes" && "Aulas do Mês"}

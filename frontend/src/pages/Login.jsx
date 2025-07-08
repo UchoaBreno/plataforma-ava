@@ -25,16 +25,26 @@ export default function Login() {
       const userFromBackend = decoded.username;
 
       localStorage.setItem("access", access);
-      localStorage.setItem("refresh", refresh);
       localStorage.setItem("username", userFromBackend);
       localStorage.setItem("is_staff", JSON.stringify(isStaff));
       localStorage.setItem("is_superuser", JSON.stringify(isSuperuser));
       localStorage.removeItem("fotoPerfil");
 
-      // 🔷 PRIORIDADE: superuser > staff > aluno
+      if (souAdmin) {
+        if (isSuperuser) {
+          localStorage.setItem("refresh", refresh);
+          window.location.href = "/admin-dashboard";
+        } else {
+          localStorage.removeItem("refresh");
+          setErroLogin("Você não é um administrador.");
+        }
+        return;
+      }
+
+      // login normal
+      localStorage.setItem("refresh", refresh);
+
       if (isSuperuser) {
-        window.location.href = "/admin-dashboard";
-      } else if (souAdmin && isStaff) {
         window.location.href = "/admin-dashboard";
       } else if (isStaff) {
         window.location.href = "/professor";
@@ -80,6 +90,14 @@ export default function Login() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+
+          <p
+          className="text-sm text-blue-600 hover:underline text-center cursor-pointer"
+          onClick={() => window.location.href = "/recuperar-senha"}
+        >
+          Esqueceu sua senha?
+        </p>
+
 
         <label className="flex items-center mb-4 text-black dark:text-white">
           <input

@@ -8,8 +8,7 @@ export default function ForumAluno() {
   const [novoComentario, setNovoComentario] = useState("");
   const [respostaAtiva, setRespostaAtiva] = useState(null);
   const [novaResposta, setNovaResposta] = useState("");
-  const [editandoId, setEditandoId] = useState(null);
-  const [textoEditado, setTextoEditado] = useState("");
+  const [editando, setEditando] = useState({ id: null, texto: "", isResposta: false, comentarioPaiId: null });
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
 
@@ -63,10 +62,10 @@ export default function ForumAluno() {
     }
   };
 
-  const apagarComentario = async (id, isResposta = false, comentarioPaiId = null) => {
+  const apagar = async (id, isResposta = false, comentarioPaiId = null) => {
     try {
       const url = isResposta
-        ? `forum/${comentarioPaiId}/resposta/${id}/`
+        ? `forum/respostas/${id}/`
         : `forum/${id}/`;
       await axiosInstance.delete(url);
       fetchComentarios();
@@ -75,19 +74,19 @@ export default function ForumAluno() {
     }
   };
 
-  const iniciarEdicao = (id, texto) => {
-    setEditandoId(id);
-    setTextoEditado(texto);
+  const iniciarEdicao = (id, texto, isResposta = false, comentarioPaiId = null) => {
+    setEditando({ id, texto, isResposta, comentarioPaiId });
   };
 
-  const salvarEdicao = async (id, isResposta = false, comentarioPaiId = null) => {
+  const salvarEdicao = async () => {
+    const { id, texto, isResposta } = editando;
+    if (!texto.trim()) return;
     try {
       const url = isResposta
-        ? `forum/${comentarioPaiId}/resposta/${id}/`
+        ? `forum/respostas/${id}/`
         : `forum/${id}/`;
-      await axiosInstance.put(url, { texto: textoEditado });
-      setEditandoId(null);
-      setTextoEditado("");
+      await axiosInstance.put(url, { texto });
+      setEditando({ id: null, texto: "", isResposta: false, comentarioPaiId: null });
       fetchComentarios();
     } catch (err) {
       console.error("Erro ao editar:", err);
@@ -125,18 +124,15 @@ export default function ForumAluno() {
         <div key={comentario.id} className="mb-6 bg-white dark:bg-gray-800 p-3 sm:p-4 rounded shadow-sm">
           <p className="font-semibold break-words">{comentario.autor_nome} comentou:</p>
 
-          {editandoId === comentario.id ? (
+          {editando.id === comentario.id && !editando.isResposta ? (
             <div className="flex flex-col sm:flex-row gap-2 mt-1">
               <input
                 type="text"
-                value={textoEditado}
-                onChange={(e) => setTextoEditado(e.target.value)}
+                value={editando.texto}
+                onChange={(e) => setEditando({ ...editando, texto: e.target.value })}
                 className="flex-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 rounded p-1 text-sm text-black dark:text-gray-100"
               />
-              <button
-                onClick={() => salvarEdicao(comentario.id)}
-                className="text-blue-600 dark:text-blue-400 text-xs"
-              >
+              <button onClick={salvarEdicao} className="text-blue-600 dark:text-blue-400 text-xs">
                 Salvar
               </button>
             </div>
@@ -160,7 +156,7 @@ export default function ForumAluno() {
                   Editar
                 </button>
                 <button
-                  onClick={() => apagarComentario(comentario.id)}
+                  onClick={() => apagar(comentario.id)}
                   className="text-red-700 dark:text-red-400"
                 >
                   Apagar
@@ -191,18 +187,15 @@ export default function ForumAluno() {
             {comentario.respostas.map((resposta) => (
               <div key={resposta.id} className="text-xs text-gray-800 dark:text-gray-300">
                 <span className="font-semibold">{resposta.autor_nome}</span> respondeu:
-                {editandoId === resposta.id ? (
+                {editando.id === resposta.id && editando.isResposta ? (
                   <div className="flex flex-col sm:flex-row gap-2 mt-1">
                     <input
                       type="text"
-                      value={textoEditado}
-                      onChange={(e) => setTextoEditado(e.target.value)}
+                      value={editando.texto}
+                      onChange={(e) => setEditando({ ...editando, texto: e.target.value })}
                       className="flex-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 rounded p-1 text-xs text-black dark:text-gray-100"
                     />
-                    <button
-                      onClick={() => salvarEdicao(resposta.id, true, comentario.id)}
-                      className="text-blue-600 dark:text-blue-400 text-xs"
-                    >
+                    <button onClick={salvarEdicao} className="text-blue-600 dark:text-blue-400 text-xs">
                       Salvar
                     </button>
                   </div>
@@ -212,13 +205,13 @@ export default function ForumAluno() {
                 {resposta.autor_nome === username && (
                   <div className="flex flex-wrap gap-2 ml-4 mt-1 text-xs">
                     <button
-                      onClick={() => iniciarEdicao(resposta.id, resposta.texto)}
+                      onClick={() => iniciarEdicao(resposta.id, resposta.texto, true)}
                       className="text-blue-600 dark:text-blue-400"
                     >
                       Editar
                     </button>
                     <button
-                      onClick={() => apagarComentario(resposta.id, true, comentario.id)}
+                      onClick={() => apagar(resposta.id, true)}
                       className="text-red-600 dark:text-red-400"
                     >
                       Apagar
