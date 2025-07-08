@@ -1,14 +1,25 @@
 import axios from "axios";
 
-// 🔷 Aqui você troca a baseURL para o domínio do Render:
+// 🔷 Instância básica com baseURL correta
 const axiosInstance = axios.create({
   baseURL: "https://plataforma-ava2.onrender.com/api/",
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem("access")}`,
-  },
 });
 
-// 🔷 Atualiza token em caso de 401
+// 🔷 Sempre adiciona o token mais recente antes de cada requisição
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("access");
+    if (token) {
+      config.headers["Authorization"] = `Bearer ${token}`;
+    } else {
+      delete config.headers["Authorization"];
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// 🔷 Redireciona para login em caso de 401
 axiosInstance.interceptors.response.use(
   (res) => res,
   (err) => {
