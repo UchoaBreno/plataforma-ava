@@ -9,6 +9,8 @@ SECRET_KEY = 'django-insecure-)vw9ds9egj=ov(j-=sqy!*pe4(g1wrv&dg8e082!u7*dx4wt^k
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    'plataforma-ava.onrender.com',
+    'www.plataforma-ava.onrender.com',
     'plataforma-ava2.onrender.com',
     'www.plataforma-ava2.onrender.com',
     '192.168.0.3',
@@ -92,7 +94,26 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # 🔷 Configurações CORS
+CORS_ALLOW_ALL_ORIGINS = False
+
+CORS_ALLOWED_ORIGINS = [
+    "https://plataforma-ava.onrender.com",
+    "https://www.plataforma-ava.onrender.com",
+    "https://plataforma-ava2.onrender.com",
+    "https://www.plataforma-ava2.onrender.com",
+]
+
 CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS"
+]
+
 CORS_ALLOW_HEADERS = [
     "accept",
     "accept-encoding",
@@ -103,17 +124,6 @@ CORS_ALLOW_HEADERS = [
     "user-agent",
     "x-csrftoken",
     "x-requested-with",
-]
-CORS_ALLOW_METHODS = [
-    "DELETE",
-    "GET",
-    "OPTIONS",
-    "PATCH",
-    "POST",
-    "PUT",
-]
-CORS_ALLOWED_ORIGINS = [
-    "https://plataforma-ava2.onrender.com",   # ✅ frontend correto
 ]
 
 MEDIA_URL = '/media/'
