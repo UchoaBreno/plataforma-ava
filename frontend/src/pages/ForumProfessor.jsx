@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "../utils/axiosInstance";
 import Sidebar from "../components/Sidebar";
 
 export default function ForumProfessor() {
@@ -12,22 +12,27 @@ export default function ForumProfessor() {
   const [editandoId, setEditandoId] = useState(null);
   const [textoEditado, setTextoEditado] = useState("");
   const [username, setUsername] = useState("");
-  const token = localStorage.getItem("access");
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (token) {
+    const token = localStorage.getItem("access");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+    try {
       const decoded = jwtDecode(token);
       setUsername(decoded.username || decoded.name || "Usuário");
-      fetchComentarios();
+    } catch {
+      navigate("/login");
+      return;
     }
-  }, []);
+    fetchComentarios();
+  }, [navigate]);
 
   const fetchComentarios = async () => {
     try {
-      const { data } = await axios.get("http://127.0.0.1:8000/api/forum/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await axiosInstance.get("forum/");
       setComentarios(data);
     } catch (err) {
       console.error("Erro ao carregar comentários:", err);
@@ -37,11 +42,7 @@ export default function ForumProfessor() {
   const adicionarComentario = async () => {
     if (!novoComentario.trim()) return;
     try {
-      await axios.post(
-        "http://127.0.0.1:8000/api/forum/",
-        { texto: novoComentario },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axiosInstance.post("forum/", { texto: novoComentario });
       setNovoComentario("");
       fetchComentarios();
     } catch (err) {
@@ -52,11 +53,9 @@ export default function ForumProfessor() {
   const enviarResposta = async (comentarioId) => {
     if (!novaResposta.trim()) return;
     try {
-      await axios.post(
-        `http://127.0.0.1:8000/api/forum/${comentarioId}/responder/`,
-        { texto: novaResposta },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axiosInstance.post(`forum/${comentarioId}/responder/`, {
+        texto: novaResposta,
+      });
       setNovaResposta("");
       setRespostaAtiva(null);
       fetchComentarios();
@@ -68,11 +67,9 @@ export default function ForumProfessor() {
   const apagarComentario = async (id, isResposta = false, comentarioPaiId = null) => {
     try {
       const url = isResposta
-        ? `http://127.0.0.1:8000/api/forum/${comentarioPaiId}/resposta/${id}/`
-        : `http://127.0.0.1:8000/api/forum/${id}/`;
-      await axios.delete(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        ? `forum/${comentarioPaiId}/resposta/${id}/`
+        : `forum/${id}/`;
+      await axiosInstance.delete(url);
       fetchComentarios();
     } catch (err) {
       console.error("Erro ao apagar:", err);
@@ -87,13 +84,9 @@ export default function ForumProfessor() {
   const salvarEdicao = async (id, isResposta = false, comentarioPaiId = null) => {
     try {
       const url = isResposta
-        ? `http://127.0.0.1:8000/api/forum/${comentarioPaiId}/resposta/${id}/`
-        : `http://127.0.0.1:8000/api/forum/${id}/`;
-      await axios.put(
-        url,
-        { texto: textoEditado },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+        ? `forum/${comentarioPaiId}/resposta/${id}/`
+        : `forum/${id}/`;
+      await axiosInstance.put(url, { texto: textoEditado });
       setEditandoId(null);
       setTextoEditado("");
       fetchComentarios();
@@ -105,7 +98,7 @@ export default function ForumProfessor() {
   return (
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <Sidebar isStaff />
-      <main className="ml-64 flex-1 p-8 max-w-3xl mx-auto">
+      <main className="ml-64 flex-1 p-8 max-w-3xl mx-auto relative">
         <button
           className="absolute top-4 right-4 text-sm bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 px-4 py-2 rounded"
           onClick={() => navigate(-1)}
@@ -114,7 +107,6 @@ export default function ForumProfessor() {
         </button>
 
         <h1 className="text-3xl font-bold mb-4">Fórum</h1>
-        <h2 className="text-xl font-semibold mb-2">Comentários</h2>
 
         <div className="flex gap-2 mb-4">
           <input
@@ -134,7 +126,7 @@ export default function ForumProfessor() {
 
         {comentarios.map((comentario) => (
           <div key={comentario.id} className="mb-6">
-            <p className="font-semibold">{comentario.autor_nome} comentou</p>
+            <p className="font-semibold">{comentario.autor_nome} comentou:</p>
             {editandoId === comentario.id ? (
               <>
                 <input

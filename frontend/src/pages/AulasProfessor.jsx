@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import dayjs from "dayjs";
 import Sidebar from "../components/Sidebar";
+import axiosInstance from "../utils/axiosInstance";
 
 // -------------------- Modal de Entregas --------------------
 function DeliveriesModal({ student, deliveries, onClose }) {
@@ -22,11 +22,12 @@ function DeliveriesModal({ student, deliveries, onClose }) {
                 <div>
                   <p className="font-medium">{e.aula_titulo}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Enviado em {dayjs(e.enviado_em).format("DD/MM/YYYY HH:mm")}
+                    Enviado em{" "}
+                    {dayjs(e.data_envio).format("DD/MM/YYYY HH:mm")}
                   </p>
                 </div>
                 <a
-                  href={`http://127.0.0.1:8000${e.arquivo}`}
+                  href={e.arquivo.startsWith("http") ? e.arquivo : `https://plataforma-ava2.onrender.com${e.arquivo}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-green-600 dark:text-green-400 underline text-sm"
@@ -51,17 +52,13 @@ function DeliveriesModal({ student, deliveries, onClose }) {
 
 // -------------------- Página AulasProfessor --------------------
 export default function AulasProfessor() {
-  const token = localStorage.getItem("access");
-
   const [alunos, setAlunos] = useState([]);
   const [entregas, setEntregas] = useState([]);
   const [modalStudent, setModalStudent] = useState(null);
 
   const fetchEntregas = async () => {
     try {
-      const { data } = await axios.get("http://127.0.0.1:8000/api/entregas/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await axiosInstance.get("entregas/");
       setEntregas(data);
     } catch (err) {
       console.error("Erro ao buscar entregas:", err);
@@ -69,16 +66,8 @@ export default function AulasProfessor() {
   };
 
   useEffect(() => {
-    if (!token) {
-      console.warn("Token ausente. Redirecionando para login.");
-      window.location.href = "/login";
-      return;
-    }
-
-    axios
-      .get("http://127.0.0.1:8000/api/alunos/", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    axiosInstance
+      .get("alunos/")
       .then(({ data }) => {
         setAlunos(
           data.map((u) => ({ id: u.id, nome: u.first_name || u.username }))
@@ -92,7 +81,7 @@ export default function AulasProfessor() {
     fetchEntregas();
     const interval = setInterval(fetchEntregas, 5000);
     return () => clearInterval(interval);
-  }, [token]);
+  }, []);
 
   const entregasPorAluno = (alunoId) =>
     entregas.filter((e) => Number(e.aluno) === Number(alunoId));
@@ -103,10 +92,10 @@ export default function AulasProfessor() {
 
       <main className="ml-64 flex-1 p-6 relative">
         <h1 className="mb-6 text-3xl font-bold text-green-600 dark:text-green-400">
-          Minhas Aulas
+          Entregas dos Alunos
         </h1>
 
-        <div className="space-y-3 rounded-xl border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-gray-800 p-4 shadow max-w-md mx-auto">
+        <div className="space-y-3 rounded-xl border border-green-300 dark:border-green-600 bg-green-50 dark:bg-gray-800 p-4 shadow max-w-md mx-auto">
           <h2 className="mb-2 text-lg font-bold">Alunos</h2>
           {alunos.length === 0 ? (
             <p className="text-gray-600 dark:text-gray-300">

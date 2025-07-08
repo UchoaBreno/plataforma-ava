@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axiosInstance from "../utils/axiosInstance";
 
 export default function CriarAulaModal({ isOpen, onClose, onSaved }) {
   const [titulo, setTitulo] = useState("");
@@ -30,26 +30,18 @@ export default function CriarAulaModal({ isOpen, onClose, onSaved }) {
     e.preventDefault();
     if (loading) return;
 
-    const token = localStorage.getItem("access");
-    if (!token) {
-      alert("Você não está autenticado. Faça login novamente.");
-      return;
-    }
-
     const formData = new FormData();
     formData.append("titulo", titulo);
     formData.append("descricao", descricao);
-    formData.append("data_postagem", dataPostagem);
-    formData.append("agendada", agendar);
+    formData.append("data", dataPostagem);
     if (agendar && dataAgendada) formData.append("data_agendada", dataAgendada);
     if (linkReuniao) formData.append("link_reuniao", linkReuniao);
-    if (slide) formData.append("slide", slide);
+    if (slide) formData.append("arquivo", slide);
 
     try {
       setLoading(true);
-      const res = await axios.post("http://127.0.0.1:8000/api/aulas/", formData, {
+      const res = await axiosInstance.post("aulas/", formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       });

@@ -1,14 +1,11 @@
 import React, { useState } from "react";
-import axios from "axios";
+import axiosInstance from "../utils/axiosInstance";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 
 export default function EditAulaModal({ aula, onClose, onSaved, onDeleted }) {
-  const token = localStorage.getItem("access");
-  const auth = { headers: { Authorization: `Bearer ${token}` } };
-
   const [titulo, setTitulo] = useState(aula.titulo);
   const [descricao, setDescricao] = useState(aula.descricao || "");
-  const [dataPost, setDataPost] = useState(aula.data_postagem);
+  const [dataPost, setDataPost] = useState(aula.data);
   const [slide, setSlide] = useState(null);
   const [showDel, setShowDel] = useState(false);
 
@@ -17,17 +14,18 @@ export default function EditAulaModal({ aula, onClose, onSaved, onDeleted }) {
     const fd = new FormData();
     fd.append("titulo", titulo);
     fd.append("descricao", descricao);
-    fd.append("data_postagem", dataPost);
-    if (slide) fd.append("slide", slide);
+    fd.append("data", dataPost);
+    if (slide) fd.append("arquivo", slide);
 
     try {
-      await axios.patch(
-        `http://127.0.0.1:8000/api/aulas/${aula.id}/`,
-        fd,
-        auth
-      );
+      await axiosInstance.patch(`aulas/${aula.id}/`, fd, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       onSaved();
-    } catch {
+    } catch (err) {
+      console.error("Erro ao salvar alterações:", err.response?.data || err);
       alert("Erro ao salvar alterações");
     }
   };
@@ -102,13 +100,11 @@ export default function EditAulaModal({ aula, onClose, onSaved, onDeleted }) {
           onCancel={() => setShowDel(false)}
           onConfirm={async () => {
             try {
-              await axios.delete(
-                `http://127.0.0.1:8000/api/aulas/${aula.id}/`,
-                auth
-              );
+              await axiosInstance.delete(`aulas/${aula.id}/`);
               setShowDel(false);
               onDeleted();
-            } catch {
+            } catch (err) {
+              console.error("Erro ao apagar:", err.response?.data || err);
               alert("Erro ao apagar");
             }
           }}

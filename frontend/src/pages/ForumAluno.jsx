@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../utils/axiosInstance";
 
 export default function ForumAluno() {
   const [comentarios, setComentarios] = useState([]);
@@ -11,22 +11,27 @@ export default function ForumAluno() {
   const [editandoId, setEditandoId] = useState(null);
   const [textoEditado, setTextoEditado] = useState("");
   const [username, setUsername] = useState("");
-  const token = localStorage.getItem("access");
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (token) {
+    const token = localStorage.getItem("access");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+    try {
       const decoded = jwtDecode(token);
       setUsername(decoded.username || decoded.name || "Usuário");
-      fetchComentarios();
+    } catch {
+      navigate("/login");
+      return;
     }
-  }, []);
+    fetchComentarios();
+  }, [navigate]);
 
   const fetchComentarios = async () => {
     try {
-      const { data } = await axios.get("http://127.0.0.1:8000/api/forum/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await axiosInstance.get("forum/");
       setComentarios(data);
     } catch (err) {
       console.error("Erro ao carregar comentários:", err);
@@ -36,11 +41,7 @@ export default function ForumAluno() {
   const adicionarComentario = async () => {
     if (!novoComentario.trim()) return;
     try {
-      await axios.post(
-        "http://127.0.0.1:8000/api/forum/",
-        { texto: novoComentario },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axiosInstance.post("forum/", { texto: novoComentario });
       setNovoComentario("");
       fetchComentarios();
     } catch (err) {
@@ -51,11 +52,9 @@ export default function ForumAluno() {
   const enviarResposta = async (comentarioId) => {
     if (!novaResposta.trim()) return;
     try {
-      await axios.post(
-        `http://127.0.0.1:8000/api/forum/${comentarioId}/responder/`,
-        { texto: novaResposta },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axiosInstance.post(`forum/${comentarioId}/responder/`, {
+        texto: novaResposta,
+      });
       setNovaResposta("");
       setRespostaAtiva(null);
       fetchComentarios();
@@ -67,11 +66,9 @@ export default function ForumAluno() {
   const apagarComentario = async (id, isResposta = false, comentarioPaiId = null) => {
     try {
       const url = isResposta
-        ? `http://127.0.0.1:8000/api/forum/${comentarioPaiId}/resposta/${id}/`
-        : `http://127.0.0.1:8000/api/forum/${id}/`;
-      await axios.delete(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        ? `forum/${comentarioPaiId}/resposta/${id}/`
+        : `forum/${id}/`;
+      await axiosInstance.delete(url);
       fetchComentarios();
     } catch (err) {
       console.error("Erro ao apagar:", err);
@@ -86,13 +83,9 @@ export default function ForumAluno() {
   const salvarEdicao = async (id, isResposta = false, comentarioPaiId = null) => {
     try {
       const url = isResposta
-        ? `http://127.0.0.1:8000/api/forum/${comentarioPaiId}/resposta/${id}/`
-        : `http://127.0.0.1:8000/api/forum/${id}/`;
-      await axios.put(
-        url,
-        { texto: textoEditado },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+        ? `forum/${comentarioPaiId}/resposta/${id}/`
+        : `forum/${id}/`;
+      await axiosInstance.put(url, { texto: textoEditado });
       setEditandoId(null);
       setTextoEditado("");
       fetchComentarios();
@@ -111,7 +104,6 @@ export default function ForumAluno() {
       </button>
 
       <h1 className="text-2xl font-bold mb-4">Fórum</h1>
-      <h2 className="text-xl font-semibold mb-2">Comentários</h2>
 
       <div className="flex gap-2 mb-4">
         <input
@@ -131,7 +123,7 @@ export default function ForumAluno() {
 
       {comentarios.map((comentario) => (
         <div key={comentario.id} className="mb-6">
-          <p className="font-semibold">{comentario.autor_nome} comentou</p>
+          <p className="font-semibold">{comentario.autor_nome} comentou:</p>
           {editandoId === comentario.id ? (
             <>
               <input

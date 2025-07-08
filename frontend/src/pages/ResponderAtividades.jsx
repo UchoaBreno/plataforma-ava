@@ -1,10 +1,10 @@
 // src/pages/ResponderAtividades.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import dayjs from "dayjs";
 import Sidebar from "../components/Sidebar";
+import axiosInstance from "../utils/axiosInstance";
 
 export default function ResponderAtividades() {
   const navigate = useNavigate();
@@ -14,22 +14,11 @@ export default function ResponderAtividades() {
   const token = localStorage.getItem("access");
 
   const fetchAtividades = async () => {
-    if (!token) return;
-
     try {
-      const response = await axios.get(
-        "http://127.0.0.1:8000/api/atividades-aluno/",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        }
-      );
-      setAtividades(response.data);
-    } catch (error) {
-      console.error("Erro ao buscar atividades:", error);
+      const { data } = await axiosInstance.get("atividades-aluno/");
+      setAtividades(data);
+    } catch (err) {
+      console.error("Erro ao buscar atividades:", err);
     }
   };
 
@@ -46,9 +35,9 @@ export default function ResponderAtividades() {
       setIsStaff(false);
     }
 
-    fetchAtividades(); // Carrega inicialmente
-    const intervalId = setInterval(fetchAtividades, 15000); // Atualiza a cada 15s
+    fetchAtividades();
 
+    const intervalId = setInterval(fetchAtividades, 15000);
     return () => clearInterval(intervalId);
   }, [token]);
 
@@ -56,7 +45,7 @@ export default function ResponderAtividades() {
 
   return (
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-      <Sidebar isStaff={false} isAluno={true} />
+      <Sidebar isAluno isStaff={false} />
       <main className="ml-64 flex-1 p-6">
         <h1 className="text-green-600 dark:text-green-400 text-3xl font-bold mb-6">
           Atividades Recebidas
@@ -72,16 +61,19 @@ export default function ResponderAtividades() {
               <div
                 key={atividade.id}
                 onClick={() => handleResponder(atividade.id)}
-                className="bg-white dark:bg-gray-800 text-black dark:text-gray-100 rounded p-4 border border-green-300 dark:border-green-600 shadow hover:shadow-md transition cursor-pointer"
+                className="bg-white dark:bg-gray-800 text-black dark:text-gray-100 rounded-lg p-4 border border-green-300 dark:border-green-600 shadow hover:shadow-md transition cursor-pointer"
               >
                 <h2 className="text-xl font-semibold text-green-800 dark:text-green-400">
                   {atividade.titulo}
                 </h2>
                 <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
                   Prazo:{" "}
-                  {dayjs(atividade.data_entrega).format("DD/MM/YYYY")}
+                  {dayjs(atividade.data_entrega).format("DD/MM/YYYY")}{" "}
+                  {atividade.hora_entrega && (
+                    <>às {atividade.hora_entrega}</>
+                  )}
                 </p>
-                <p className="text-sm mt-1 text-gray-700 dark:text-gray-300">
+                <p className="text-sm mt-1 text-gray-700 dark:text-gray-300 line-clamp-2">
                   {atividade.descricao}
                 </p>
               </div>

@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import dayjs from "dayjs";
+import axiosInstance from "../utils/axiosInstance";
 import EditAulaModal from "./EditAulaModal";
 
 export default function GerenciarAulasModal({ isOpen, onClose }) {
-  const token = localStorage.getItem("access");
-
   const [aba, setAba] = useState("listar");
   const [aulas, setAulas] = useState([]);
   const [editAula, setEditAula] = useState(null);
@@ -18,9 +16,7 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
 
   const recarregarAulas = async () => {
     try {
-      const { data } = await axios.get("http://127.0.0.1:8000/api/aulas/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await axiosInstance.get("aulas/");
       setAulas(data);
     } catch {
       console.error("Erro ao buscar aulas.");
@@ -37,9 +33,7 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
     if (slide) fd.append("arquivo", slide);
 
     try {
-      await axios.post("http://127.0.0.1:8000/api/aulas/", fd, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axiosInstance.post("aulas/", fd);
       alert("Aula publicada!");
       recarregarAulas();
       setAba("listar");
@@ -48,7 +42,8 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
       setData("");
       setHora("");
       setSlide(null);
-    } catch {
+    } catch (err) {
+      console.error("Erro ao publicar aula:", err.response?.data || err);
       alert("Erro ao publicar aula.");
     }
   };
@@ -56,9 +51,7 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
   const apagarAula = async (id) => {
     if (!window.confirm("Apagar esta aula?")) return;
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/aulas/${id}/`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axiosInstance.delete(`aulas/${id}/`);
       recarregarAulas();
     } catch {
       alert("Erro ao apagar aula.");
@@ -66,9 +59,8 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
   };
 
   useEffect(() => {
-    if (!token) return;
     recarregarAulas();
-  }, [token]);
+  }, []);
 
   if (!isOpen) return null;
 

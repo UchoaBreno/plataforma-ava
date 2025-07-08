@@ -1,22 +1,16 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import Sidebar from "../components/Sidebar";
+import axiosInstance from "../utils/axiosInstance";
 
 export default function CriarQuiz() {
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [arquivo, setArquivo] = useState(null);
   const [link, setLink] = useState("");
-  const token = localStorage.getItem("access");
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
-    if (!token) {
-      alert("Sessão expirada. Faça login novamente.");
-      navigate("/login");
-      return;
-    }
-
     const formData = new FormData();
     formData.append("title", titulo);
     formData.append("description", descricao);
@@ -24,74 +18,83 @@ export default function CriarQuiz() {
     if (link) formData.append("link_interativo", link);
 
     try {
-      await axios.post("http://127.0.0.1:8000/api/quizzes/", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
+      await axiosInstance.post("quizzes/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
+      alert("Quiz criado com sucesso!");
       navigate("/quizzes");
     } catch (err) {
-      if (err.response?.status === 401) {
-        alert("Token expirado ou inválido. Faça login novamente.");
-        localStorage.removeItem("access");
-        navigate("/login");
-      } else {
-        console.error("Erro ao criar quiz:", err);
-      }
+      console.error("Erro ao criar quiz:", err);
+      alert("Ocorreu um erro ao criar o quiz. Verifique os dados e tente novamente.");
     }
   };
 
   return (
-    <div className="p-6 ml-64 text-white relative">
-      {/* Botão de voltar */}
-      <button
-        onClick={() => navigate(-1)}
-        className="absolute top-4 right-4 text-sm bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded"
-      >
-        Voltar
-      </button>
+    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
+      <Sidebar isStaff />
 
-      <h1 className="text-2xl font-bold text-green-400 mb-4">Criar Novo Quiz</h1>
+      <main className="ml-64 flex-1 p-6 relative">
+        {/* Botão de voltar */}
+        <button
+          onClick={() => navigate(-1)}
+          className="absolute top-4 right-4 text-sm bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-black dark:text-gray-100 px-4 py-2 rounded"
+        >
+          Voltar
+        </button>
 
-      <label className="block mb-1 text-sm">Título</label>
-      <input
-        value={titulo}
-        onChange={(e) => setTitulo(e.target.value)}
-        className="w-full p-2 mb-4 rounded text-black"
-        placeholder="Digite o título"
-      />
+        <h1 className="text-3xl font-bold text-green-600 dark:text-green-400 mb-6">
+          Criar Novo Quiz
+        </h1>
 
-      <label className="block mb-1 text-sm">Descrição</label>
-      <textarea
-        value={descricao}
-        onChange={(e) => setDescricao(e.target.value)}
-        className="w-full p-2 mb-4 rounded text-black"
-        placeholder="Descrição do quiz"
-      />
+        <div className="max-w-xl space-y-4">
+          <div>
+            <label className="block mb-1 text-sm">Título</label>
+            <input
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              className="w-full p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-gray-100"
+              placeholder="Digite o título"
+            />
+          </div>
 
-      <label className="block mb-1 text-sm">Arquivo (PDF, imagem...)</label>
-      <input
-        type="file"
-        onChange={(e) => setArquivo(e.target.files[0])}
-        className="w-full mb-4 text-black"
-      />
+          <div>
+            <label className="block mb-1 text-sm">Descrição</label>
+            <textarea
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
+              className="w-full p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-gray-100"
+              placeholder="Descrição do quiz"
+            />
+          </div>
 
-      <label className="block mb-1 text-sm">Link Interativo</label>
-      <input
-        type="url"
-        value={link}
-        onChange={(e) => setLink(e.target.value)}
-        className="w-full p-2 mb-4 rounded text-black"
-        placeholder="https://exemplo.com/jogo"
-      />
+          <div>
+            <label className="block mb-1 text-sm">Arquivo (PDF, imagem...)</label>
+            <input
+              type="file"
+              onChange={(e) => setArquivo(e.target.files[0])}
+              className="w-full text-black dark:text-gray-100"
+            />
+          </div>
 
-      <button
-        onClick={handleSubmit}
-        className="bg-green-600 hover:bg-green-700 text-white py-2 px-6 rounded"
-      >
-        Criar Quiz
-      </button>
+          <div>
+            <label className="block mb-1 text-sm">Link Interativo</label>
+            <input
+              type="url"
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+              className="w-full p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-gray-100"
+              placeholder="https://exemplo.com/jogo"
+            />
+          </div>
+
+          <button
+            onClick={handleSubmit}
+            className="bg-green-600 hover:bg-green-700 text-white py-2 px-6 rounded"
+          >
+            Criar Quiz
+          </button>
+        </div>
+      </main>
     </div>
   );
 }

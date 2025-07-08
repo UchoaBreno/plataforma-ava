@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+import axiosInstance from "../utils/axiosInstance";
 import Sidebar from "../components/Sidebar";
 import GerenciarAulasModal from "../components/GerenciarAulasModal";
 import VideoCard from "../components/VideoCard";
@@ -11,29 +11,25 @@ export default function Professor() {
   const [showGerenciar, setShowGerenciar] = useState(false);
 
   const navigate = useNavigate();
-  const token = localStorage.getItem("access");
 
   const carregarAulas = () =>
-    axios
-      .get("http://127.0.0.1:8000/api/aulas/", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    axiosInstance
+      .get("aulas/")
       .then((r) => setAulas(r.data))
       .catch(console.error);
 
   useEffect(() => {
-    if (!token) return navigate("/");
+    const token = localStorage.getItem("access");
+    if (!token) return navigate("/login");
     carregarAulas();
-  }, [navigate, token]);
+  }, [navigate]);
 
   const editar = () =>
     alert("Clique em 'Gerenciar Aulas' e use a aba LISTAR para editar.");
 
   const apagar = async (id) => {
     if (!window.confirm("Apagar esta aula?")) return;
-    await axios.delete(`http://127.0.0.1:8000/api/aulas/${id}/`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    await axiosInstance.delete(`aulas/${id}/`);
     carregarAulas();
   };
 

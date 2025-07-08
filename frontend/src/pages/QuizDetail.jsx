@@ -1,12 +1,10 @@
-// src/pages/QuizDetail.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
 import Sidebar from "../components/Sidebar";
+import axiosInstance from "../utils/axiosInstance";
 
 export default function QuizDetail() {
   const { id } = useParams();
-  const token = localStorage.getItem("access");
   const navigate = useNavigate();
 
   const [quiz, setQuiz] = useState(null);
@@ -15,14 +13,15 @@ export default function QuizDetail() {
   const [result, setResult] = useState(null);
 
   useEffect(() => {
-    if (!token) return;
-    axios
-      .get(`http://127.0.0.1:8000/api/quizzes/${id}/`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    axiosInstance
+      .get(`quizzes/${id}/`)
       .then(({ data }) => setQuiz(data))
-      .catch(console.error);
-  }, [id, token]);
+      .catch((err) => {
+        console.error("Erro ao carregar quiz:", err);
+        alert("Não foi possível carregar o quiz.");
+        navigate("/quizzes");
+      });
+  }, [id, navigate]);
 
   const handleChoice = (questionId, choiceId) => {
     setAnswers((prev) => ({ ...prev, [questionId]: choiceId }));
@@ -40,16 +39,11 @@ export default function QuizDetail() {
         })),
       };
 
-      const { data } = await axios.post(
-        "http://127.0.0.1:8000/api/respostas/",
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
+      const { data } = await axiosInstance.post("respostas/", payload);
       setResult(data);
     } catch (err) {
       console.error("Erro ao enviar respostas:", err);
-      alert("Erro ao enviar respostas");
+      alert("Ocorreu um erro ao enviar as respostas.");
     } finally {
       setSubmitting(false);
     }

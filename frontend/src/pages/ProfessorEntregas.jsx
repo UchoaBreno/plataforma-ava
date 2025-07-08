@@ -1,42 +1,37 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import dayjs from "dayjs";
 import Sidebar from "../components/Sidebar";
+import axiosInstance from "../utils/axiosInstance";
 
 export default function ProfessorEntregas() {
-  const token = localStorage.getItem("access");
-
   const [students, setStudents] = useState([]);
   const [entregas, setEntregas] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
   const fetchStudents = async () => {
     try {
-      const { data } = await axios.get("http://127.0.0.1:8000/api/alunos/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await axiosInstance.get("alunos/");
       setStudents(data.map(u => ({ id: u.id, name: u.first_name || u.username })));
     } catch {
-      const { data } = await axios.get("http://127.0.0.1:8000/api/usuarios/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setStudents(
-        data
-          .filter(u => !u.is_staff)
-          .map(u => ({ id: u.id, name: u.first_name || u.username }))
-      );
+      try {
+        const { data } = await axiosInstance.get("usuarios/");
+        setStudents(
+          data
+            .filter(u => !u.is_staff)
+            .map(u => ({ id: u.id, name: u.first_name || u.username }))
+        );
+      } catch (err) {
+        console.error("Erro ao buscar alunos:", err);
+      }
     }
   };
 
   const fetchEntregas = async () => {
     try {
-      const { data } = await axios.get("http://127.0.0.1:8000/api/entregas/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await axiosInstance.get("entregas/");
       setEntregas(data);
-      return data;
-    } catch {
-      return [];
+    } catch (err) {
+      console.error("Erro ao buscar entregas:", err);
     }
   };
 
@@ -50,12 +45,11 @@ export default function ProfessorEntregas() {
   const closeModal = () => setSelectedStudent(null);
 
   useEffect(() => {
-    if (!token) return;
     fetchStudents();
     fetchEntregas();
     const intervalo = setInterval(fetchEntregas, 5000);
     return () => clearInterval(intervalo);
-  }, [token]);
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
@@ -104,15 +98,14 @@ export default function ProfessorEntregas() {
                   <div>
                     <p className="font-medium">{sub.aula_titulo}</p>
                     <p className="text-xs text-gray-600 dark:text-gray-400">
-                      Enviado em{" "}
-                      {dayjs(sub.enviado_em).format("DD/MM/YYYY HH:mm")}
+                      Enviado em {dayjs(sub.enviado_em).format("DD/MM/YYYY HH:mm")}
                     </p>
                   </div>
                   <a
                     href={
                       sub.arquivo.startsWith("http")
                         ? sub.arquivo
-                        : `http://127.0.0.1:8000${sub.arquivo}`
+                        : `${import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000"}${sub.arquivo}`
                     }
                     target="_blank"
                     rel="noopener noreferrer"

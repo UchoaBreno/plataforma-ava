@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
+import axiosInstance from "../utils/axiosInstance";
 
 export default function AtividadeCreate() {
   const [titulo, setTitulo] = useState("");
@@ -10,10 +10,14 @@ export default function AtividadeCreate() {
   const [horaEntrega, setHoraEntrega] = useState("");
   const [pontos, setPontos] = useState("");
   const [arquivo, setArquivo] = useState(null);
-  const token = localStorage.getItem("access");
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
+    if (!titulo.trim() || !dataEntrega.trim()) {
+      alert("Título e data de entrega são obrigatórios.");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("titulo", titulo);
     formData.append("descricao", descricao);
@@ -23,15 +27,13 @@ export default function AtividadeCreate() {
     if (arquivo) formData.append("arquivo", arquivo);
 
     try {
-      await axios.post("http://127.0.0.1:8000/api/atividades/", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
+      await axiosInstance.post("atividades/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
       navigate("/atividades");
     } catch (err) {
-      console.error("Erro ao criar atividade:", err);
+      console.error("Erro ao criar atividade:", err.response?.data || err);
+      alert("Erro ao criar atividade. Verifique os campos e tente novamente.");
     }
   };
 

@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import Sidebar from "../components/Sidebar";
 import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
+import axiosInstance from "../utils/axiosInstance";
 
 export default function AtividadesProfessor() {
   const navigate = useNavigate();
-  const token = localStorage.getItem("access");
   const [atividades, setAtividades] = useState([]);
   const [editandoId, setEditandoId] = useState(null);
   const [form, setForm] = useState({
@@ -23,24 +22,22 @@ export default function AtividadesProfessor() {
 
   const fetchAtividades = async () => {
     try {
-      const { data } = await axios.get("http://127.0.0.1:8000/api/atividades/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await axiosInstance.get("atividades/");
       setAtividades(data);
     } catch (err) {
-      console.error("Erro ao buscar atividades:", err);
+      console.error("Erro ao buscar atividades:", err.response?.data || err);
+      alert("Erro ao carregar atividades.");
     }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm("Tem certeza que deseja excluir esta atividade?")) return;
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/atividades/${id}/`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axiosInstance.delete(`atividades/${id}/`);
       setAtividades((prev) => prev.filter((a) => a.id !== id));
     } catch (err) {
-      console.error("Erro ao deletar atividade:", err);
+      console.error("Erro ao deletar atividade:", err.response?.data || err);
+      alert("Erro ao excluir atividade.");
     }
   };
 
@@ -57,20 +54,12 @@ export default function AtividadesProfessor() {
 
   const handleEditSubmit = async () => {
     try {
-      await axios.put(
-        `http://127.0.0.1:8000/api/atividades/${editandoId}/`,
-        form,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      await axiosInstance.put(`atividades/${editandoId}/`, form);
       setEditandoId(null);
       fetchAtividades();
     } catch (err) {
-      console.error("Erro ao editar atividade:", err);
+      console.error("Erro ao editar atividade:", err.response?.data || err);
+      alert("Erro ao editar atividade.");
     }
   };
 
@@ -80,14 +69,23 @@ export default function AtividadesProfessor() {
 
   return (
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-      <Sidebar isStaff={true} isAluno={false} />
+      <Sidebar isStaff />
       <main className="ml-64 flex-1 p-6 relative">
         <h1 className="text-3xl font-bold text-green-600 dark:text-green-400 mb-4">
           Atividades Avaliativas
         </h1>
 
+        {atividades.length === 0 && (
+          <p className="text-gray-600 dark:text-gray-400">
+            Nenhuma atividade cadastrada.
+          </p>
+        )}
+
         {atividades.map((a) => (
-          <div key={a.id} className="bg-white dark:bg-gray-800 p-4 rounded shadow mb-4">
+          <div
+            key={a.id}
+            className="bg-white dark:bg-gray-800 p-4 rounded shadow mb-4"
+          >
             {editandoId === a.id ? (
               <>
                 <input

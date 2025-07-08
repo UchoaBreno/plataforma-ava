@@ -1,9 +1,8 @@
-// src/pages/AulasAluno.jsx
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import dayjs from "dayjs";
 import { jwtDecode } from "jwt-decode";
 import Sidebar from "../components/Sidebar";
+import axiosInstance from "../utils/axiosInstance";
 
 const LIMITE_MEDIA = 7;
 const LIMITE_BAIXA = 31;
@@ -12,22 +11,20 @@ export default function AulasAluno() {
   const token = localStorage.getItem("access");
 
   const [alunoId, setAlunoId] = useState(null);
-
   const [alta, setAlta] = useState([]);
   const [media, setMedia] = useState([]);
   const [baixa, setBaixa] = useState([]);
-
   const [showEntrega, setShowEntrega] = useState(false);
 
   useEffect(() => {
     if (!token) return;
-    let decoded = {};
     try {
-      decoded = jwtDecode(token);
-    } catch {}
-
-    const id = decoded.user_id ?? decoded.id;
-    if (id) setAlunoId(id);
+      const decoded = jwtDecode(token);
+      const id = decoded.user_id ?? decoded.id;
+      if (id) setAlunoId(id);
+    } catch {
+      console.error("Token inválido.");
+    }
   }, [token]);
 
   useEffect(() => {
@@ -40,12 +37,8 @@ export default function AulasAluno() {
   async function carregarPrioridades() {
     try {
       const [aulasRes, entregasRes] = await Promise.all([
-        axios.get("http://127.0.0.1:8000/api/aulas-aluno/", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get("http://127.0.0.1:8000/api/entregas/", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
+        axiosInstance.get("aulas-aluno/"),
+        axiosInstance.get("entregas/"),
       ]);
 
       const aulas = Array.isArray(aulasRes.data) ? aulasRes.data : [];
@@ -73,7 +66,8 @@ export default function AulasAluno() {
       setMedia(_media);
       setBaixa(_baixa);
     } catch (err) {
-      console.error("Erro ao carregar prioridades:", err);
+      console.error("Erro ao carregar aulas:", err.response?.data || err);
+      alert("Erro ao carregar suas aulas.");
     }
   }
 
@@ -87,9 +81,7 @@ export default function AulasAluno() {
           {lista.map(a => {
             let link = "#";
             if (a.arquivo) {
-              link = a.arquivo.startsWith("http")
-                ? a.arquivo
-                : `http://127.0.0.1:8000${a.arquivo}`;
+              link = a.arquivo.startsWith("http") ? a.arquivo : `${axiosInstance.defaults.baseURL}${a.arquivo}`;
             } else if (a.video_url) {
               link = a.video_url;
             }
@@ -133,22 +125,15 @@ export default function AulasAluno() {
       fd.append("arquivo", selArquivo);
 
       try {
-        await axios.post(
-          "http://127.0.0.1:8000/api/entregas/",
-          fd,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-        alert("Enviado!");
+        await axiosInstance.post("entregas/", fd, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        alert("Atividade enviada!");
         setShowEntrega(false);
         await carregarPrioridades();
       } catch (err) {
         console.error(err.response?.data || err);
-        alert("Erro ao enviar.");
+        alert("Erro ao enviar atividade.");
       }
     };
 
@@ -213,7 +198,6 @@ export default function AulasAluno() {
   return (
     <div className="flex">
       <Sidebar isAluno />
-
       <main className="ml-64 flex-1 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white p-6 relative">
         <h1 className="mb-6 text-3xl font-bold text-green-600">Minhas Aulas</h1>
 
