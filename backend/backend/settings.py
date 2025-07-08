@@ -162,3 +162,16 @@ DJOSER = {
     'PASSWORD_RESET_CONFIRM_URL': 'reset-password-confirm/{uid}/{token}/',
     'SERIALIZERS': {},
 }
+
+# Superuser automático para Render (apenas para testes acadêmicos)
+import django
+django.setup()
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
+if not User.objects.filter(username='admin').exists():
+    User.objects.create_superuser(
+        username='admin',
+        email='admin@example.com',
+        password='admin'
+    )
