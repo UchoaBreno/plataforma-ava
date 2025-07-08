@@ -47,7 +47,6 @@ class EntregaView(ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(aluno=self.request.user)
 
-
 # ─── Aulas ────────────────────────────────
 class AulaView(ListCreateAPIView):
     queryset = Aula.objects.all()
@@ -57,7 +56,6 @@ class AulaView(ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(professor=self.request.user)
 
-
 class AulaDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = AulaSerializer
     permission_classes = [IsAuthenticated]
@@ -66,7 +64,6 @@ class AulaDetailView(RetrieveUpdateDestroyAPIView):
         if self.request.user.is_staff:
             return Aula.objects.filter(professor=self.request.user)
         return Aula.objects.none()
-
 
 class AulasDisponiveisView(ListAPIView):
     serializer_class = AulaSerializer
@@ -83,19 +80,16 @@ class AulasDisponiveisView(ListAPIView):
             ja_entregue=Exists(entregas)
         ).filter(ja_entregue=False).order_by('-criada_em')
 
-
 # ─── Quizzes ──────────────────────────────
 class QuizListCreateView(ListCreateAPIView):
     serializer_class = QuizSerializer
     permission_classes = [IsAuthenticated]
     queryset = Quiz.objects.all()
 
-
 class QuizDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = QuizSerializer
     permission_classes = [IsAuthenticated]
     queryset = Quiz.objects.all()
-
 
 class QuizSubmitView(APIView):
     permission_classes = [IsAuthenticated]
@@ -117,7 +111,6 @@ class QuizSubmitView(APIView):
         )
         return Response({"message": "Respostas enviadas.", "score": acertos})
 
-
 class RespostaQuizView(ListAPIView):
     serializer_class = RespostaQuizSerializer
     permission_classes = [IsAuthenticated]
@@ -125,18 +118,16 @@ class RespostaQuizView(ListAPIView):
     def get_queryset(self):
         return RespostaQuiz.objects.filter(aluno=self.request.user)
 
-
 # ─── Usuários ─────────────────────────────
 class AlunoListView(ListAPIView):
     serializer_class = UsuarioSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Usuario.objects.filter(is_staff=False)
-
+        return Usuario.objects.filter(is_staff=False, is_active=True)
 
 class UsuarioListCreateView(ListCreateAPIView):
-    queryset = Usuario.objects.all()
+    queryset = Usuario.objects.filter(is_active=True)
     serializer_class = UsuarioSerializer
     permission_classes = [AllowAny]
 
@@ -148,17 +139,18 @@ class UsuarioListCreateView(ListCreateAPIView):
         self.perform_create(serializer)
         return Response(serializer.data, status=201)
 
-
-class UsuarioDetailView(APIView):
+class UsuarioDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = Usuario.objects.all()
+    serializer_class = UsuarioSerializer
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, username):
-        usuario = Usuario.objects.filter(username=username).first()
-        if not usuario:
-            return Response({"error": "Usuário não encontrado"}, status=404)
-        return Response(UsuarioSerializer(usuario).data)
+    def delete(self, request, *args, **kwargs):
+        usuario = self.get_object()
+        usuario.is_active = False  # marca como inativo em vez de excluir de verdade
+        usuario.save()
+        return Response({"detail": "Usuário desativado"}, status=204)
 
-
+# ─── Foto Perfil ──────────────────────────
 class AtualizarFotoPerfilView(APIView):
     parser_classes = [MultiPartParser]
     permission_classes = [IsAuthenticated]
@@ -169,10 +161,9 @@ class AtualizarFotoPerfilView(APIView):
         user.save()
         return Response({"foto_url": user.foto_perfil.url})
 
-
+# ─── Login/Token ──────────────────────────
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
-
 
 class LoginView(APIView):
     def post(self, request):
@@ -180,7 +171,6 @@ class LoginView(APIView):
         if serializer.is_valid():
             return Response(serializer.validated_data)
         return Response(serializer.errors, status=400)
-
 
 # ─── Atividades ───────────────────────────
 class AtividadeView(ListCreateAPIView):
@@ -194,7 +184,6 @@ class AtividadeView(ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(professor=self.request.user)
 
-
 class AtividadesDisponiveisView(ListAPIView):
     serializer_class = AtividadeSerializer
     permission_classes = [IsAuthenticated]
@@ -205,7 +194,6 @@ class AtividadesDisponiveisView(ListAPIView):
             return Atividade.objects.filter(data_entrega__gte=now()).order_by("data_entrega")
         return Atividade.objects.none()
 
-
 class AtividadeDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = AtividadeSerializer
     permission_classes = [IsAuthenticated]
@@ -213,7 +201,6 @@ class AtividadeDetailView(RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         user = self.request.user
         return Atividade.objects.filter(professor=user) if user.is_staff else Atividade.objects.all()
-
 
 # ─── Fórum ────────────────────────────────
 class ForumAPIView(APIView):
@@ -228,7 +215,6 @@ class ForumAPIView(APIView):
         comentario = ComentarioForum.objects.create(autor=request.user, texto=request.data.get("texto"))
         return Response({"id": comentario.id})
 
-
 class ResponderComentarioAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -239,7 +225,6 @@ class ResponderComentarioAPIView(APIView):
         resposta = RespostaForum.objects.create(comentario=comentario, autor=request.user, texto=request.data.get("texto"))
         return Response({"id": resposta.id})
 
-
 # ─── Desempenho ───────────────────────────
 class DesempenhoCreateListView(ListCreateAPIView):
     serializer_class = DesempenhoSerializer
@@ -249,19 +234,16 @@ class DesempenhoCreateListView(ListCreateAPIView):
         user = self.request.user
         return Desempenho.objects.all() if user.is_staff else Desempenho.objects.filter(aluno=user)
 
-
 class DesempenhoDetailView(RetrieveUpdateDestroyAPIView):
     queryset = Desempenho.objects.all()
     serializer_class = DesempenhoSerializer
     permission_classes = [IsAuthenticated]
-
 
 # ─── Solicitação de Professores ───────────
 class SolicitacaoProfessorCreateView(ListCreateAPIView):
     queryset = SolicitacaoProfessor.objects.all()
     serializer_class = SolicitacaoProfessorSerializer
     permission_classes = [AllowAny]
-
 
 class SolicitacaoProfessorAdminViewSet(viewsets.ViewSet):
     permission_classes = [IsAdminUser]

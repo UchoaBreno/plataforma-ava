@@ -10,7 +10,6 @@ from .models import (
     ComentarioForum, RespostaForum, Desempenho, SolicitacaoProfessor
 )
 
-
 class UsuarioSerializer(serializers.ModelSerializer):
     foto_perfil = serializers.ImageField(required=False, allow_null=True)
 
@@ -36,11 +35,12 @@ class UsuarioSerializer(serializers.ModelSerializer):
             "password",
         ]
         extra_kwargs = {
-            "password": {"write_only": True},
-            "is_staff": {"read_only": True},
+            "password": {"write_only": True, "required": False},
         }
 
     def validate_username(self, value):
+        if self.instance and self.instance.username == value:
+            return value
         if Usuario.objects.filter(username=value).exists():
             raise serializers.ValidationError("Este nome de usuário já está em uso.")
         return value
@@ -52,13 +52,20 @@ class UsuarioSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+    def update(self, instance, validated_data):
+        password = validated_data.pop("password", None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance
 
 class AulaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Aula
         fields = "__all__"
         extra_kwargs = {"professor": {"read_only": True}}
-
 
 class EntregaSerializer(serializers.ModelSerializer):
     aluno_nome = serializers.CharField(source="aluno.username", read_only=True)
@@ -72,12 +79,10 @@ class EntregaSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {"aluno": {"read_only": True}}
 
-
 class AlternativaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Alternativa
         fields = ["id", "text"]
-
 
 class QuestaoSerializer(serializers.ModelSerializer):
     choices = AlternativaSerializer(many=True, read_only=True)
@@ -86,14 +91,12 @@ class QuestaoSerializer(serializers.ModelSerializer):
         model = Questao
         fields = ["id", "text", "choices"]
 
-
 class QuizSerializer(serializers.ModelSerializer):
     questions = QuestaoSerializer(many=True, read_only=True)
 
     class Meta:
         model = Quiz
         fields = ["id", "title", "description", "created_at", "questions"]
-
 
 class RespostaQuizSerializer(serializers.ModelSerializer):
     aluno_nome = serializers.CharField(source="aluno.username", read_only=True)
@@ -111,7 +114,6 @@ class RespostaQuizSerializer(serializers.ModelSerializer):
             "respondido_em": {"read_only": True},
         }
 
-
 class CustomLoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
@@ -128,7 +130,6 @@ class CustomLoginSerializer(serializers.Serializer):
             }
         raise serializers.ValidationError("Credenciais inválidas")
 
-
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
@@ -137,13 +138,11 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token["is_staff"] = user.is_staff
         return token
 
-
 class AtividadeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Atividade
         fields = "__all__"
         extra_kwargs = {"professor": {"read_only": True}}
-
 
 class RespostaForumSerializer(serializers.ModelSerializer):
     autor_nome = serializers.CharField(source="autor.username", read_only=True)
@@ -151,7 +150,6 @@ class RespostaForumSerializer(serializers.ModelSerializer):
     class Meta:
         model = RespostaForum
         fields = ["id", "texto", "autor_nome", "criado_em"]
-
 
 class ComentarioForumSerializer(serializers.ModelSerializer):
     autor_nome = serializers.CharField(source="autor.username", read_only=True)
@@ -161,14 +159,12 @@ class ComentarioForumSerializer(serializers.ModelSerializer):
         model = ComentarioForum
         fields = ["id", "texto", "autor_nome", "criado_em", "respostas"]
 
-
 class DesempenhoSerializer(serializers.ModelSerializer):
     aluno_nome = serializers.CharField(source='aluno.username', read_only=True)
 
     class Meta:
         model = Desempenho
         fields = ['id', 'titulo', 'descricao', 'nota', 'aluno', 'aluno_nome']
-
 
 class SolicitacaoProfessorSerializer(serializers.ModelSerializer):
     senha = serializers.CharField(write_only=True)

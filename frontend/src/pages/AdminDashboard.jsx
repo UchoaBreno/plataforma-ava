@@ -12,6 +12,7 @@ export default function AdminDashboard() {
   const [atividades, setAtividades] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
   const [desempenhos, setDesempenhos] = useState([]);
+  const [editandoUsuario, setEditandoUsuario] = useState(null);
 
   useEffect(() => {
     fetchAll();
@@ -94,8 +95,17 @@ export default function AdminDashboard() {
   };
 
   const deleteItem = async (endpoint, id) => {
+    if (!window.confirm("Tem certeza que deseja deletar?")) return;
     await axiosInstance.delete(`${endpoint}/${id}/`);
     fetchAll();
+  };
+
+  const salvarEdicaoUsuario = async () => {
+    if (!editandoUsuario) return;
+    const { id, ...data } = editandoUsuario;
+    await axiosInstance.put(`usuarios/${editandoUsuario.username}/`, data);
+    setEditandoUsuario(null);
+    fetchUsuarios();
   };
 
   const renderTab = () => {
@@ -103,8 +113,11 @@ export default function AdminDashboard() {
 
     const renderCards = (list, keyFn, titleFn, actionsFn) => (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {list.map(item => (
-          <div key={keyFn(item)} className="rounded border border-green-300 bg-green-50 dark:bg-gray-800 dark:border-green-600 p-4 shadow-sm">
+        {list.map((item) => (
+          <div
+            key={keyFn(item)}
+            className="rounded border border-green-300 bg-green-50 dark:bg-gray-800 dark:border-green-600 p-4 shadow-sm"
+          >
             <h3 className="text-lg font-semibold text-green-800 dark:text-green-400">
               {titleFn(item)}
             </h3>
@@ -118,17 +131,23 @@ export default function AdminDashboard() {
       case "solicitacoes":
         return renderCards(
           solicitacoes,
-          s => s.id,
-          s => `${s.nome} ${s.sobrenome} (${s.email})`,
-          s => (
+          (s) => s.id,
+          (s) => `${s.nome} ${s.sobrenome} (${s.email})`,
+          (s) => (
             <>
               <p>Status: {s.aprovado ? "✅ Aprovado" : "⏳ Pendente"}</p>
               {!s.aprovado && (
                 <div className="flex gap-2 mt-2">
-                  <button onClick={() => aprovarSolicitacao(s.id)} className="bg-green-600 text-white px-3 py-1 rounded">
+                  <button
+                    onClick={() => aprovarSolicitacao(s.id)}
+                    className="bg-green-600 text-white px-3 py-1 rounded"
+                  >
                     Aprovar
                   </button>
-                  <button onClick={() => rejeitarSolicitacao(s.id)} className="bg-red-600 text-white px-3 py-1 rounded">
+                  <button
+                    onClick={() => rejeitarSolicitacao(s.id)}
+                    className="bg-red-600 text-white px-3 py-1 rounded"
+                  >
                     Rejeitar
                   </button>
                 </div>
@@ -140,22 +159,86 @@ export default function AdminDashboard() {
       case "usuarios":
         return renderCards(
           usuarios,
-          u => u.id,
-          u => `${u.username} (${u.is_staff ? "Professor" : "Aluno"})`,
-          u => (
-            <button onClick={() => deleteItem("usuarios", u.username)} className="bg-red-600 text-white px-3 py-1 rounded">
-              Deletar
-            </button>
-          )
+          (u) => u.id,
+          (u) =>
+            editandoUsuario?.id === u.id ? (
+              <>
+                <input
+                  type="text"
+                  value={editandoUsuario.first_name}
+                  onChange={(e) =>
+                    setEditandoUsuario({ ...editandoUsuario, first_name: e.target.value })
+                  }
+                  placeholder="Nome"
+                  className="text-black"
+                />
+                <input
+                  type="text"
+                  value={editandoUsuario.last_name}
+                  onChange={(e) =>
+                    setEditandoUsuario({ ...editandoUsuario, last_name: e.target.value })
+                  }
+                  placeholder="Sobrenome"
+                  className="text-black"
+                />
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={editandoUsuario.is_staff}
+                    onChange={(e) =>
+                      setEditandoUsuario({ ...editandoUsuario, is_staff: e.target.checked })
+                    }
+                  />{" "}
+                  Professor
+                </label>
+              </>
+            ) : (
+              `${u.username} (${u.is_staff ? "Professor" : "Aluno"})`
+            ),
+          (u) =>
+            editandoUsuario?.id === u.id ? (
+              <div className="flex gap-2">
+                <button
+                  onClick={salvarEdicaoUsuario}
+                  className="bg-green-600 text-white px-3 py-1 rounded"
+                >
+                  Salvar
+                </button>
+                <button
+                  onClick={() => setEditandoUsuario(null)}
+                  className="bg-gray-500 text-white px-3 py-1 rounded"
+                >
+                  Cancelar
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setEditandoUsuario(u)}
+                  className="bg-yellow-600 text-white px-3 py-1 rounded"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => deleteItem("usuarios", u.username)}
+                  className="bg-red-600 text-white px-3 py-1 rounded"
+                >
+                  Deletar
+                </button>
+              </div>
+            )
         );
 
       case "aulas":
         return renderCards(
           aulas,
-          a => a.id,
-          a => a.titulo,
-          a => (
-            <button onClick={() => deleteItem("aulas", a.id)} className="bg-red-600 text-white px-3 py-1 rounded">
+          (a) => a.id,
+          (a) => a.titulo,
+          (a) => (
+            <button
+              onClick={() => deleteItem("aulas", a.id)}
+              className="bg-red-600 text-white px-3 py-1 rounded"
+            >
               Deletar
             </button>
           )
@@ -164,10 +247,13 @@ export default function AdminDashboard() {
       case "atividades":
         return renderCards(
           atividades,
-          a => a.id,
-          a => a.titulo,
-          a => (
-            <button onClick={() => deleteItem("atividades", a.id)} className="bg-red-600 text-white px-3 py-1 rounded">
+          (a) => a.id,
+          (a) => a.titulo,
+          (a) => (
+            <button
+              onClick={() => deleteItem("atividades", a.id)}
+              className="bg-red-600 text-white px-3 py-1 rounded"
+            >
               Deletar
             </button>
           )
@@ -176,10 +262,13 @@ export default function AdminDashboard() {
       case "quizzes":
         return renderCards(
           quizzes,
-          q => q.id,
-          q => q.title,
-          q => (
-            <button onClick={() => deleteItem("quizzes", q.id)} className="bg-red-600 text-white px-3 py-1 rounded">
+          (q) => q.id,
+          (q) => q.title,
+          (q) => (
+            <button
+              onClick={() => deleteItem("quizzes", q.id)}
+              className="bg-red-600 text-white px-3 py-1 rounded"
+            >
               Deletar
             </button>
           )
@@ -188,8 +277,8 @@ export default function AdminDashboard() {
       case "desempenhos":
         return renderCards(
           desempenhos,
-          d => d.id,
-          d => `${d.titulo} - Nota: ${d.nota}`,
+          (d) => d.id,
+          (d) => `${d.titulo} - Nota: ${d.nota}`,
           () => null
         );
 
@@ -210,14 +299,13 @@ export default function AdminDashboard() {
   return (
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
       <Sidebar isAdmin />
-
       <main role="main" className="ml-64 flex-1 p-6">
         <h1 className="text-3xl font-bold text-green-600 dark:text-green-400 mb-6">
           Painel Administrativo
         </h1>
 
         <div className="mb-8 flex flex-wrap gap-2">
-          {tabs.map(t => (
+          {tabs.map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
