@@ -40,6 +40,11 @@ class UsuarioSerializer(serializers.ModelSerializer):
             "is_staff": {"read_only": True},
         }
 
+    def validate_username(self, value):
+        if Usuario.objects.filter(username=value).exists():
+            raise serializers.ValidationError("Este nome de usuário já está em uso.")
+        return value
+
     def create(self, validated_data):
         password = validated_data.pop("password")
         user = Usuario(**validated_data)
