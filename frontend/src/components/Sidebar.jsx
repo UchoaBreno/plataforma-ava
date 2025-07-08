@@ -9,6 +9,8 @@ import {
   FaChartBar,
   FaSignOutAlt,
   FaCamera,
+  FaBars,
+  FaTimes,
 } from "react-icons/fa";
 import { jwtDecode } from "jwt-decode";
 
@@ -16,6 +18,8 @@ export default function Sidebar({ isStaff = undefined, isAluno = undefined }) {
   const location = useLocation();
   const navigate = useNavigate();
   const fileInputRef = useRef();
+
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const defaultIsStaff = useMemo(() => {
     if (isStaff === true) return true;
@@ -65,17 +69,36 @@ export default function Sidebar({ isStaff = undefined, isAluno = undefined }) {
 
   const items = staff ? profMenu : alunoMenu;
 
-  return (
-    <div className="fixed top-0 left-0 flex h-screen w-64 flex-col bg-gray-900 dark:bg-gray-800">
-      <div className="border-b border-gray-700 p-6 text-2xl font-bold text-white">
-        Plataforma<span className="text-green-500">AVA</span>
+  const handleLogout = () => {
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    localStorage.removeItem("username");
+    localStorage.removeItem("fotoPerfil");
+    navigate("/login");
+  };
+
+  const SidebarContent = () => (
+    <>
+      <div className="border-b border-gray-700 p-6 text-2xl font-bold text-white flex justify-between lg:justify-center">
+        <span>
+          Plataforma<span className="text-green-500">AVA</span>
+        </span>
+        <button
+          className="text-white text-xl lg:hidden"
+          onClick={() => setMenuOpen(false)}
+        >
+          <FaTimes />
+        </button>
       </div>
 
       <nav className="flex-1 space-y-4 overflow-y-auto p-4">
         {items.map(({ path, label, icon }) => (
           <button
             key={path + label}
-            onClick={() => navigate(path)}
+            onClick={() => {
+              navigate(path);
+              setMenuOpen(false);
+            }}
             className={`flex w-full items-center gap-2 rounded px-4 py-2 text-left transition ${
               location.pathname === path
                 ? "font-semibold text-green-500 bg-gray-800"
@@ -119,18 +142,36 @@ export default function Sidebar({ isStaff = undefined, isAluno = undefined }) {
 
       <div className="border-t border-gray-700 p-4">
         <button
-          onClick={() => {
-            localStorage.removeItem("access");
-            localStorage.removeItem("refresh");
-            localStorage.removeItem("username");
-            localStorage.removeItem("fotoPerfil");
-            navigate("/login");
-          }}
+          onClick={handleLogout}
           className="flex w-full items-center justify-center gap-2 rounded bg-red-500 py-2 text-white hover:bg-red-600"
         >
           <FaSignOutAlt /> Sair
         </button>
       </div>
-    </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* botão toggle mobile */}
+      <button
+        className="fixed top-4 left-4 z-50 lg:hidden bg-gray-900 p-2 rounded text-white"
+        onClick={() => setMenuOpen(true)}
+      >
+        <FaBars />
+      </button>
+
+      {/* Sidebar desktop */}
+      <div className="hidden lg:flex fixed top-0 left-0 flex-col h-screen w-64 bg-gray-900 dark:bg-gray-800">
+        <SidebarContent />
+      </div>
+
+      {/* Sidebar mobile */}
+      {menuOpen && (
+        <div className="fixed top-0 left-0 z-50 flex flex-col h-screen w-64 bg-gray-900 dark:bg-gray-800 shadow-lg lg:hidden">
+          <SidebarContent />
+        </div>
+      )}
+    </>
   );
 }
