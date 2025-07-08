@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axiosInstance from "../utils/axiosInstance";
+import Sidebar from "../components/Sidebar";
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState("solicitacoes");
@@ -38,62 +39,47 @@ export default function AdminDashboard() {
   };
 
   const fetchUsuarios = async () => {
-    setLoading(true);
     try {
       const { data } = await axiosInstance.get("usuarios/");
       setUsuarios(data);
     } catch (err) {
       console.error("Erro ao buscar usuários", err);
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchAulas = async () => {
-    setLoading(true);
     try {
       const { data } = await axiosInstance.get("aulas/");
       setAulas(data);
     } catch (err) {
       console.error("Erro ao buscar aulas", err);
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchAtividades = async () => {
-    setLoading(true);
     try {
       const { data } = await axiosInstance.get("atividades/");
       setAtividades(data);
     } catch (err) {
       console.error("Erro ao buscar atividades", err);
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchQuizzes = async () => {
-    setLoading(true);
     try {
       const { data } = await axiosInstance.get("quizzes/");
       setQuizzes(data);
     } catch (err) {
       console.error("Erro ao buscar quizzes", err);
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchDesempenhos = async () => {
-    setLoading(true);
     try {
       const { data } = await axiosInstance.get("desempenhos/");
       setDesempenhos(data);
     } catch (err) {
       console.error("Erro ao buscar desempenhos", err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -115,102 +101,96 @@ export default function AdminDashboard() {
   const renderTab = () => {
     if (loading) return <p>🔄 Carregando...</p>;
 
+    const renderCards = (list, keyFn, titleFn, actionsFn) => (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {list.map(item => (
+          <div key={keyFn(item)} className="rounded border border-green-300 bg-green-50 dark:bg-gray-800 dark:border-green-600 p-4 shadow-sm">
+            <h3 className="text-lg font-semibold text-green-800 dark:text-green-400">
+              {titleFn(item)}
+            </h3>
+            <div className="mt-2">{actionsFn(item)}</div>
+          </div>
+        ))}
+      </div>
+    );
+
     switch (tab) {
       case "solicitacoes":
-        return (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Solicitações de Professores</h2>
-            {solicitacoes.map((s) => (
-              <div key={s.id} className="border p-3 mb-2 rounded bg-white dark:bg-gray-800">
-                <p>
-                  {s.nome} {s.sobrenome} - {s.email}
-                </p>
-                <p>Status: {s.aprovado ? "✅ Aprovado" : "⏳ Pendente"}</p>
-                {!s.aprovado && (
-                  <div className="flex gap-2 mt-2">
-                    <button onClick={() => aprovarSolicitacao(s.id)} className="bg-green-600 text-white px-3 py-1 rounded">
-                      Aprovar
-                    </button>
-                    <button onClick={() => rejeitarSolicitacao(s.id)} className="bg-red-600 text-white px-3 py-1 rounded">
-                      Rejeitar
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+        return renderCards(
+          solicitacoes,
+          s => s.id,
+          s => `${s.nome} ${s.sobrenome} (${s.email})`,
+          s => (
+            <>
+              <p>Status: {s.aprovado ? "✅ Aprovado" : "⏳ Pendente"}</p>
+              {!s.aprovado && (
+                <div className="flex gap-2 mt-2">
+                  <button onClick={() => aprovarSolicitacao(s.id)} className="bg-green-600 text-white px-3 py-1 rounded">
+                    Aprovar
+                  </button>
+                  <button onClick={() => rejeitarSolicitacao(s.id)} className="bg-red-600 text-white px-3 py-1 rounded">
+                    Rejeitar
+                  </button>
+                </div>
+              )}
+            </>
+          )
         );
 
       case "usuarios":
-        return (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Usuários</h2>
-            {usuarios.map((u) => (
-              <div key={u.id} className="border p-3 mb-2 rounded bg-white dark:bg-gray-800 flex justify-between">
-                <span>{u.username} ({u.is_staff ? "Professor" : "Aluno"})</span>
-                <button onClick={() => deleteItem("usuarios", u.username)} className="bg-red-600 text-white px-3 py-1 rounded">
-                  Deletar
-                </button>
-              </div>
-            ))}
-          </div>
+        return renderCards(
+          usuarios,
+          u => u.id,
+          u => `${u.username} (${u.is_staff ? "Professor" : "Aluno"})`,
+          u => (
+            <button onClick={() => deleteItem("usuarios", u.username)} className="bg-red-600 text-white px-3 py-1 rounded">
+              Deletar
+            </button>
+          )
         );
 
       case "aulas":
-        return (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Aulas</h2>
-            {aulas.map((a) => (
-              <div key={a.id} className="border p-3 mb-2 rounded bg-white dark:bg-gray-800 flex justify-between">
-                <span>{a.titulo}</span>
-                <button onClick={() => deleteItem("aulas", a.id)} className="bg-red-600 text-white px-3 py-1 rounded">
-                  Deletar
-                </button>
-              </div>
-            ))}
-          </div>
+        return renderCards(
+          aulas,
+          a => a.id,
+          a => a.titulo,
+          a => (
+            <button onClick={() => deleteItem("aulas", a.id)} className="bg-red-600 text-white px-3 py-1 rounded">
+              Deletar
+            </button>
+          )
         );
 
       case "atividades":
-        return (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Atividades</h2>
-            {atividades.map((a) => (
-              <div key={a.id} className="border p-3 mb-2 rounded bg-white dark:bg-gray-800 flex justify-between">
-                <span>{a.titulo}</span>
-                <button onClick={() => deleteItem("atividades", a.id)} className="bg-red-600 text-white px-3 py-1 rounded">
-                  Deletar
-                </button>
-              </div>
-            ))}
-          </div>
+        return renderCards(
+          atividades,
+          a => a.id,
+          a => a.titulo,
+          a => (
+            <button onClick={() => deleteItem("atividades", a.id)} className="bg-red-600 text-white px-3 py-1 rounded">
+              Deletar
+            </button>
+          )
         );
 
       case "quizzes":
-        return (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Quizzes</h2>
-            {quizzes.map((q) => (
-              <div key={q.id} className="border p-3 mb-2 rounded bg-white dark:bg-gray-800 flex justify-between">
-                <span>{q.title}</span>
-                <button onClick={() => deleteItem("quizzes", q.id)} className="bg-red-600 text-white px-3 py-1 rounded">
-                  Deletar
-                </button>
-              </div>
-            ))}
-          </div>
+        return renderCards(
+          quizzes,
+          q => q.id,
+          q => q.title,
+          q => (
+            <button onClick={() => deleteItem("quizzes", q.id)} className="bg-red-600 text-white px-3 py-1 rounded">
+              Deletar
+            </button>
+          )
         );
 
       case "desempenhos":
-        return (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Desempenhos</h2>
-            {desempenhos.map((d) => (
-              <div key={d.id} className="border p-3 mb-2 rounded bg-white dark:bg-gray-800">
-                <p>{d.titulo} - Nota: {d.nota}</p>
-              </div>
-            ))}
-          </div>
+        return renderCards(
+          desempenhos,
+          d => d.id,
+          d => `${d.titulo} - Nota: ${d.nota}`,
+          () => null
         );
 
       default:
@@ -218,32 +198,42 @@ export default function AdminDashboard() {
     }
   };
 
+  const tabs = [
+    { id: "solicitacoes", label: "Solicitações" },
+    { id: "usuarios", label: "Usuários" },
+    { id: "aulas", label: "Aulas" },
+    { id: "atividades", label: "Atividades" },
+    { id: "quizzes", label: "Quizzes" },
+    { id: "desempenhos", label: "Desempenhos" },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-black dark:text-white p-6">
-      <h1 className="text-3xl font-bold mb-6">Painel Administrativo</h1>
+    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
+      <Sidebar isAdmin />
 
-      <div className="flex gap-2 mb-6">
-        <button onClick={() => setTab("solicitacoes")} className="px-3 py-1 bg-green-600 text-white rounded">
-          Solicitações
-        </button>
-        <button onClick={() => setTab("usuarios")} className="px-3 py-1 bg-green-600 text-white rounded">
-          Usuários
-        </button>
-        <button onClick={() => setTab("aulas")} className="px-3 py-1 bg-green-600 text-white rounded">
-          Aulas
-        </button>
-        <button onClick={() => setTab("atividades")} className="px-3 py-1 bg-green-600 text-white rounded">
-          Atividades
-        </button>
-        <button onClick={() => setTab("quizzes")} className="px-3 py-1 bg-green-600 text-white rounded">
-          Quizzes
-        </button>
-        <button onClick={() => setTab("desempenhos")} className="px-3 py-1 bg-green-600 text-white rounded">
-          Desempenhos
-        </button>
-      </div>
+      <main role="main" className="ml-64 flex-1 p-6">
+        <h1 className="text-3xl font-bold text-green-600 dark:text-green-400 mb-6">
+          Painel Administrativo
+        </h1>
 
-      {renderTab()}
+        <div className="mb-8 flex flex-wrap gap-2">
+          {tabs.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`px-3 py-1 rounded ${
+                tab === t.id
+                  ? "bg-green-600 text-white"
+                  : "bg-green-100 dark:bg-gray-800 text-green-800 dark:text-green-400 border border-green-300 dark:border-green-600"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {renderTab()}
+      </main>
     </div>
   );
 }

@@ -31,7 +31,10 @@ export default function Login() {
       localStorage.setItem("is_superuser", JSON.stringify(isSuperuser));
       localStorage.removeItem("fotoPerfil");
 
-      if (souAdmin && isSuperuser) {
+      // 🔷 PRIORIDADE: superuser > staff > aluno
+      if (isSuperuser) {
+        window.location.href = "/admin-dashboard";
+      } else if (souAdmin && isStaff) {
         window.location.href = "/admin-dashboard";
       } else if (isStaff) {
         window.location.href = "/professor";
