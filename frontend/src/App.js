@@ -5,6 +5,7 @@ import LayoutComSidebar from "./components/LayoutComSidebar";
 import AdminDashboard from "./pages/AdminDashboard";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
+import RecuperarSenha from "./pages/RecuperarSenha";
 import Home from "./pages/Home";
 import AulasAluno from "./pages/AulasAluno";
 import AulasProfessor from "./pages/AulasProfessor";
@@ -78,6 +79,7 @@ export default function App() {
         {/* Rotas públicas */}
         <Route path="/login" element={<Login />} />
         <Route path="/cadastro" element={<Cadastro />} />
+        <Route path="/recuperar-senha" element={<RecuperarSenha />} />
         <Route path="/" element={<RedirectRoot />} />
 
         {/* Rotas protegidas */}

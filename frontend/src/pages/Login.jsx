@@ -31,7 +31,8 @@ export default function Login() {
       localStorage.removeItem("fotoPerfil");
 
       if (souAdmin) {
-        if (isSuperuser) {
+        // ✅ Somente o superuser fixo "admin" pode entrar no painel admin
+        if (isSuperuser && userFromBackend === "admin") {
           localStorage.setItem("refresh", refresh);
           window.location.href = "/admin-dashboard";
         } else {
@@ -91,13 +92,12 @@ export default function Login() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-          <p
+        <p
           className="text-sm text-blue-600 hover:underline text-center cursor-pointer"
-          onClick={() => window.location.href = "/recuperar-senha"}
+          onClick={() => (window.location.href = "/recuperar-senha")}
         >
           Esqueceu sua senha?
         </p>
-
 
         <label className="flex items-center mb-4 text-black dark:text-white">
           <input
