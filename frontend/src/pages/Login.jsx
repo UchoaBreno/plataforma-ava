@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import axios from "../utils/axiosInstance";
 import { jwtDecode } from "jwt-decode";
 
 export default function Login() {
@@ -10,37 +10,36 @@ export default function Login() {
   const handleLogin = async () => {
     setErroLogin("");
     try {
-      const response = await axios.post(
-        "https://plataforma-ava2.onrender.com/api/token/",
-        {
-          username,
-          password,
-        }
-      );
+      const response = await axios.post("token/", {
+        username,
+        password,
+      });
 
       const { access, refresh } = response.data;
       const decoded = jwtDecode(access);
+
       const isStaff = decoded.is_staff === true || decoded.is_staff === "true";
+      const isSuperuser =
+        decoded.is_superuser === true || decoded.is_superuser === "true";
       const userFromBackend = decoded.username;
 
       localStorage.setItem("access", access);
       localStorage.setItem("refresh", refresh);
       localStorage.setItem("username", userFromBackend);
       localStorage.setItem("is_staff", JSON.stringify(isStaff));
+      localStorage.setItem("is_superuser", JSON.stringify(isSuperuser));
       localStorage.removeItem("fotoPerfil");
 
-      if (isStaff) {
+      if (isSuperuser) {
+        window.location.href = "/admin-dashboard";
+      } else if (isStaff) {
         window.location.href = "/professor";
       } else {
         window.location.href = "/";
       }
     } catch (error) {
       console.error("Erro no login:", error);
-      if (error.response?.status === 401) {
-        setErroLogin("Usuário ou senha incorretos. Tente novamente.");
-      } else {
-        setErroLogin("Erro de rede ou servidor. Tente mais tarde.");
-      }
+      setErroLogin("Usuário ou senha incorretos ou erro no servidor.");
     }
   };
 
