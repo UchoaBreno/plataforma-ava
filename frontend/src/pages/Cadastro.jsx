@@ -38,20 +38,34 @@ export default function Cadastro() {
       return;
     }
 
-    const payload = {
-      first_name: trimmedNome,
-      last_name: trimmedSobrenome,
-      email: trimmedEmail,
-      username: trimmedUsername,
-      password: senha
-    };
-
     try {
       if (role === 'professor') {
-        await axios.post('https://plataforma-ava2.onrender.com/api/solicitacoes-professor/', payload);
+        // campos compatíveis com SolicitacaoProfessor
+        const payloadProfessor = {
+          nome: trimmedNome,
+          sobrenome: trimmedSobrenome,
+          email: trimmedEmail,
+          username: trimmedUsername,
+          senha: senha
+        };
+        await axios.post(
+          'https://plataforma-ava2.onrender.com/api/solicitacoes-professor/',
+          payloadProfessor
+        );
         alert('Solicitação enviada! Aguarde a aprovação do administrador.');
       } else {
-        await axios.post('https://plataforma-ava2.onrender.com/api/usuarios/', payload);
+        // campos compatíveis com Usuario
+        const payloadAluno = {
+          first_name: trimmedNome,
+          last_name: trimmedSobrenome,
+          email: trimmedEmail,
+          username: trimmedUsername,
+          password: senha
+        };
+        await axios.post(
+          'https://plataforma-ava2.onrender.com/api/usuarios/',
+          payloadAluno
+        );
         alert('Conta de aluno criada com sucesso!');
       }
       navigate('/login');
