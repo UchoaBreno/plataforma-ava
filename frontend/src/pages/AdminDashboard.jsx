@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axiosInstance from "../api/axiosInstance";
+import axiosInstance from "../utils/axiosInstance";
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState("solicitacoes");
