@@ -64,6 +64,8 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
 
 class AulaSerializer(serializers.ModelSerializer):
+    arquivo = serializers.FileField(use_url=True, required=False)
+
     class Meta:
         model = Aula
         fields = "__all__"

@@ -54,6 +54,7 @@ class AulaView(ListCreateAPIView):
     queryset = Aula.objects.all()
     serializer_class = AulaSerializer
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser]
 
     def perform_create(self, serializer):
         serializer.save(professor=self.request.user)
@@ -62,10 +63,12 @@ class AulaView(ListCreateAPIView):
 class AulaDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = AulaSerializer
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser]
 
     def get_queryset(self):
-        if self.request.user.is_staff:
-            return Aula.objects.filter(professor=self.request.user)
+        user = self.request.user
+        if user.is_staff:
+            return Aula.objects.filter(professor=user)
         return Aula.objects.none()
 
 
@@ -162,15 +165,15 @@ class ChangePasswordView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        email = request.data.get("email")
+        username = request.data.get("username")
         old_password = request.data.get("old_password")
         new_password = request.data.get("new_password")
 
-        if not email or not old_password or not new_password:
+        if not username or not old_password or not new_password:
             return Response({"detail": "Todos os campos são obrigatórios."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            user = Usuario.objects.get(email=email)
+            user = Usuario.objects.get(username=username)
         except Usuario.DoesNotExist:
             return Response({"detail": "Usuário não encontrado."}, status=status.HTTP_404_NOT_FOUND)
 

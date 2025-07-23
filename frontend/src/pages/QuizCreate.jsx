@@ -8,9 +8,17 @@ export default function CriarQuiz() {
   const [descricao, setDescricao] = useState("");
   const [arquivo, setArquivo] = useState(null);
   const [link, setLink] = useState("");
+  const [erro, setErro] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
+    setErro("");
+
+    if (!titulo.trim() || !descricao.trim()) {
+      setErro("Preencha pelo menos o título e a descrição do quiz.");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("title", titulo);
     formData.append("description", descricao);
@@ -25,7 +33,10 @@ export default function CriarQuiz() {
       navigate("/quizzes");
     } catch (err) {
       console.error("Erro ao criar quiz:", err);
-      alert("Ocorreu um erro ao criar o quiz. Verifique os dados e tente novamente.");
+      const msg =
+        err.response?.data?.detail ||
+        "Ocorreu um erro ao criar o quiz. Verifique os dados e tente novamente.";
+      setErro("❌ " + msg);
     }
   };
 
@@ -45,6 +56,12 @@ export default function CriarQuiz() {
         <h1 className="text-3xl font-bold text-green-600 dark:text-green-400 mb-6">
           Criar Novo Quiz
         </h1>
+
+        {erro && (
+          <div className="text-red-700 bg-red-100 dark:bg-red-900/50 dark:text-red-300 border border-red-300 dark:border-red-600 px-4 py-2 rounded text-center mb-4 text-sm">
+            {erro}
+          </div>
+        )}
 
         <div className="max-w-xl space-y-4">
           <div>

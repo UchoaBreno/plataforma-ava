@@ -8,16 +8,21 @@ import axiosInstance from "../utils/axiosInstance";
 export default function ResponderAtividades() {
   const navigate = useNavigate();
   const [atividades, setAtividades] = useState([]);
-  const [isStaff, setIsStaff] = useState(false);
+  const [erro, setErro] = useState("");
+  const [carregando, setCarregando] = useState(true);
 
   const token = localStorage.getItem("access");
 
   const fetchAtividades = async () => {
     try {
+      setErro("");
       const { data } = await axiosInstance.get("atividades-aluno/");
       setAtividades(data);
     } catch (err) {
       console.error("Erro ao buscar atividades:", err);
+      setErro("❌ Não foi possível carregar as atividades.");
+    } finally {
+      setCarregando(false);
     }
   };
 
@@ -28,14 +33,14 @@ export default function ResponderAtividades() {
     }
 
     try {
-      const decoded = jwtDecode(token);
-      setIsStaff(decoded.is_staff === true || decoded.is_staff === "true");
-    } catch {
-      setIsStaff(false);
+      jwtDecode(token); // só para verificar validade
+    } catch (err) {
+      localStorage.removeItem("access");
+      navigate("/login");
+      return;
     }
 
     fetchAtividades();
-
     const intervalId = setInterval(fetchAtividades, 15000);
     return () => clearInterval(intervalId);
   }, [token, navigate]);
@@ -52,7 +57,17 @@ export default function ResponderAtividades() {
           </h1>
         </div>
 
-        {atividades.length === 0 ? (
+        {erro && (
+          <div className="text-red-700 bg-red-100 dark:bg-red-900/50 dark:text-red-300 border border-red-300 dark:border-red-600 px-4 py-2 rounded text-center mb-4 text-sm">
+            {erro}
+          </div>
+        )}
+
+        {carregando ? (
+          <p className="text-gray-600 dark:text-gray-400">
+            Carregando atividades...
+          </p>
+        ) : atividades.length === 0 ? (
           <p className="text-gray-600 dark:text-gray-400">
             Nenhuma atividade disponível no momento.
           </p>
@@ -70,9 +85,7 @@ export default function ResponderAtividades() {
                   </h2>
                   <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
                     Prazo: {dayjs(atividade.data_entrega).format("DD/MM/YYYY")}{" "}
-                    {atividade.hora_entrega && (
-                      <>às {atividade.hora_entrega}</>
-                    )}
+                    {atividade.hora_entrega && <>às {atividade.hora_entrega}</>}
                   </p>
                   {atividade.descricao && (
                     <p className="text-sm mt-1 text-gray-700 dark:text-gray-400 line-clamp-2">

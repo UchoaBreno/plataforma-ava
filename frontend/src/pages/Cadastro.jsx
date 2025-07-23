@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import axios from 'axios'; // ou '../utils/axiosInstance' se você estiver usando o instance global
 import { useNavigate } from 'react-router-dom';
 
 export default function Cadastro() {
@@ -10,16 +10,15 @@ export default function Cadastro() {
   const [senha, setSenha] = useState('');
   const [role, setRole] = useState('aluno');
   const [erroCadastro, setErroCadastro] = useState('');
+  const [mensagem, setMensagem] = useState('');
 
   const navigate = useNavigate();
 
-  const validarUsername = (user) => {
-    const regex = /^[\w.@+-]+$/;
-    return regex.test(user);
-  };
+  const validarUsername = (user) => /^[\w.@+-]+$/.test(user);
 
   const handleCadastro = async () => {
     setErroCadastro('');
+    setMensagem('');
 
     const trimmedNome = nome.trim();
     const trimmedSobrenome = sobrenome.trim();
@@ -28,6 +27,11 @@ export default function Cadastro() {
 
     if (!trimmedNome || !trimmedSobrenome || !trimmedEmail || !trimmedUsername || !senha) {
       setErroCadastro("Por favor, preencha todos os campos.");
+      return;
+    }
+
+    if (senha.length < 6) {
+      setErroCadastro("A senha deve ter pelo menos 6 caracteres.");
       return;
     }
 
@@ -40,7 +44,6 @@ export default function Cadastro() {
 
     try {
       if (role === 'professor') {
-        // campos compatíveis com SolicitacaoProfessor
         const payloadProfessor = {
           nome: trimmedNome,
           sobrenome: trimmedSobrenome,
@@ -52,9 +55,8 @@ export default function Cadastro() {
           'https://plataforma-ava2.onrender.com/api/solicitacoes-professor/',
           payloadProfessor
         );
-        alert('Solicitação enviada! Aguarde a aprovação do administrador.');
+        setMensagem('✅ Solicitação enviada! Aguarde a aprovação do administrador.');
       } else {
-        // campos compatíveis com Usuario
         const payloadAluno = {
           first_name: trimmedNome,
           last_name: trimmedSobrenome,
@@ -66,9 +68,10 @@ export default function Cadastro() {
           'https://plataforma-ava2.onrender.com/api/usuarios/',
           payloadAluno
         );
-        alert('Conta de aluno criada com sucesso!');
+        setMensagem('✅ Conta de aluno criada com sucesso!');
       }
-      navigate('/login');
+
+      setTimeout(() => navigate('/login'), 2500);
     } catch (err) {
       console.error('Erro ao criar conta:', err.response?.data || err.message);
 
@@ -87,7 +90,7 @@ export default function Cadastro() {
         }
       }
 
-      setErroCadastro(msg);
+      setErroCadastro("❌ " + msg);
     }
   };
 
@@ -102,8 +105,14 @@ export default function Cadastro() {
           Preencha os campos abaixo
         </p>
 
+        {mensagem && (
+          <div className="text-green-700 bg-green-100 dark:bg-green-900/50 dark:text-green-300 border border-green-300 dark:border-green-600 px-4 py-2 rounded text-center mb-4 text-sm">
+            {mensagem}
+          </div>
+        )}
+
         {erroCadastro && (
-          <div className="text-red-700 bg-red-100 dark:bg-red-900/50 dark:text-red-300 border border-red-300 dark:border-red-600 px-4 py-2 rounded text-center mb-4">
+          <div className="text-red-700 bg-red-100 dark:bg-red-900/50 dark:text-red-300 border border-red-300 dark:border-red-600 px-4 py-2 rounded text-center mb-4 text-sm">
             {erroCadastro}
           </div>
         )}

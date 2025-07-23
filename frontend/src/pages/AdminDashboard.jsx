@@ -138,18 +138,8 @@ export default function AdminDashboard() {
               <p>Status: {s.aprovado ? "✅ Aprovado" : "⏳ Pendente"}</p>
               {!s.aprovado && (
                 <div className="flex gap-2 mt-2">
-                  <button
-                    onClick={() => aprovarSolicitacao(s.id)}
-                    className="bg-green-600 text-white px-3 py-1 rounded"
-                  >
-                    Aprovar
-                  </button>
-                  <button
-                    onClick={() => rejeitarSolicitacao(s.id)}
-                    className="bg-red-600 text-white px-3 py-1 rounded"
-                  >
-                    Rejeitar
-                  </button>
+                  <button onClick={() => aprovarSolicitacao(s.id)} className="bg-green-600 text-white px-3 py-1 rounded">Aprovar</button>
+                  <button onClick={() => rejeitarSolicitacao(s.id)} className="bg-red-600 text-white px-3 py-1 rounded">Rejeitar</button>
                 </div>
               )}
             </>
@@ -162,125 +152,50 @@ export default function AdminDashboard() {
           (u) => u.id,
           (u) =>
             editandoUsuario?.id === u.id ? (
-              <>
-                <input
-                  type="text"
-                  value={editandoUsuario.first_name}
-                  onChange={(e) =>
-                    setEditandoUsuario({ ...editandoUsuario, first_name: e.target.value })
-                  }
-                  placeholder="Nome"
-                  className="text-black"
-                />
-                <input
-                  type="text"
-                  value={editandoUsuario.last_name}
-                  onChange={(e) =>
-                    setEditandoUsuario({ ...editandoUsuario, last_name: e.target.value })
-                  }
-                  placeholder="Sobrenome"
-                  className="text-black"
-                />
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={editandoUsuario.is_staff}
-                    onChange={(e) =>
-                      setEditandoUsuario({ ...editandoUsuario, is_staff: e.target.checked })
-                    }
-                  />{" "}
+              <div className="space-y-2">
+                <input type="text" value={editandoUsuario.first_name} onChange={(e) => setEditandoUsuario({ ...editandoUsuario, first_name: e.target.value })} placeholder="Nome" className="w-full text-black px-2 py-1 rounded" />
+                <input type="text" value={editandoUsuario.last_name} onChange={(e) => setEditandoUsuario({ ...editandoUsuario, last_name: e.target.value })} placeholder="Sobrenome" className="w-full text-black px-2 py-1 rounded" />
+                <input type="email" value={editandoUsuario.email} onChange={(e) => setEditandoUsuario({ ...editandoUsuario, email: e.target.value })} placeholder="E-mail" className="w-full text-black px-2 py-1 rounded" />
+                <input type="text" value={editandoUsuario.username} onChange={(e) => setEditandoUsuario({ ...editandoUsuario, username: e.target.value })} placeholder="Usuário" className="w-full text-black px-2 py-1 rounded" />
+                <label className="block text-sm text-black dark:text-white">
+                  <input type="checkbox" checked={editandoUsuario.is_staff} onChange={(e) => setEditandoUsuario({ ...editandoUsuario, is_staff: e.target.checked })} className="mr-2" />
                   Professor
                 </label>
-              </>
+              </div>
             ) : (
               `${u.username} (${u.is_staff ? "Professor" : "Aluno"})`
             ),
           (u) =>
             editandoUsuario?.id === u.id ? (
               <div className="flex gap-2">
-                <button
-                  onClick={salvarEdicaoUsuario}
-                  className="bg-green-600 text-white px-3 py-1 rounded"
-                >
-                  Salvar
-                </button>
-                <button
-                  onClick={() => setEditandoUsuario(null)}
-                  className="bg-gray-500 text-white px-3 py-1 rounded"
-                >
-                  Cancelar
-                </button>
+                <button onClick={salvarEdicaoUsuario} className="bg-green-600 text-white px-3 py-1 rounded">Salvar</button>
+                <button onClick={() => setEditandoUsuario(null)} className="bg-gray-500 text-white px-3 py-1 rounded">Cancelar</button>
               </div>
             ) : (
               <div className="flex gap-2">
-                <button
-                  onClick={() => setEditandoUsuario(u)}
-                  className="bg-yellow-600 text-white px-3 py-1 rounded"
-                >
-                  Editar
-                </button>
-                <button
-                  onClick={() => deleteItem("usuarios", u.username)}
-                  className="bg-red-600 text-white px-3 py-1 rounded"
-                >
-                  Deletar
-                </button>
+                <button onClick={() => setEditandoUsuario(u)} className="bg-yellow-600 text-white px-3 py-1 rounded">Editar</button>
+                <button onClick={() => deleteItem("usuarios", u.username)} className="bg-red-600 text-white px-3 py-1 rounded">Deletar</button>
               </div>
             )
         );
 
       case "aulas":
-        return renderCards(
-          aulas,
-          (a) => a.id,
-          (a) => a.titulo,
-          (a) => (
-            <button
-              onClick={() => deleteItem("aulas", a.id)}
-              className="bg-red-600 text-white px-3 py-1 rounded"
-            >
-              Deletar
-            </button>
-          )
-        );
+        return renderCards(aulas, (a) => a.id, (a) => a.titulo, (a) => (
+          <button onClick={() => deleteItem("aulas", a.id)} className="bg-red-600 text-white px-3 py-1 rounded">Deletar</button>
+        ));
 
       case "atividades":
-        return renderCards(
-          atividades,
-          (a) => a.id,
-          (a) => a.titulo,
-          (a) => (
-            <button
-              onClick={() => deleteItem("atividades", a.id)}
-              className="bg-red-600 text-white px-3 py-1 rounded"
-            >
-              Deletar
-            </button>
-          )
-        );
+        return renderCards(atividades, (a) => a.id, (a) => a.titulo, (a) => (
+          <button onClick={() => deleteItem("atividades", a.id)} className="bg-red-600 text-white px-3 py-1 rounded">Deletar</button>
+        ));
 
       case "quizzes":
-        return renderCards(
-          quizzes,
-          (q) => q.id,
-          (q) => q.title,
-          (q) => (
-            <button
-              onClick={() => deleteItem("quizzes", q.id)}
-              className="bg-red-600 text-white px-3 py-1 rounded"
-            >
-              Deletar
-            </button>
-          )
-        );
+        return renderCards(quizzes, (q) => q.id, (q) => q.title, (q) => (
+          <button onClick={() => deleteItem("quizzes", q.id)} className="bg-red-600 text-white px-3 py-1 rounded">Deletar</button>
+        ));
 
       case "desempenhos":
-        return renderCards(
-          desempenhos,
-          (d) => d.id,
-          (d) => `${d.titulo} - Nota: ${d.nota}`,
-          () => null
-        );
+        return renderCards(desempenhos, (d) => d.id, (d) => `${d.titulo} - Nota: ${d.nota}`, () => null);
 
       default:
         return null;
@@ -325,3 +240,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+

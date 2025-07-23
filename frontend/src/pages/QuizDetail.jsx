@@ -11,6 +11,7 @@ export default function QuizDetail() {
   const [answers, setAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
+  const [erro, setErro] = useState("");
 
   useEffect(() => {
     axiosInstance
@@ -29,7 +30,18 @@ export default function QuizDetail() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErro("");
     setSubmitting(true);
+
+    const perguntasRespondidas = Object.keys(answers).length;
+    const totalPerguntas = quiz.questions.length;
+
+    if (perguntasRespondidas < totalPerguntas) {
+      setErro("⚠️ Responda todas as perguntas antes de enviar.");
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const payload = {
         quiz: id,
@@ -43,7 +55,7 @@ export default function QuizDetail() {
       setResult(data);
     } catch (err) {
       console.error("Erro ao enviar respostas:", err);
-      alert("Ocorreu um erro ao enviar as respostas.");
+      setErro("❌ Ocorreu um erro ao enviar as respostas.");
     } finally {
       setSubmitting(false);
     }
@@ -87,6 +99,13 @@ export default function QuizDetail() {
       <Sidebar isAluno />
       <main className="ml-64 flex-1 p-6">
         <h1 className="text-3xl font-bold mb-4">{quiz.title}</h1>
+
+        {erro && (
+          <div className="text-red-700 bg-red-100 dark:bg-red-900/50 dark:text-red-300 border border-red-300 dark:border-red-600 px-4 py-2 rounded text-center mb-4 text-sm">
+            {erro}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {quiz.questions.map((question, index) => (
             <div

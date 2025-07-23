@@ -5,12 +5,25 @@ import DeleteConfirmModal from "./DeleteConfirmModal";
 export default function EditAulaModal({ aula, onClose, onSaved, onDeleted }) {
   const [titulo, setTitulo] = useState(aula.titulo);
   const [descricao, setDescricao] = useState(aula.descricao || "");
-  const [dataPost, setDataPost] = useState(aula.data);
+  const [dataPost, setDataPost] = useState(aula.data || "");
   const [slide, setSlide] = useState(null);
+  const [erro, setErro] = useState("");
   const [showDel, setShowDel] = useState(false);
 
   const salvar = async (e) => {
     e.preventDefault();
+    setErro("");
+
+    if (!titulo.trim()) {
+      setErro("O campo título é obrigatório.");
+      return;
+    }
+
+    if (!dataPost.trim()) {
+      setErro("A data de postagem é obrigatória.");
+      return;
+    }
+
     const fd = new FormData();
     fd.append("titulo", titulo);
     fd.append("descricao", descricao);
@@ -26,7 +39,7 @@ export default function EditAulaModal({ aula, onClose, onSaved, onDeleted }) {
       onSaved();
     } catch (err) {
       console.error("Erro ao salvar alterações:", err.response?.data || err);
-      alert("Erro ao salvar alterações");
+      setErro("Erro ao salvar alterações. Verifique os dados e tente novamente.");
     }
   };
 
@@ -45,6 +58,12 @@ export default function EditAulaModal({ aula, onClose, onSaved, onDeleted }) {
             Editar aula
           </h2>
 
+          {erro && (
+            <div className="mb-4 rounded border border-red-500 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 px-4 py-2 text-sm">
+              {erro}
+            </div>
+          )}
+
           <form
             onSubmit={salvar}
             className="space-y-3 max-h-[65vh] overflow-auto"
@@ -53,24 +72,43 @@ export default function EditAulaModal({ aula, onClose, onSaved, onDeleted }) {
               className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
-              required
+              placeholder="Título da aula"
             />
+
             <textarea
               className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
+              placeholder="Descrição da aula"
             />
+
             <input
               type="date"
               className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
               value={dataPost}
               onChange={(e) => setDataPost(e.target.value)}
-              required
             />
+
+            <div>
+              <label className="block mb-1 text-sm">Anexo atual:</label>
+              {aula.arquivo ? (
+                <a
+                  href={aula.arquivo}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 underline break-all"
+                >
+                  {aula.arquivo.split("/").pop()}
+                </a>
+              ) : (
+                <span className="text-sm text-gray-500">Nenhum arquivo anexado.</span>
+              )}
+            </div>
+
             <input
               type="file"
               accept=".pdf"
-              className="w-full text-sm"
+              className="w-full text-sm mt-1"
               onChange={(e) => setSlide(e.target.files[0])}
             />
 

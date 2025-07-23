@@ -10,11 +10,31 @@ export default function AtividadeCreate() {
   const [horaEntrega, setHoraEntrega] = useState("");
   const [pontos, setPontos] = useState("");
   const [arquivo, setArquivo] = useState(null);
+  const [erro, setErro] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
-    if (!titulo.trim() || !dataEntrega.trim()) {
-      alert("Título e data de entrega são obrigatórios.");
+    setErro("");
+
+    if (!titulo.trim()) {
+      setErro("O campo título é obrigatório.");
+      return;
+    }
+
+    if (!dataEntrega.trim()) {
+      setErro("A data de entrega é obrigatória.");
+      return;
+    }
+
+    if (!horaEntrega.trim()) {
+      setErro("A hora de entrega é obrigatória.");
+      return;
+    }
+
+    if (!pontos.trim()) {
+      setErro("A pontuação da atividade é obrigatória.");
       return;
     }
 
@@ -27,13 +47,16 @@ export default function AtividadeCreate() {
     if (arquivo) formData.append("arquivo", arquivo);
 
     try {
+      setLoading(true);
       await axiosInstance.post("atividades/", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       navigate("/atividades");
     } catch (err) {
       console.error("Erro ao criar atividade:", err.response?.data || err);
-      alert("Erro ao criar atividade. Verifique os campos e tente novamente.");
+      setErro("Erro ao criar atividade. Verifique os campos e tente novamente.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -53,6 +76,12 @@ export default function AtividadeCreate() {
         </h1>
 
         <div className="max-w-lg space-y-4">
+          {erro && (
+            <div className="rounded border border-red-500 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 px-4 py-2 text-sm">
+              {erro}
+            </div>
+          )}
+
           <div>
             <label className="block mb-1 text-sm">Título</label>
             <input
@@ -115,9 +144,10 @@ export default function AtividadeCreate() {
 
           <button
             onClick={handleSubmit}
-            className="bg-green-600 hover:bg-green-700 text-white py-2 px-6 rounded"
+            disabled={loading}
+            className="bg-green-600 hover:bg-green-700 text-white py-2 px-6 rounded disabled:opacity-50"
           >
-            Criar Atividade
+            {loading ? "Criando..." : "Criar Atividade"}
           </button>
         </div>
       </main>

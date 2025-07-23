@@ -10,6 +10,7 @@ export default function CriarAulaModal({ isOpen, onClose, onSaved }) {
   const [linkReuniao, setLinkReuniao] = useState("");
   const [slide, setSlide] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState("");
 
   useEffect(() => {
     if (!isOpen) {
@@ -21,6 +22,7 @@ export default function CriarAulaModal({ isOpen, onClose, onSaved }) {
       setLinkReuniao("");
       setSlide(null);
       setLoading(false);
+      setErro("");
     }
   }, [isOpen]);
 
@@ -28,7 +30,22 @@ export default function CriarAulaModal({ isOpen, onClose, onSaved }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErro("");
     if (loading) return;
+
+    // Validação manual
+    if (!titulo.trim()) {
+      setErro("Por favor, preencha o título da aula.");
+      return;
+    }
+    if (!dataPostagem) {
+      setErro("Por favor, selecione a data de postagem.");
+      return;
+    }
+    if (agendar && !dataAgendada) {
+      setErro("Você marcou para agendar a aula, mas esqueceu de informar a data e hora.");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("titulo", titulo);
@@ -50,7 +67,7 @@ export default function CriarAulaModal({ isOpen, onClose, onSaved }) {
       onClose();
     } catch (err) {
       console.error("Erro ao criar aula:", err.response?.data || err.message);
-      alert("Erro ao publicar aula. Confira os dados e tente novamente.");
+      setErro("Erro ao publicar aula. Verifique os dados e tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -63,13 +80,18 @@ export default function CriarAulaModal({ isOpen, onClose, onSaved }) {
           Criar Nova Aula
         </h2>
 
+        {erro && (
+          <div className="mb-4 rounded border border-red-500 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 px-4 py-2 text-sm">
+            {erro}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
             placeholder="Título da aula"
             className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
-            required
           />
 
           <textarea
@@ -86,7 +108,6 @@ export default function CriarAulaModal({ isOpen, onClose, onSaved }) {
               value={dataPostagem}
               onChange={(e) => setDataPostagem(e.target.value)}
               className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
-              required
             />
           </label>
 

@@ -1,15 +1,23 @@
 import React, { useState } from "react";
 import axios from "../utils/axiosInstance";
 import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [souAdmin, setSouAdmin] = useState(false);
   const [erroLogin, setErroLogin] = useState("");
+  const navigate = useNavigate();
 
   const handleLogin = async () => {
     setErroLogin("");
+
+    if (!username || !password) {
+      setErroLogin("Por favor, preencha todos os campos.");
+      return;
+    }
+
     try {
       const response = await axios.post("token/", {
         username,
@@ -20,30 +28,25 @@ export default function Login() {
       const decoded = jwtDecode(access);
 
       const isStaff = decoded.is_staff === true || decoded.is_staff === "true";
-      const isSuperuser =
-        decoded.is_superuser === true || decoded.is_superuser === "true";
+      const isSuperuser = decoded.is_superuser === true || decoded.is_superuser === "true";
       const userFromBackend = decoded.username;
 
       localStorage.setItem("access", access);
+      localStorage.setItem("refresh", refresh);
       localStorage.setItem("username", userFromBackend);
       localStorage.setItem("is_staff", JSON.stringify(isStaff));
       localStorage.setItem("is_superuser", JSON.stringify(isSuperuser));
       localStorage.removeItem("fotoPerfil");
 
       if (souAdmin) {
-        // ✅ Somente o superuser fixo "admin" pode entrar no painel admin
         if (isSuperuser && userFromBackend === "admin") {
-          localStorage.setItem("refresh", refresh);
           window.location.href = "/admin-dashboard";
         } else {
           localStorage.removeItem("refresh");
-          setErroLogin("Você não é um administrador.");
+          setErroLogin("❌ Você não é um administrador.");
         }
         return;
       }
-
-      // login normal
-      localStorage.setItem("refresh", refresh);
 
       if (isSuperuser) {
         window.location.href = "/admin-dashboard";
@@ -54,7 +57,13 @@ export default function Login() {
       }
     } catch (error) {
       console.error("Erro no login:", error);
-      setErroLogin("Usuário ou senha incorretos ou erro no servidor.");
+
+      let msg = "❌ Usuário ou senha incorretos ou erro no servidor.";
+      if (error.response?.data?.detail) {
+        msg = "❌ " + error.response.data.detail;
+      }
+
+      setErroLogin(msg);
     }
   };
 
@@ -72,7 +81,7 @@ export default function Login() {
         </p>
 
         {erroLogin && (
-          <div className="text-red-700 bg-red-100 dark:bg-red-900/50 dark:text-red-300 border border-red-300 dark:border-red-600 px-4 py-2 rounded text-center mb-4">
+          <div className="text-red-700 bg-red-100 dark:bg-red-900/50 dark:text-red-300 border border-red-300 dark:border-red-600 px-4 py-2 rounded text-center mb-4 text-sm">
             {erroLogin}
           </div>
         )}
@@ -93,8 +102,8 @@ export default function Login() {
         />
 
         <p
-          className="text-sm text-blue-600 hover:underline text-center cursor-pointer"
-          onClick={() => (window.location.href = "/recuperar-senha")}
+          className="text-sm text-blue-600 hover:underline text-center cursor-pointer mb-4"
+          onClick={() => navigate("/recuperar-senha")}
         >
           Esqueceu sua senha?
         </p>
@@ -116,7 +125,7 @@ export default function Login() {
           Entrar
         </button>
         <button
-          onClick={() => (window.location.href = "/cadastro")}
+          onClick={() => navigate("/cadastro")}
           className="w-full border border-gray-400 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-black dark:text-white py-2 rounded-md"
         >
           Criar conta
