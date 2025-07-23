@@ -31,6 +31,7 @@ from usuarios.views import (
     ChangePasswordView,
 )
 
+# DRF Router para ViewSets
 router = DefaultRouter()
 router.register(
     r"api/admin/solicitacoes-professor",
@@ -39,7 +40,7 @@ router.register(
 )
 
 urlpatterns = [
-    # Admin Django
+    # Admin
     path("admin/", admin.site.urls),
 
     # Autenticação
@@ -47,13 +48,13 @@ urlpatterns = [
     path("api/token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/", include("djoser.urls")),
     path("api/", include("djoser.urls.jwt")),
+    path("api/change_password/", ChangePasswordView.as_view(), name="change_password"),
 
     # Usuários
     path("api/usuarios/", UsuarioListCreateView.as_view(), name="usuarios"),
     path("api/usuarios/<str:username>/", UsuarioDetailView.as_view(), name="usuario_detail"),
     path("api/foto-perfil/", AtualizarFotoPerfilView.as_view(), name="atualizar_foto_perfil"),
     path("api/alunos/", AlunoListView.as_view(), name="alunos"),
-    path("api/change_password/", ChangePasswordView.as_view(), name="change_password"),
 
     # Aulas
     path("api/aulas/", AulaView.as_view(), name="aulas"),
@@ -78,11 +79,7 @@ urlpatterns = [
     path("api/forum/", ForumAPIView.as_view(), name="forum"),
     path("api/forum/<int:pk>/", ForumAPIView.as_view(), name="forum_detail"),
     path("api/forum/<int:pk>/responder/", ResponderComentarioAPIView.as_view(), name="forum_responder"),
-    path(
-        "api/forum/<int:pk>/resposta/<int:resposta_id>/",
-        ResponderComentarioAPIView.as_view(),
-        name="forum_resposta_detail"
-    ),
+    path("api/forum/<int:pk>/resposta/<int:resposta_id>/", ResponderComentarioAPIView.as_view(), name="forum_resposta_detail"),
 
     # Desempenho
     path("api/desempenhos/", DesempenhoCreateListView.as_view(), name="desempenhos"),
@@ -92,9 +89,9 @@ urlpatterns = [
     path("api/solicitacoes-professor/", SolicitacaoProfessorCreateView.as_view(), name="solicitacao_professor"),
 ]
 
-# Admin ViewSet via DRF router
+# ViewSets registrados
 urlpatterns += router.urls
 
-# Servir arquivos de mídia em DEBUG
+# Servir arquivos de mídia durante o desenvolvimento
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

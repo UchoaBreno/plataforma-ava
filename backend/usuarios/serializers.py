@@ -99,14 +99,16 @@ class QuestaoSerializer(serializers.ModelSerializer):
         fields = ["id", "text", "choices"]
 
 
+# Serializer de leitura para quizzes
 class QuizSerializer(serializers.ModelSerializer):
     questions = QuestaoSerializer(many=True, read_only=True)
+    criador_nome = serializers.CharField(source="criador.username", read_only=True)
 
     class Meta:
         model = Quiz
-        fields = ["id", "title", "description", "created_at", "questions"]
+        fields = ["id", "title", "description", "created_at", "questions", "criador_nome"]
 
-
+# Serializer de respostas ao quiz
 class RespostaQuizSerializer(serializers.ModelSerializer):
     aluno_nome = serializers.CharField(source="aluno.username", read_only=True)
     quiz_titulo = serializers.CharField(source="quiz.title", read_only=True)
@@ -114,15 +116,20 @@ class RespostaQuizSerializer(serializers.ModelSerializer):
     class Meta:
         model = RespostaQuiz
         fields = [
-            "id", "quiz", "quiz_titulo", "aluno", "aluno_nome",
-            "resposta", "nota", "respondido_em",
+            "id",
+            "quiz",
+            "quiz_titulo",
+            "aluno",
+            "aluno_nome",
+            "resposta",
+            "nota",
+            "respondido_em",
         ]
         extra_kwargs = {
             "aluno": {"read_only": True},
             "nota": {"read_only": True},
             "respondido_em": {"read_only": True},
         }
-
 
 class CustomLoginSerializer(serializers.Serializer):
     username = serializers.CharField()

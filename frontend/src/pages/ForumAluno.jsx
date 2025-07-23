@@ -8,7 +8,7 @@ export default function ForumAluno() {
   const [novoComentario, setNovoComentario] = useState("");
   const [respostaAtiva, setRespostaAtiva] = useState(null);
   const [novaResposta, setNovaResposta] = useState("");
-  const [editando, setEditando] = useState({ id: null, texto: "", isResposta: false, comentarioPaiId: null });
+  const [editando, setEditando] = useState({ id: null, texto: "", isResposta: false });
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
 
@@ -62,11 +62,9 @@ export default function ForumAluno() {
     }
   };
 
-  const apagar = async (id, isResposta = false, comentarioPaiId = null) => {
+  const apagar = async (id, isResposta = false) => {
     try {
-      const url = isResposta
-        ? `forum/respostas/${id}/`
-        : `forum/${id}/`;
+      const url = isResposta ? `forum/respostas/${id}/` : `forum/${id}/`;
       await axiosInstance.delete(url);
       fetchComentarios();
     } catch (err) {
@@ -74,19 +72,17 @@ export default function ForumAluno() {
     }
   };
 
-  const iniciarEdicao = (id, texto, isResposta = false, comentarioPaiId = null) => {
-    setEditando({ id, texto, isResposta, comentarioPaiId });
+  const iniciarEdicao = (id, texto, isResposta = false) => {
+    setEditando({ id, texto, isResposta });
   };
 
   const salvarEdicao = async () => {
     const { id, texto, isResposta } = editando;
     if (!texto.trim()) return;
     try {
-      const url = isResposta
-        ? `forum/respostas/${id}/`
-        : `forum/${id}/`;
+      const url = isResposta ? `forum/respostas/${id}/` : `forum/${id}/`;
       await axiosInstance.put(url, { texto });
-      setEditando({ id: null, texto: "", isResposta: false, comentarioPaiId: null });
+      setEditando({ id: null, texto: "", isResposta: false });
       fetchComentarios();
     } catch (err) {
       console.error("Erro ao editar:", err);
@@ -147,7 +143,7 @@ export default function ForumAluno() {
             >
               Responder
             </button>
-            {comentario.autor_nome === username && (
+            {comentario.autor_username === username && (
               <>
                 <button
                   onClick={() => iniciarEdicao(comentario.id, comentario.texto)}
@@ -202,7 +198,7 @@ export default function ForumAluno() {
                 ) : (
                   <span className="ml-1 break-words">{resposta.texto}</span>
                 )}
-                {resposta.autor_nome === username && (
+                {resposta.autor_username === username && (
                   <div className="flex flex-wrap gap-2 ml-4 mt-1 text-xs">
                     <button
                       onClick={() => iniciarEdicao(resposta.id, resposta.texto, true)}

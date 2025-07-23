@@ -85,10 +85,17 @@ class AulasDisponiveisView(ListAPIView):
 
 
 # ─── Quizzes ──────────────────────────────
-class QuizListCreateView(ListCreateAPIView):
+class QuizListCreateView(generics.ListCreateAPIView):
+    queryset = Quiz.objects.all().order_by('-created_at')
     serializer_class = QuizSerializer
-    permission_classes = [IsAuthenticated]
-    queryset = Quiz.objects.all()
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [permissions.IsAuthenticated(), permissions.IsAdminUser()]
+        return [permissions.AllowAny()]
+
+    def perform_create(self, serializer):
+        serializer.save(criador=self.request.user)
 
 
 class QuizDetailView(RetrieveUpdateDestroyAPIView):
