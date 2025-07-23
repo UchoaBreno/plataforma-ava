@@ -62,7 +62,7 @@ export default function Login() {
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
       <div className="bg-white dark:bg-gray-800 p-8 border border-gray-300 dark:border-gray-700 rounded-md shadow-md w-full max-w-md">
         <h1 className="text-3xl font-semibold text-gray-800 dark:text-white mb-1">
-          Plataforma<span className="text-green-500">AVA</span>
+          B-High<span className="text-green-500">Education</span>
         </h1>
         <p className="text-black dark:text-gray-300 text-base mb-1">
           Entre com sua conta

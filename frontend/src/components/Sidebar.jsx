@@ -81,7 +81,7 @@ export default function Sidebar({ isStaff = undefined, isAluno = undefined }) {
     <>
       <div className="border-b border-gray-700 p-6 text-2xl font-bold text-white flex justify-between lg:justify-center">
         <span>
-          Plataforma<span className="text-green-500">AVA</span>
+          B-High<span className="text-green-500">Education</span>
         </span>
         <button
           className="text-white text-xl lg:hidden"

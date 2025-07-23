@@ -158,6 +158,31 @@ class UsuarioDetailView(RetrieveUpdateDestroyAPIView):
         return Response({"detail": "Usuário desativado"}, status=204)
 
 
+class ChangePasswordView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get("email")
+        old_password = request.data.get("old_password")
+        new_password = request.data.get("new_password")
+
+        if not email or not old_password or not new_password:
+            return Response({"detail": "Todos os campos são obrigatórios."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = Usuario.objects.get(email=email)
+        except Usuario.DoesNotExist:
+            return Response({"detail": "Usuário não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+        if not user.check_password(old_password):
+            return Response({"detail": "Senha antiga incorreta."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+
+        return Response({"detail": "Senha alterada com sucesso!"}, status=status.HTTP_200_OK)
+
+
 # ─── Foto Perfil ──────────────────────────
 class AtualizarFotoPerfilView(APIView):
     parser_classes = [MultiPartParser]

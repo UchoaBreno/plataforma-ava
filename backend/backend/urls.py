@@ -28,6 +28,7 @@ from usuarios.views import (
     DesempenhoDetailView,
     SolicitacaoProfessorCreateView,
     SolicitacaoProfessorAdminViewSet,
+    ChangePasswordView,
 )
 
 router = DefaultRouter()
@@ -52,6 +53,7 @@ urlpatterns = [
     path("api/usuarios/<str:username>/", UsuarioDetailView.as_view(), name="usuario_detail"),
     path("api/foto-perfil/", AtualizarFotoPerfilView.as_view(), name="atualizar_foto_perfil"),
     path("api/alunos/", AlunoListView.as_view(), name="alunos"),
+    path("api/change_password/", ChangePasswordView.as_view(), name="change_password"),
 
     # Aulas
     path("api/aulas/", AulaView.as_view(), name="aulas"),
