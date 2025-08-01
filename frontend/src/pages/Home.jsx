@@ -96,7 +96,7 @@ export default function Home() {
                 )}
               </div>
             )}
-            {/* Se o conteúdo for um vídeo, mostramos uma imagem de play */}
+            {/* Se o conteúdo for um vídeo, mostramos uma imagem genérica */}
             {a.video_url && (
               <div className="w-full h-24 bg-gray-300 rounded-lg flex items-center justify-center">
                 <img
