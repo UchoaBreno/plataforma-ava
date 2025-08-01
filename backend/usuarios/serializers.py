@@ -55,13 +55,13 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
 class AulaSerializer(serializers.ModelSerializer):
     arquivo = serializers.FileField(use_url=True, required=False)
+    agendada = serializers.BooleanField(required=False)
 
     class Meta:
         model = Aula
         fields = "__all__"
         extra_kwargs = {
             "professor": {"read_only": True},
-            "agendada": {"required": False},  # <- 🔧 Garantir que é opcional no envio
         }
 
 
