@@ -184,10 +184,6 @@ export default function Home() {
                       )}
                     </div>
                   )}
-                  {a.video_url && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    </div>
-                  )}
                   {/* Placeholder caso não haja vídeo ou arquivo */}
                   {!a.arquivo && !a.video_url && (
                     <div className="h-24 w-full text-green-700 rounded-lg flex items-center justify-center text-white">
