@@ -4,8 +4,8 @@ import { jwtDecode } from "jwt-decode";
 import Sidebar from "../components/Sidebar";
 import axiosInstance from "../utils/axiosInstance";
 
-const LIMITE_MEDIA = 7;  // Aulas que vencem nos próximos 7 dias
-const LIMITE_BAIXA = 31;  // Aulas que vencem dentro de 31 dias
+const LIMITE_MEDIA = 7;
+const LIMITE_BAIXA = 31;
 
 export default function AulasAluno() {
   const token = localStorage.getItem("access");
@@ -30,7 +30,7 @@ export default function AulasAluno() {
   useEffect(() => {
     if (!token || !alunoId) return;
     carregarPrioridades();
-    const intervalo = setInterval(carregarPrioridades, 60 * 60 * 1000);  // Atualiza a cada hora
+    const intervalo = setInterval(carregarPrioridades, 60 * 60 * 1000);
     return () => clearInterval(intervalo);
   }, [token, alunoId]);
 
@@ -80,10 +80,19 @@ export default function AulasAluno() {
         <p className="text-sm text-gray-600 dark:text-gray-300">Nenhuma aula nesta prioridade.</p>
       ) : (
         <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-          {lista.map((a) => {
+          {lista.map(a => {
+            let link = "#";
+            if (a.arquivo) {
+              link = a.arquivo.startsWith("http") ? a.arquivo : `${axiosInstance.defaults.baseURL}${a.arquivo}`;
+            } else if (a.video_url) {
+              link = a.video_url;
+            }
             return (
-              <div
+              <a
                 key={a.id}
+                href={link}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="block rounded border border-green-100 bg-green-50 dark:bg-gray-700 px-3 py-2 hover:bg-green-100 dark:hover:bg-gray-600"
               >
                 <p className="text-sm font-medium text-green-900 dark:text-green-300">
@@ -97,7 +106,7 @@ export default function AulasAluno() {
                     {a.descricao}
                   </p>
                 )}
-              </div>
+              </a>
             );
           })}
         </div>
@@ -191,15 +200,17 @@ export default function AulasAluno() {
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <Sidebar isAluno />
       <main className="ml-64 flex-1 p-4 sm:p-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-400 mb-6">
-          Minhas Aulas
-        </h1>
-        <button
-          onClick={() => setShowEntrega(true)}
-          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-        >
-          Entregar atividade
-        </button>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-400">
+            Minhas Aulas
+          </h1>
+          <button
+            onClick={() => setShowEntrega(true)}
+            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          >
+            Entregar atividade
+          </button>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <CardPrioridade

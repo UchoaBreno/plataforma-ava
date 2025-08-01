@@ -135,9 +135,6 @@ export default function Home() {
           <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
             Você tem <span className="font-semibold">{metrics.aulasPendentes}</span> aulas pendentes de <span className="font-semibold">{metrics.totalAulas}</span>.
           </p>
-          <p className="text-sm text-gray-700 dark:text-gray-300">
-             Aulas concluídas: <span className="font-semibold">{metrics.aulasConcluidas}</span>
-          </p>
         </div>
       </main>
     </div>

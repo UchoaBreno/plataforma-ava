@@ -54,11 +54,6 @@ class EntregaView(ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(aluno=self.request.user)
 
-        # Atualiza as aulas concluídas após a entrega
-        aula = Entrega.aula  # Garantir que a aula da entrega seja acessada corretamente
-        if aula not in self.request.user.aulas_concluidas.all():
-            self.request.user.aulas_concluidas.add(aula)
-
 # ─── Aulas ────────────────────────────────
 
 # ─── Nova View para Métricas das Aulas ─────────────────────────
