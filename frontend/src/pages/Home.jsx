@@ -85,21 +85,32 @@ export default function Home() {
             📅 {a.data ? dayjs(a.data).format("DD/MM/YYYY") : ""}
           </p>
           <div className="mt-2">
+            {/* Se o conteúdo for um slide (PDF ou Imagem) */}
             {a.arquivo && (
-              <img
-                src={a.arquivo}
-                alt={a.titulo}
-                className="h-20 w-full object-cover rounded-lg"
-              />
+              <div className="w-full h-24 bg-gray-300 rounded-lg flex items-center justify-center">
+                {/* Aqui verificamos se é um PDF ou imagem e mostramos de acordo */}
+                {a.arquivo.endsWith(".pdf") ? (
+                  <span className="text-white">📄 Slide (PDF)</span>
+                ) : (
+                  <img src={a.arquivo} alt={a.titulo} className="object-cover h-24 w-full rounded-lg" />
+                )}
+              </div>
             )}
+            {/* Se o conteúdo for um vídeo */}
             {a.video_url && (
               <video
                 controls
-                className="h-20 w-full object-cover rounded-lg"
+                className="h-24 w-full object-cover rounded-lg"
                 src={a.video_url}
               >
                 Seu navegador não suporta vídeos.
               </video>
+            )}
+            {/* Placeholder caso não haja vídeo ou slide */}
+            {!a.arquivo && !a.video_url && (
+              <div className="h-24 w-full bg-gray-300 rounded-lg flex items-center justify-center text-white">
+                Sem conteúdo
+              </div>
             )}
           </div>
         </div>
@@ -162,21 +173,31 @@ export default function Home() {
                 <h3 className="font-semibold text-green-700 dark:text-green-400">{a.titulo}</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-300">{a.descricao}</p>
                 <div className="mt-2">
+                  {/* Verifica se há arquivo ou vídeo para exibir a thumbnail */}
                   {a.arquivo && (
-                    <img
-                      src={a.arquivo}
-                      alt={a.titulo}
-                      className="h-20 w-full object-cover rounded-lg"
-                    />
+                    <div className="w-full h-24 bg-gray-300 rounded-lg flex items-center justify-center">
+                      {/* Aqui verificamos se é um PDF ou imagem e mostramos de acordo */}
+                      {a.arquivo.endsWith(".pdf") ? (
+                        <span className="text-white">📄 Slide (PDF)</span>
+                      ) : (
+                        <img src={a.arquivo} alt={a.titulo} className="object-cover h-24 w-full rounded-lg" />
+                      )}
+                    </div>
                   )}
                   {a.video_url && (
                     <video
                       controls
-                      className="h-20 w-full object-cover rounded-lg"
+                      className="h-24 w-full object-cover rounded-lg"
                       src={a.video_url}
                     >
                       Seu navegador não suporta vídeos.
                     </video>
+                  )}
+                  {/* Placeholder caso não haja vídeo ou arquivo */}
+                  {!a.arquivo && !a.video_url && (
+                    <div className="h-24 w-full bg-gray-300 rounded-lg flex items-center justify-center text-white">
+                      Sem conteúdo
+                    </div>
                   )}
                 </div>
               </div>
