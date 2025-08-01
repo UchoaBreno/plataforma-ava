@@ -61,7 +61,8 @@ class AulaView(ListCreateAPIView):
     parser_classes = [MultiPartParser]
 
     def perform_create(self, serializer):
-        serializer.save(professor=self.request.user)
+        agendada = self.request.data.get("agendada", "false").lower() == "true"
+        serializer.save(professor=self.request.user, agendada=agendada)
 
 
 class AulaDetailView(RetrieveUpdateDestroyAPIView):
