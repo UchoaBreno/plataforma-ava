@@ -71,8 +71,47 @@ export default function Home() {
     }
   }
 
+  const renderLista = (lista) => (
+    <div className="space-y-4">
+      {lista.map((a) => (
+        <div
+          key={a.id}
+          className="cursor-pointer rounded border border-green-300 bg-white dark:bg-gray-800 p-4 shadow hover:bg-green-100 dark:hover:bg-gray-700"
+          onClick={() => navigate("/aulas")}
+        >
+          <h3 className="text-lg font-semibold text-green-700 dark:text-green-400">{a.titulo}</h3>
+          <p className="text-sm text-gray-700 dark:text-gray-300">{a.descricao}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            📅 {a.data ? dayjs(a.data).format("DD/MM/YYYY") : ""}
+          </p>
+          <div className="mt-2">
+            {a.arquivo && (
+              <img
+                src={a.arquivo}
+                alt={a.titulo}
+                className="h-20 w-full object-cover rounded-lg"
+              />
+            )}
+            {a.video_url && (
+              <video
+                controls
+                className="h-20 w-full object-cover rounded-lg"
+                src={a.video_url}
+              >
+                Seu navegador não suporta vídeos.
+              </video>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   const CardPrioridade = ({ titulo, lista, borda }) => (
-    <div className={`rounded border ${borda} bg-white dark:bg-gray-800 p-4 shadow cursor-pointer`} onClick={() => navigate("/aulas")}>      
+    <div
+      className={`rounded border ${borda} bg-white dark:bg-gray-800 p-4 shadow cursor-pointer`}
+      onClick={() => navigate("/aulas")}
+    >
       <h2 className="text-lg font-semibold text-green-700 dark:text-green-400 mb-2">
         {titulo}
       </h2>
@@ -122,6 +161,24 @@ export default function Home() {
               >
                 <h3 className="font-semibold text-green-700 dark:text-green-400">{a.titulo}</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-300">{a.descricao}</p>
+                <div className="mt-2">
+                  {a.arquivo && (
+                    <img
+                      src={a.arquivo}
+                      alt={a.titulo}
+                      className="h-20 w-full object-cover rounded-lg"
+                    />
+                  )}
+                  {a.video_url && (
+                    <video
+                      controls
+                      className="h-20 w-full object-cover rounded-lg"
+                      src={a.video_url}
+                    >
+                      Seu navegador não suporta vídeos.
+                    </video>
+                  )}
+                </div>
               </div>
             ))}
         </div>
