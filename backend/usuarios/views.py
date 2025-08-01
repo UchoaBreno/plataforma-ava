@@ -77,6 +77,7 @@ class AulaDetailView(RetrieveUpdateDestroyAPIView):
         return Aula.objects.none()
 
 
+# ─── Aulas Disponíveis ─────────────────────
 class AulasDisponiveisView(ListAPIView):
     serializer_class = AulaSerializer
     permission_classes = [IsAuthenticated]
@@ -92,9 +93,14 @@ class AulasDisponiveisView(ListAPIView):
         return Aula.objects.annotate(
             ja_entregue=Exists(entregas)
         ).filter(
-            Q(agendada=False) | Q(agendada=True, data__lte=agora.date(), hora__lte=agora.time()),
+            Q(
+                Q(agendada=False) |
+                Q(agendada=True, data__lt=agora.date()) |
+                Q(agendada=True, data=agora.date(), hora__lte=agora.time())
+            ),
             ja_entregue=False
         ).order_by('-criada_em')
+
 
 
 # ─── Quizzes ──────────────────────────────
