@@ -137,16 +137,19 @@ export default function Home() {
         </h2>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[...alta, ...media, ...baixa].slice(0, 6).map(a => (
-            <div
-              key={a.id}
-              className="cursor-pointer rounded border border-green-300 bg-white dark:bg-gray-800 p-3 shadow hover:bg-green-100 dark:hover:bg-gray-700"
-              onClick={() => navigate("/aulas")}
-            >
-              <h3 className="font-semibold text-green-700 dark:text-green-400">{a.titulo}</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300">{a.descricao}</p>
-            </div>
-          ))}
+          {[...alta, ...media, ...baixa]
+            .filter(a => a && a.id)
+            .slice(0, 6)
+            .map(a => (
+              <div
+                key={a.id}
+                className="cursor-pointer rounded border border-green-300 bg-white dark:bg-gray-800 p-3 shadow hover:bg-green-100 dark:hover:bg-gray-700"
+                onClick={() => navigate("/aulas")}
+              >
+                <h3 className="font-semibold text-green-700 dark:text-green-400">{a.titulo}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">{a.descricao}</p>
+              </div>
+            ))}
         </div>
 
         {modalAberto && (
