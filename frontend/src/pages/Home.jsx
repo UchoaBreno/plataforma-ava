@@ -13,9 +13,6 @@ export default function Home() {
   const token = localStorage.getItem("access");
 
   const [alunoId, setAlunoId] = useState(null);
-  const [alta, setAlta] = useState([]);
-  const [media, setMedia] = useState([]);
-  const [baixa, setBaixa] = useState([]);
   const [proximaAula, setProximaAula] = useState(null);  // Para notificações
   const [statusNotificacao, setStatusNotificacao] = useState(""); // Status de notificação
 
@@ -52,7 +49,6 @@ export default function Home() {
       );
 
       const hoje = dayjs().startOf("day");
-      const _alta = [], _media = [], _baixa = [];
       let proximaAulaVencendo = null;
 
       aulas.forEach(a => {
@@ -62,22 +58,10 @@ export default function Home() {
         
         // Aulas em alta prioridade (vence hoje)
         if (diff <= 0) {
-          _alta.push(a);
           if (!proximaAulaVencendo) proximaAulaVencendo = a; // Define a primeira aula que vence
-        }
-        // Aulas em média prioridade (próximos 7 dias)
-        else if (diff <= LIMITE_MEDIA) {
-          _media.push(a);
-        }
-        // Aulas em baixa prioridade (até 31 dias)
-        else if (diff <= LIMITE_BAIXA) {
-          _baixa.push(a);
         }
       });
 
-      setAlta(_alta);
-      setMedia(_media);
-      setBaixa(_baixa);
       setProximaAula(proximaAulaVencendo);
 
       // Verifica a notificação caso uma aula esteja vencendo
@@ -90,36 +74,6 @@ export default function Home() {
       console.error("Erro ao carregar aulas:", err.response?.data || err);
     }
   }
-
-  const renderLista = (lista) => (
-    <div className="space-y-4">
-      {lista.map((a) => (
-        <div
-          key={a.id}
-          className="cursor-pointer rounded border border-green-300 bg-white dark:bg-gray-800 p-4 shadow hover:bg-green-100 dark:hover:bg-gray-700"
-          onClick={() => navigate("/aulas")}
-        >
-          <h3 className="text-lg font-semibold text-green-700 dark:text-green-400">{a.titulo}</h3>
-          <p className="text-sm text-gray-700 dark:text-gray-300">{a.descricao}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            📅 {a.data ? dayjs(a.data).format("DD/MM/YYYY") : ""}
-          </p>
-        </div>
-      ))}
-    </div>
-  );
-
-  const CardPrioridade = ({ titulo, lista, borda }) => (
-    <div
-      className={`rounded border ${borda} bg-white dark:bg-gray-800 p-4 shadow cursor-pointer`}
-      onClick={() => navigate("/aulas")}
-    >
-      <h2 className="text-lg font-semibold text-green-700 dark:text-green-400 mb-2">
-        {titulo}
-      </h2>
-      <p className="text-sm text-gray-600 dark:text-gray-300">{lista.length} aula(s)</p>
-    </div>
-  );
 
   return (
     <div className={`flex min-h-screen ${statusNotificacao ? 'bg-red-100' : 'bg-gray-100'} dark:bg-gray-900 text-gray-900 dark:text-white`}>
@@ -135,75 +89,6 @@ export default function Home() {
             {statusNotificacao}
           </div>
         )}
-
-        {/* Resumo das aulas e suas prioridades */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-          <CardPrioridade
-            titulo="Alta prioridade (vence hoje)"
-            borda="border-red-300"
-            lista={alta}
-          />
-          <CardPrioridade
-            titulo="Média prioridade (próx. 7 dias)"
-            borda="border-yellow-300"
-            lista={media}
-          />
-          <CardPrioridade
-            titulo="Baixa prioridade (até 31 dias)"
-            borda="border-blue-300"
-            lista={baixa}
-          />
-        </div>
-
-        {/* Exibição das aulas recentes */}
-        <h2 className="text-xl font-semibold text-green-700 dark:text-green-400 mb-3">
-          Aulas Recentes
-        </h2>
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[...alta, ...media, ...baixa]
-            .filter((a) => a && a.id)
-            .slice(0, 6)
-            .map((a) => (
-              <div
-                key={a.id}
-                className="cursor-pointer rounded border border-green-300 bg-white dark:bg-gray-800 p-3 shadow hover:bg-green-100 dark:hover:bg-gray-700"
-                onClick={() => navigate("/aulas")}
-              >
-                <h3 className="font-semibold text-green-700 dark:text-green-400">{a.titulo}</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300">{a.descricao}</p>
-                <div className="mt-2">
-                  {/* Se o conteúdo for um slide (PDF ou Imagem) */}
-                  {a.arquivo && (
-                    <div className="w-full h-24 bg-gray-300 rounded-lg flex items-center justify-center">
-                      {/* Aqui verificamos se é um PDF ou imagem e mostramos de acordo */}
-                      {a.arquivo.endsWith(".pdf") ? (
-                        <span className="text-green-700">📄(PDF)</span>
-                      ) : (
-                        <img src={a.arquivo} alt={a.titulo} className="object-cover h-24 w-full rounded-lg" />
-                      )}
-                    </div>
-                  )}
-                  {/* Se o conteúdo for um vídeo, mostramos uma imagem genérica */}
-                  {a.video_url && (
-                    <div className="w-full h-24 bg-gray-300 rounded-lg flex items-center justify-center">
-                      <img
-                        src="https://via.placeholder.com/150/0000FF/808080?text=Play"
-                        alt="Play Video"
-                        className="object-cover w-full h-24 rounded-lg"
-                      />
-                    </div>
-                  )}
-                  {/* Placeholder caso não haja vídeo ou arquivo */}
-                  {!a.arquivo && !a.video_url && (
-                    <div className="h-24 w-full text-green-700 rounded-lg flex items-center justify-center text-white">
-                      Sem conteúdo
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-        </div>
       </main>
     </div>
   );
