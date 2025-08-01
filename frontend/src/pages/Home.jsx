@@ -96,7 +96,7 @@ export default function Home() {
                 )}
               </div>
             )}
-            {/* Se o conteúdo for um vídeo, exibimos uma miniatura genérica */}
+            {/* Se o conteúdo for um vídeo, mostramos uma imagem de play */}
             {a.video_url && (
               <div className="w-full h-24 bg-gray-300 rounded-lg flex items-center justify-center">
                 <img
@@ -186,7 +186,7 @@ export default function Home() {
                   )}
                   {a.video_url && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {/* Mostra uma miniatura genérica de vídeo */}
+                      {/* Mostra uma imagem genérica de vídeo */}
                       <img
                         src="https://via.placeholder.com/150/0000FF/808080?text=Play"
                         alt="Play Video"
