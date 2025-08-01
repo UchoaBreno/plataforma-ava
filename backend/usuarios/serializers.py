@@ -152,19 +152,21 @@ class AtividadeSerializer(serializers.ModelSerializer):
 
 class RespostaForumSerializer(serializers.ModelSerializer):
     autor_nome = serializers.CharField(source="autor.username", read_only=True)
+    autor_username = serializers.CharField(source="autor.username", read_only=True)
 
     class Meta:
         model = RespostaForum
-        fields = ["id", "texto", "autor_nome", "criado_em"]
+        fields = ["id", "texto", "autor_nome", "autor_username", "criado_em"]
 
 
 class ComentarioForumSerializer(serializers.ModelSerializer):
     autor_nome = serializers.CharField(source="autor.username", read_only=True)
+    autor_username = serializers.CharField(source="autor.username", read_only=True)
     respostas = RespostaForumSerializer(many=True, read_only=True)
 
     class Meta:
         model = ComentarioForum
-        fields = ["id", "texto", "autor_nome", "criado_em", "respostas"]
+        fields = ["id", "texto", "autor_nome", "autor_username", "criado_em", "respostas"]
 
 
 class DesempenhoSerializer(serializers.ModelSerializer):

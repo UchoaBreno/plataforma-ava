@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets, generics, permissions
 from rest_framework.generics import (
     ListCreateAPIView,
@@ -266,6 +267,17 @@ class ForumAPIView(APIView):
         )
         return Response({"id": comentario.id})
 
+    def put(self, request, pk):
+        comentario = get_object_or_404(ComentarioForum, pk=pk, autor=request.user)
+        comentario.texto = request.data.get("texto", comentario.texto)
+        comentario.save()
+        return Response({"detail": "Comentário atualizado"})
+
+    def delete(self, request, pk):
+        comentario = get_object_or_404(ComentarioForum, pk=pk, autor=request.user)
+        comentario.delete()
+        return Response({"detail": "Comentário apagado"})
+
 
 class ResponderComentarioAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -280,6 +292,20 @@ class ResponderComentarioAPIView(APIView):
         return Response({"id": resposta.id})
 
 
+class RespostaComentarioAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, pk):
+        resposta = get_object_or_404(RespostaForum, pk=pk, autor=request.user)
+        resposta.texto = request.data.get("texto", resposta.texto)
+        resposta.save()
+        return Response({"detail": "Resposta atualizada"})
+
+    def delete(self, request, pk):
+        resposta = get_object_or_404(RespostaForum, pk=pk, autor=request.user)
+        resposta.delete()
+        return Response({"detail": "Resposta apagada"})
+    
 # ─── Desempenho ───────────────────────────
 class DesempenhoCreateListView(ListCreateAPIView):
     serializer_class = DesempenhoSerializer
