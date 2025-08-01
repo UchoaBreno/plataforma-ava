@@ -10,9 +10,9 @@ export default function Home() {
   const [cargo, setCargo] = useState("Aluno");
   const [alunoId, setAlunoId] = useState(null);
 
-  const [aulasHoje, setAulasHoje] = useState([]);
-  const [aulasSemana, setAulasSemana] = useState([]);
-  const [aulasMes, setAulasMes] = useState([]);
+  const [alta, setAlta] = useState([]);
+  const [media, setMedia] = useState([]);
+  const [baixa, setBaixa] = useState([]);
 
   const [modalAberto, setModalAberto] = useState(null);
 
@@ -41,7 +41,7 @@ export default function Home() {
     async function fetchData() {
       try {
         const [aulasRes, entregasRes] = await Promise.all([
-          axios.get("/api/aulas/", {
+          axios.get("/api/aulas-aluno/", {
             headers: { Authorization: `Bearer ${token}` },
           }),
           axios.get("/api/entregas/", {
@@ -49,35 +49,32 @@ export default function Home() {
           }),
         ]);
 
-        const listaAulas = Array.isArray(aulasRes.data) ? aulasRes.data : [];
-        const listaEntregas = Array.isArray(entregasRes.data) ? entregasRes.data : [];
+        const aulas = Array.isArray(aulasRes.data) ? aulasRes.data : [];
+        const entregas = Array.isArray(entregasRes.data) ? entregasRes.data : [];
 
         const entreguesIds = new Set(
-          listaEntregas
+          entregas
             .filter(e => Number(e.aluno) === Number(alunoId))
             .map(e => Number(e.aula))
         );
 
-        const hoje = dayjs();
-        const hj = listaAulas.filter(a =>
-          dayjs(a.data_postagem).isSame(hoje, "day") &&
-          !entreguesIds.has(Number(a.id))
-        );
-        const sem = listaAulas.filter(a =>
-          dayjs(a.data_postagem).isSame(hoje, "week") &&
-          !hj.find(x => x.id === a.id) &&
-          !entreguesIds.has(Number(a.id))
-        );
-        const mes = listaAulas.filter(a =>
-          dayjs(a.data_postagem).isSame(hoje, "month") &&
-          !hj.find(x => x.id === a.id) &&
-          !sem.find(x => x.id === a.id) &&
-          !entreguesIds.has(Number(a.id))
-        );
+        const hoje = dayjs().startOf("day");
+        const _alta = [], _media = [], _baixa = [];
 
-        setAulasHoje(hj);
-        setAulasSemana(sem);
-        setAulasMes(mes);
+        aulas
+          .filter(a => !entreguesIds.has(Number(a.id)))
+          .forEach(a => {
+            const limite = a.data;
+            if (!limite) return;
+            const diff = dayjs(limite).startOf("day").diff(hoje, "day");
+            if (diff <= 0) _alta.push(a);
+            else if (diff <= 7) _media.push(a);
+            else if (diff <= 31) _baixa.push(a);
+          });
+
+        setAlta(_alta);
+        setMedia(_media);
+        setBaixa(_baixa);
       } catch (err) {
         console.error("Erro ao carregar Home:", err);
       }
@@ -96,7 +93,7 @@ export default function Home() {
           <h3 className="text-lg font-semibold text-green-700 dark:text-green-400">{a.titulo}</h3>
           <p className="text-sm text-gray-700 dark:text-gray-300">{a.descricao}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            📅 {a.data_postagem ? dayjs(a.data_postagem).format("DD/MM/YYYY") : ""}
+            📅 {a.data ? dayjs(a.data).format("DD/MM/YYYY") : ""}
           </p>
         </div>
       ))}
@@ -113,10 +110,9 @@ export default function Home() {
         </h1>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
-          {[
-            { key: "hoje", label: "Aulas de Hoje", lista: aulasHoje },
-            { key: "semana", label: "Aulas da Semana", lista: aulasSemana },
-            { key: "mes", label: "Aulas do Mês", lista: aulasMes },
+          {[{ key: "alta", label: "Alta Prioridade", lista: alta },
+            { key: "media", label: "Média Prioridade", lista: media },
+            { key: "baixa", label: "Baixa Prioridade", lista: baixa },
           ].map(({ key, label, lista }) => (
             <button
               key={key}
@@ -138,7 +134,7 @@ export default function Home() {
         </h2>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {(aulasSemana.length ? aulasSemana : aulasMes).map(a => (
+          {[...alta, ...media, ...baixa].slice(0, 6).map(a => (
             <div
               key={a.id}
               className="rounded border border-green-300 bg-white dark:bg-gray-800 p-3 shadow"
@@ -159,13 +155,13 @@ export default function Home() {
                 ✖
               </button>
               <h2 className="text-xl font-bold text-green-700 dark:text-green-400 mb-3">
-                {modalAberto === "hoje" && "Aulas de Hoje"}
-                {modalAberto === "semana" && "Aulas da Semana"}
-                {modalAberto === "mes" && "Aulas do Mês"}
+                {modalAberto === "alta" && "Alta Prioridade"}
+                {modalAberto === "media" && "Média Prioridade"}
+                {modalAberto === "baixa" && "Baixa Prioridade"}
               </h2>
-              {modalAberto === "hoje" && renderLista(aulasHoje)}
-              {modalAberto === "semana" && renderLista(aulasSemana)}
-              {modalAberto === "mes" && renderLista(aulasMes)}
+              {modalAberto === "alta" && renderLista(alta)}
+              {modalAberto === "media" && renderLista(media)}
+              {modalAberto === "baixa" && renderLista(baixa)}
             </div>
           </div>
         )}

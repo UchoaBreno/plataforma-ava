@@ -12,11 +12,12 @@ export default function Professor() {
 
   const navigate = useNavigate();
 
-  const carregarAulas = () =>
+  const carregarAulas = () => {
     axiosInstance
       .get("aulas/")
       .then((r) => setAulas(r.data))
       .catch(console.error);
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("access");
@@ -75,6 +76,7 @@ export default function Professor() {
             setShowGerenciar(false);
             carregarAulas();
           }}
+          requiredFieldsFeedback // <-- habilita validação no modal
         />
       </main>
     </div>

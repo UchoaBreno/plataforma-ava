@@ -51,9 +51,7 @@ export default function ForumAluno() {
   const enviarResposta = async (comentarioId) => {
     if (!novaResposta.trim()) return;
     try {
-      await axiosInstance.post(`forum/${comentarioId}/responder/`, {
-        texto: novaResposta,
-      });
+      await axiosInstance.post(`forum/${comentarioId}/responder/`, { texto: novaResposta });
       setNovaResposta("");
       setRespostaAtiva(null);
       fetchComentarios();
