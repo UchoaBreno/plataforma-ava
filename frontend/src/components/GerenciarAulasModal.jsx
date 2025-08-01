@@ -12,10 +12,11 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
   const [descricao, setDescricao] = useState("");
   const [data, setData] = useState("");
   const [hora, setHora] = useState("");
-  const [arquivo, setArquivo] = useState(null); // alterado para 'arquivo', que agora pode ser qualquer tipo de mídia
+  const [arquivo, setArquivo] = useState(null); // Alterado para 'arquivo', que agora pode ser qualquer tipo de mídia
   const [agendada, setAgendada] = useState(false);
-
+  
   const [erros, setErros] = useState({});
+  const [carregando, setCarregando] = useState(false); // Estado de carregamento
 
   const recarregarAulas = async () => {
     try {
@@ -32,14 +33,16 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
     if (!descricao.trim()) novosErros.descricao = true;
     if (!data.trim()) novosErros.data = true;
     if (!hora.trim()) novosErros.hora = true;
-    if (!arquivo) novosErros.arquivo = true; // alterado para verificar o arquivo, seja PDF ou Vídeo
+    if (!arquivo) novosErros.arquivo = true; // Alterado para verificar o arquivo, seja PDF ou Vídeo
     setErros(novosErros);
     return Object.keys(novosErros).length === 0;
   };
 
   const publicarAula = async (e) => {
     e.preventDefault();
-    if (!validarCampos()) return;
+    if (!validarCampos() || carregando) return; // Não permite o envio de múltiplos arquivos
+
+    setCarregando(true); // Inicia o carregamento
 
     const fd = new FormData();
     fd.append("titulo", titulo);
@@ -66,6 +69,8 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
     } catch (err) {
       console.error("Erro ao publicar aula:", err.response?.data || err);
       alert("Erro ao publicar aula. Verifique os campos obrigatórios.");
+    } finally {
+      setCarregando(false); // Finaliza o carregamento
     }
   };
 
@@ -197,8 +202,15 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
               />
               {erros.arquivo && <p className="text-sm text-red-500">Escolha um arquivo válido (PDF ou Vídeo)</p>}
 
-              <button className="rounded bg-green-600 hover:bg-green-700 px-4 py-2 font-medium text-white">
-                {aba === "agendar" ? "Agendar Aula" : "Publicar Aula"}
+              <button
+                className="rounded bg-green-600 hover:bg-green-700 px-4 py-2 font-medium text-white"
+                disabled={carregando} // Desabilita o botão enquanto carrega
+              >
+                {carregando ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white"></div> // Adiciona a animação de carregamento
+                ) : (
+                  aba === "agendar" ? "Agendar Aula" : "Publicar Aula"
+                )}
               </button>
             </form>
           )}

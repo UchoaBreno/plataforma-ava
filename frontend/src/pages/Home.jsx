@@ -188,7 +188,7 @@ export default function Home() {
                   {a.video_url && (
                     <video
                       controls
-                      className="h-24 w-full object-cover rounded-lg"
+                      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
                       src={a.video_url}
                     >
                       Seu navegador não suporta vídeos.
@@ -196,7 +196,7 @@ export default function Home() {
                   )}
                   {/* Placeholder caso não haja vídeo ou arquivo */}
                   {!a.arquivo && !a.video_url && (
-                    <div className="h-24 w-full bg-gray-300 rounded-lg flex items-center justify-center text-white">
+                    <div className="h-24 w-full text-gray-600 rounded-lg flex items-center justify-center text-white">
                       Sem conteúdo
                     </div>
                   )}
