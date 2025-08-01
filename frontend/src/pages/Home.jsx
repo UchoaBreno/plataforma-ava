@@ -175,7 +175,8 @@ export default function Home() {
                 <div className="mt-2">
                   {/* Verifica se há arquivo ou vídeo para exibir a thumbnail */}
                   {a.arquivo && (
-                    <div className="w-full h-24 bg-gray-300 rounded-lg flex items-center justify-center">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      
                       {/* Aqui verificamos se é um PDF ou imagem e mostramos de acordo */}
                       {a.arquivo.endsWith(".pdf") ? (
                         <span className="text-green-700">📄(PDF)</span>
