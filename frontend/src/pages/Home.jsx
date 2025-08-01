@@ -13,6 +13,7 @@ export default function Home() {
   const token = localStorage.getItem("access");
 
   const [alunoId, setAlunoId] = useState(null);
+  const [alunoNome, setAlunoNome] = useState("");  // Para armazenar o nome do aluno
   const [alta, setAlta] = useState([]);
   const [media, setMedia] = useState([]);
   const [baixa, setBaixa] = useState([]);
@@ -28,7 +29,11 @@ export default function Home() {
     try {
       const decoded = jwtDecode(token);
       const id = decoded.user_id ?? decoded.id;
-      if (id) setAlunoId(id);
+      const nome = decoded.first_name || decoded.username;  // Captura o nome do aluno
+      if (id) {
+        setAlunoId(id);
+        setAlunoNome(nome);  // Salva o nome do aluno
+      }
     } catch {
       console.error("Token inválido.");
     }
@@ -112,7 +117,7 @@ export default function Home() {
       <Sidebar isAluno />
       <main className="ml-64 flex-1 p-4 sm:p-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-400 mb-6">
-          Página Inicial
+          Bem-vindo à sua tela inicial, {alunoNome}!
         </h1>
 
         {/* Notificação de Aula em Alta Prioridade */}
@@ -125,13 +130,13 @@ export default function Home() {
         {/* Exibindo as métricas */}
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
           <h2 className="text-xl font-semibold text-green-700 dark:text-green-400 mb-3">
-            Bem-vindo à sua área inicial!
+            Resumo da sua atividade
           </h2>
           <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
             Você tem <span className="font-semibold">{metrics.aulasPendentes}</span> aulas pendentes de <span className="font-semibold">{metrics.totalAulas}</span>.
           </p>
           <p className="text-sm text-gray-700 dark:text-gray-300">
-            Aulas concluídas: <span className="font-semibold">{metrics.aulasConcluidas}</span>
+            Aulas concluídas: <span className="font-semibold">{metrics.aulasConcluidas}</span> <button className="text-blue-600" onClick={() => navigate('/entregas')}>Ver Aulas Concluídas</button>
           </p>
         </div>
       </main>
