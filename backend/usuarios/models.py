@@ -2,7 +2,6 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
 
-
 # ─── Usuário ───────────────────────────────────────────────────
 class Usuario(AbstractUser):
     foto_perfil = models.ImageField(upload_to="fotos_perfil/", null=True, blank=True)
@@ -30,8 +29,8 @@ class Aula(models.Model):
 # ─── Entregas ──────────────────────────────────────────────────
 class Entrega(models.Model):
     """Entrega de atividades pelos alunos"""
-    aluno = models.ForeignKey(Usuario, on_delete=models.CASCADE)
-    aula = models.ForeignKey(Aula, on_delete=models.CASCADE)
+    aluno = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="entregas")
+    aula = models.ForeignKey(Aula, on_delete=models.CASCADE, related_name="entregas")
     arquivo = models.FileField(upload_to="entregas/")
     data_envio = models.DateTimeField(auto_now_add=True)
     resposta_texto = models.TextField(blank=True)
@@ -45,6 +44,7 @@ class Quiz(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    criador = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="quizzes")
 
     def __str__(self):
         return self.title
@@ -69,8 +69,8 @@ class Alternativa(models.Model):
 
 # ─── Resposta de Quiz ──────────────────────────────────────────
 class RespostaQuiz(models.Model):
-    aluno = models.ForeignKey(Usuario, on_delete=models.CASCADE)
-    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+    aluno = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="respostas_quiz")
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name="respostas")
     resposta = models.JSONField()
     nota = models.IntegerField(null=True, blank=True)
     respondido_em = models.DateTimeField(auto_now_add=True)
@@ -96,7 +96,7 @@ class Atividade(models.Model):
 
 # ─── Fórum ─────────────────────────────────────────────────────
 class ComentarioForum(models.Model):
-    autor = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    autor = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="comentarios_forum")
     texto = models.TextField()
     criado_em = models.DateTimeField(auto_now_add=True)
 
@@ -106,7 +106,7 @@ class ComentarioForum(models.Model):
 
 class RespostaForum(models.Model):
     comentario = models.ForeignKey(ComentarioForum, related_name="respostas", on_delete=models.CASCADE)
-    autor = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    autor = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="respostas_forum")
     texto = models.TextField()
     criado_em = models.DateTimeField(auto_now_add=True)
 
@@ -119,7 +119,7 @@ class Desempenho(models.Model):
     titulo = models.CharField(max_length=255)
     descricao = models.TextField()
     nota = models.DecimalField(max_digits=4, decimal_places=2)
-    aluno = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    aluno = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="desempenhos")
 
     def __str__(self):
         return f"{self.titulo} - {self.aluno.username}"

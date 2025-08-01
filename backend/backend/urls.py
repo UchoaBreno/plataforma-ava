@@ -5,30 +5,28 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from usuarios.views import (
-    LoginView,
-    CustomTokenObtainPairView,
-    UsuarioListCreateView,
-    UsuarioDetailView,
-    AtualizarFotoPerfilView,
-    AlunoListView,
-    AulaView,
-    AulaDetailView,
-    AulasDisponiveisView,
+    # Autenticação e usuários
+    LoginView, CustomTokenObtainPairView, ChangePasswordView,
+    UsuarioListCreateView, UsuarioDetailView, AtualizarFotoPerfilView, AlunoListView,
+
+    # Aulas e entregas
+    AulaView, AulaDetailView, AulasDisponiveisView,
     EntregaView,
-    QuizListCreateView,
-    QuizDetailView,
-    QuizSubmitView,
-    RespostaQuizView,
-    AtividadeView,
-    AtividadeDetailView,
-    AtividadesDisponiveisView,
-    ForumAPIView,
-    ResponderComentarioAPIView,
-    DesempenhoCreateListView,
-    DesempenhoDetailView,
-    SolicitacaoProfessorCreateView,
-    SolicitacaoProfessorAdminViewSet,
-    ChangePasswordView,
+
+    # Quizzes
+    QuizListCreateView, QuizDetailView, QuizSubmitView, RespostaQuizView,
+
+    # Atividades
+    AtividadeView, AtividadeDetailView, AtividadesDisponiveisView,
+
+    # Fórum
+    ForumAPIView, ResponderComentarioAPIView,
+
+    # Desempenho
+    DesempenhoCreateListView, DesempenhoDetailView,
+
+    # Solicitação de professor
+    SolicitacaoProfessorCreateView, SolicitacaoProfessorAdminViewSet,
 )
 
 # DRF Router para ViewSets
@@ -36,7 +34,7 @@ router = DefaultRouter()
 router.register(
     r"api/admin/solicitacoes-professor",
     SolicitacaoProfessorAdminViewSet,
-    basename="admin-solicitacoes-professor",
+    basename="admin-solicitacoes-professor"
 )
 
 urlpatterns = [
@@ -46,9 +44,9 @@ urlpatterns = [
     # Autenticação
     path("api/login/", LoginView.as_view(), name="login"),
     path("api/token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/change_password/", ChangePasswordView.as_view(), name="change_password"),
     path("api/", include("djoser.urls")),
     path("api/", include("djoser.urls.jwt")),
-    path("api/change_password/", ChangePasswordView.as_view(), name="change_password"),
 
     # Usuários
     path("api/usuarios/", UsuarioListCreateView.as_view(), name="usuarios"),
@@ -79,7 +77,6 @@ urlpatterns = [
     path("api/forum/", ForumAPIView.as_view(), name="forum"),
     path("api/forum/<int:pk>/", ForumAPIView.as_view(), name="forum_detail"),
     path("api/forum/<int:pk>/responder/", ResponderComentarioAPIView.as_view(), name="forum_responder"),
-    path("api/forum/<int:pk>/resposta/<int:resposta_id>/", ResponderComentarioAPIView.as_view(), name="forum_resposta_detail"),
 
     # Desempenho
     path("api/desempenhos/", DesempenhoCreateListView.as_view(), name="desempenhos"),
@@ -89,7 +86,7 @@ urlpatterns = [
     path("api/solicitacoes-professor/", SolicitacaoProfessorCreateView.as_view(), name="solicitacao_professor"),
 ]
 
-# ViewSets registrados
+# ViewSets registrados (admin)
 urlpatterns += router.urls
 
 # Servir arquivos de mídia durante o desenvolvimento

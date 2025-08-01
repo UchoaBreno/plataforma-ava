@@ -1,8 +1,8 @@
-from rest_framework import serializers
 from django.contrib.auth import authenticate
+from django.core.validators import RegexValidator
+from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from django.core.validators import RegexValidator
 
 from .models import (
     Usuario, Aula, Entrega, Quiz, Questao,
@@ -15,29 +15,19 @@ class UsuarioSerializer(serializers.ModelSerializer):
     foto_perfil = serializers.ImageField(required=False, allow_null=True)
 
     username = serializers.CharField(
-        validators=[
-            RegexValidator(
-                regex=r'^[\w.@+-]+$',
-                message="O nome de usuário só pode conter letras, números e os caracteres @/./+/-/_"
-            )
-        ]
+        validators=[RegexValidator(
+            regex=r'^[\w.@+-]+$',
+            message="O nome de usuário só pode conter letras, números e os caracteres @/./+/-/_"
+        )]
     )
 
     class Meta:
         model = Usuario
         fields = [
-            "id",
-            "username",
-            "first_name",
-            "last_name",
-            "email",
-            "is_staff",
-            "foto_perfil",
-            "password",
+            "id", "username", "first_name", "last_name", "email",
+            "is_staff", "foto_perfil", "password"
         ]
-        extra_kwargs = {
-            "password": {"write_only": True, "required": False},
-        }
+        extra_kwargs = {"password": {"write_only": True, "required": False}}
 
     def validate_username(self, value):
         if self.instance and self.instance.username == value:
@@ -99,7 +89,6 @@ class QuestaoSerializer(serializers.ModelSerializer):
         fields = ["id", "text", "choices"]
 
 
-# Serializer de leitura para quizzes
 class QuizSerializer(serializers.ModelSerializer):
     questions = QuestaoSerializer(many=True, read_only=True)
     criador_nome = serializers.CharField(source="criador.username", read_only=True)
@@ -108,7 +97,7 @@ class QuizSerializer(serializers.ModelSerializer):
         model = Quiz
         fields = ["id", "title", "description", "created_at", "questions", "criador_nome"]
 
-# Serializer de respostas ao quiz
+
 class RespostaQuizSerializer(serializers.ModelSerializer):
     aluno_nome = serializers.CharField(source="aluno.username", read_only=True)
     quiz_titulo = serializers.CharField(source="quiz.title", read_only=True)
@@ -116,20 +105,15 @@ class RespostaQuizSerializer(serializers.ModelSerializer):
     class Meta:
         model = RespostaQuiz
         fields = [
-            "id",
-            "quiz",
-            "quiz_titulo",
-            "aluno",
-            "aluno_nome",
-            "resposta",
-            "nota",
-            "respondido_em",
+            "id", "quiz", "quiz_titulo", "aluno", "aluno_nome",
+            "resposta", "nota", "respondido_em",
         ]
         extra_kwargs = {
             "aluno": {"read_only": True},
             "nota": {"read_only": True},
             "respondido_em": {"read_only": True},
         }
+
 
 class CustomLoginSerializer(serializers.Serializer):
     username = serializers.CharField()
