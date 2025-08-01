@@ -188,7 +188,7 @@ export default function Home() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {/* Mostra uma imagem genérica de vídeo */}
                       <img
-                        src="https://via.placeholder.com/150/0000FF/808080?text=Play"
+                        src=""
                         alt="Play Video"
                         className="object-cover w-full h-24 rounded-lg"
                       />
