@@ -93,13 +93,17 @@ class AulasDisponiveisView(ListAPIView):
         return Aula.objects.annotate(
             ja_entregue=Exists(entregas)
         ).filter(
-            Q(
-                Q(agendada=False) |
-                Q(agendada=True, data__lt=agora.date()) |
-                Q(agendada=True, data=agora.date(), hora__lte=agora.time())
-            ),
             ja_entregue=False
-        ).order_by('-criada_em')
+        ).filter(
+            Q(agendada=False) | Q(
+                agendada=True,
+                data__lt=agora.date()
+            ) | Q(
+                agendada=True,
+                data=agora.date(),
+                hora__lte=agora.time()
+            )
+        ).order_by("-criada_em")
 
 
 
