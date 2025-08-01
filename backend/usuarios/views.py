@@ -6,7 +6,7 @@ from rest_framework.parsers import MultiPartParser
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets, generics, permissions
 from .serializers import AulaSerializer, EntregaSerializer
-from .models import Aula, Entrega
+from .models import Usuario, Entrega, Aula  # Adicione o modelo Usuario e Aula
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
@@ -53,6 +53,11 @@ class EntregaView(ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(aluno=self.request.user)
+
+        # Atualiza as aulas concluídas após a entrega
+        aula = Entrega.aula  # Garantir que a aula da entrega seja acessada corretamente
+        if aula not in self.request.user.aulas_concluidas.all():
+            self.request.user.aulas_concluidas.add(aula)
 
 # ─── Aulas ────────────────────────────────
 

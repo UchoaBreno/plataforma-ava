@@ -136,7 +136,7 @@ export default function Home() {
             Você tem <span className="font-semibold">{metrics.aulasPendentes}</span> aulas pendentes de <span className="font-semibold">{metrics.totalAulas}</span>.
           </p>
           <p className="text-sm text-gray-700 dark:text-gray-300">
-            Aulas concluídas: <span className="font-semibold">{metrics.aulasConcluidas}</span> <button className="text-blue-600" onClick={() => navigate('/entregas')}>Ver Aulas Concluídas</button>
+             Aulas concluídas: <span className="font-semibold">{metrics.aulasConcluidas}</span>
           </p>
         </div>
       </main>
