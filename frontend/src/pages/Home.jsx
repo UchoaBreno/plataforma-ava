@@ -107,7 +107,7 @@ export default function Home() {
                   onLoadedMetadata={() => handleVideoThumbnail(a.id, a.video_url)} // Captura o primeiro frame do vídeo
                 />
                 <img
-                  src={videoThumbnails[a.id] || ''}
+                  src={videoThumbnails[a.id] || ''} // Exibe a miniatura
                   alt="Video Thumbnail"
                   className="object-cover w-full h-24 rounded-lg"
                   style={{ display: videoThumbnails[a.id] ? 'block' : 'none' }}
@@ -216,7 +216,7 @@ export default function Home() {
                         controls
                         className="object-cover w-full h-24 rounded-lg"
                         src={a.video_url}
-                        poster={`https://img.youtube.com/vi/${getYoutubeVideoId(a.video_url)}/0.jpg`} // Captura a miniatura do vídeo
+                        onLoadedMetadata={() => handleVideoThumbnail(a.id, a.video_url)} // Captura o primeiro frame do vídeo
                       />
                     </div>
                   )}
