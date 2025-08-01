@@ -5,6 +5,8 @@ from django.db.models import Exists, OuterRef, Q
 from rest_framework.parsers import MultiPartParser
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets, generics, permissions
+from .serializers import AulaSerializer, EntregaSerializer
+from .models import Aula, Entrega
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
@@ -54,6 +56,30 @@ class EntregaView(ListCreateAPIView):
 
 # ─── Aulas ────────────────────────────────
 
+# ─── Nova View para Métricas das Aulas ─────────────────────────
+class AulaMetricsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Contagem de aulas total
+        total_aulas = Aula.objects.filter(professor=request.user).count()
+
+        # Aulas pendentes (aulas que ainda não foram entregues)
+        entregas = Entrega.objects.filter(aluno=request.user)
+        aulas_concluidas_ids = entregas.values_list('aula', flat=True)
+        aulas_pendentes = total_aulas - len(aulas_concluidas_ids)
+
+        # Aulas concluídas
+        aulas_concluidas = len(aulas_concluidas_ids)
+
+        return Response({
+            "total_aulas": total_aulas,
+            "aulas_pendentes": aulas_pendentes,
+            "aulas_concluidas": aulas_concluidas
+        })
+    
+    
+
 class AulaView(ListCreateAPIView):
     queryset = Aula.objects.all()
     serializer_class = AulaSerializer
@@ -93,14 +119,13 @@ class AulasDisponiveisView(ListAPIView):
         return Aula.objects.annotate(
             ja_entregue=Exists(entregas)
         ).filter(
-    ja_entregue=False
-        ).filter(
             ja_entregue=False
         ).filter(
             Q(agendada=False) |
             Q(agendada=True, data__lt=agora.date()) |
             Q(agendada=True, data=agora.date(), hora__lte=agora.time())
         )
+
 
 
 

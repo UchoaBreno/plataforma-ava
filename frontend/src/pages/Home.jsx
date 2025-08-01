@@ -13,8 +13,15 @@ export default function Home() {
   const token = localStorage.getItem("access");
 
   const [alunoId, setAlunoId] = useState(null);
-  const [proximaAula, setProximaAula] = useState(null);  // Para notificações
+  const [alta, setAlta] = useState([]);
+  const [media, setMedia] = useState([]);
+  const [baixa, setBaixa] = useState([]);
   const [statusNotificacao, setStatusNotificacao] = useState(""); // Status de notificação
+  const [metrics, setMetrics] = useState({
+    totalAulas: 0,
+    aulasPendentes: 0,
+    aulasConcluidas: 0,
+  });
 
   useEffect(() => {
     if (!token) return;
@@ -49,23 +56,48 @@ export default function Home() {
       );
 
       const hoje = dayjs().startOf("day");
-      let proximaAulaVencendo = null;
+      const _alta = [], _media = [], _baixa = [];
+      let aulasConcluidas = 0;
+      let aulasPendentes = 0;
 
       aulas.forEach(a => {
         const limite = a.data;
         if (!limite) return;
         const diff = dayjs(limite).startOf("day").diff(hoje, "day");
-        
+
         // Aulas em alta prioridade (vence hoje)
         if (diff <= 0) {
-          if (!proximaAulaVencendo) proximaAulaVencendo = a; // Define a primeira aula que vence
+          _alta.push(a);
+          aulasPendentes++;
+        }
+        // Aulas em média prioridade (próximos 7 dias)
+        else if (diff <= LIMITE_MEDIA) {
+          _media.push(a);
+          aulasPendentes++;
+        }
+        // Aulas em baixa prioridade (até 31 dias)
+        else if (diff <= LIMITE_BAIXA) {
+          _baixa.push(a);
+          aulasPendentes++;
+        }
+
+        // Verifica se a aula já foi entregue
+        if (minhasEntregasIds.has(Number(a.id))) {
+          aulasConcluidas++;
         }
       });
 
-      setProximaAula(proximaAulaVencendo);
+      setAlta(_alta);
+      setMedia(_media);
+      setBaixa(_baixa);
+      setMetrics({
+        totalAulas: aulas.length,
+        aulasPendentes,
+        aulasConcluidas,
+      });
 
       // Verifica a notificação caso uma aula esteja vencendo
-      if (proximaAulaVencendo && dayjs(proximaAulaVencendo.data).isBefore(dayjs().add(1, "day"))) {
+      if (_alta.length > 0) {
         setStatusNotificacao("Atenção: Aula em alta prioridade vencendo!");
       } else {
         setStatusNotificacao("");
@@ -89,6 +121,19 @@ export default function Home() {
             {statusNotificacao}
           </div>
         )}
+
+        {/* Exibindo as métricas */}
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
+          <h2 className="text-xl font-semibold text-green-700 dark:text-green-400 mb-3">
+            Bem-vindo à sua área inicial!
+          </h2>
+          <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+            Você tem <span className="font-semibold">{metrics.aulasPendentes}</span> aulas pendentes de <span className="font-semibold">{metrics.totalAulas}</span>.
+          </p>
+          <p className="text-sm text-gray-700 dark:text-gray-300">
+            Aulas concluídas: <span className="font-semibold">{metrics.aulasConcluidas}</span>
+          </p>
+        </div>
       </main>
     </div>
   );

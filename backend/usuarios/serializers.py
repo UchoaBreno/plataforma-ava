@@ -187,3 +187,10 @@ class SolicitacaoProfessorSerializer(serializers.ModelSerializer):
         model = SolicitacaoProfessor
         fields = "__all__"
         read_only_fields = ["aprovado", "data_solicitacao"]
+
+
+# ─── Nova Serializer para Métricas das Aulas ────────────────────
+class AulaMetricsSerializer(serializers.Serializer):
+    total_aulas = serializers.IntegerField()
+    aulas_pendentes = serializers.IntegerField()
+    aulas_concluidas = serializers.IntegerField()

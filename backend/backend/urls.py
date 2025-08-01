@@ -27,6 +27,9 @@ from usuarios.views import (
 
     # Solicitação de professor
     SolicitacaoProfessorCreateView, SolicitacaoProfessorAdminViewSet,
+
+    # Métricas
+    AulaMetricsView,
 )
 
 # DRF Router para ViewSets
@@ -84,6 +87,9 @@ urlpatterns = [
 
     # Solicitação pública de professor
     path("api/solicitacoes-professor/", SolicitacaoProfessorCreateView.as_view(), name="solicitacao_professor"),
+
+    # Métricas
+    path("api/aulas/metrics/", AulaMetricsView.as_view(), name="aula_metrics"),  # Nova URL para métricas
 ]
 
 # ViewSets registrados (admin)
