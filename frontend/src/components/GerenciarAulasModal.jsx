@@ -12,7 +12,7 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
   const [descricao, setDescricao] = useState("");
   const [data, setData] = useState("");
   const [hora, setHora] = useState("");
-  const [slide, setSlide] = useState(null);
+  const [arquivo, setArquivo] = useState(null); // alterado para 'arquivo', que agora pode ser qualquer tipo de mídia
   const [agendada, setAgendada] = useState(false);
 
   const [erros, setErros] = useState({});
@@ -32,7 +32,7 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
     if (!descricao.trim()) novosErros.descricao = true;
     if (!data.trim()) novosErros.data = true;
     if (!hora.trim()) novosErros.hora = true;
-    if (!slide) novosErros.slide = true;
+    if (!arquivo) novosErros.arquivo = true; // alterado para verificar o arquivo, seja PDF ou Vídeo
     setErros(novosErros);
     return Object.keys(novosErros).length === 0;
   };
@@ -46,8 +46,10 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
     fd.append("descricao", descricao);
     fd.append("data", data);
     fd.append("hora", hora);
-    if (slide) fd.append("arquivo", slide);
     fd.append("agendada", aba === "agendar" ? "true" : "false");
+
+    // Adicionando a verificação para qualquer tipo de arquivo
+    if (arquivo) fd.append("arquivo", arquivo);
 
     try {
       await axiosInstance.post("aulas/", fd);
@@ -58,7 +60,7 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
       setDescricao("");
       setData("");
       setHora("");
-      setSlide(null);
+      setArquivo(null);
       setAgendada(false);
       setErros({});
     } catch (err) {
@@ -69,12 +71,8 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
 
   const apagarAula = async (id) => {
     if (!window.confirm("Apagar esta aula?")) return;
-    try {
-      await axiosInstance.delete(`aulas/${id}/`);
-      recarregarAulas();
-    } catch {
-      alert("Erro ao apagar aula.");
-    }
+    await axiosInstance.delete(`aulas/${id}/`);
+    recarregarAulas();
   };
 
   useEffect(() => {
@@ -193,11 +191,11 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
 
               <input
                 type="file"
-                accept=".pdf"
-                className={`w-full text-sm ${erros.slide ? "border-red-500 border rounded" : ""}`}
-                onChange={(e) => setSlide(e.target.files[0])}
+                accept=".pdf, .mp4, .mov"
+                className={`w-full text-sm ${erros.arquivo ? "border-red-500 border rounded" : ""}`}
+                onChange={(e) => setArquivo(e.target.files[0])}
               />
-              {erros.slide && <p className="text-sm text-red-500">Escolha um arquivo PDF</p>}
+              {erros.arquivo && <p className="text-sm text-red-500">Escolha um arquivo válido (PDF ou Vídeo)</p>}
 
               <button className="rounded bg-green-600 hover:bg-green-700 px-4 py-2 font-medium text-white">
                 {aba === "agendar" ? "Agendar Aula" : "Publicar Aula"}

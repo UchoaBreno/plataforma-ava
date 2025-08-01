@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
+from django.core.exceptions import ValidationError
 
 # ─── Usuário ───────────────────────────────────────────────────
 class Usuario(AbstractUser):
@@ -11,12 +12,17 @@ class Usuario(AbstractUser):
 
 
 # ─── Aulas ─────────────────────────────────────────────────────
+def validate_video(value):
+    file_extension = value.name.split('.')[-1]
+    if file_extension not in ['mp4', 'mov']:
+        raise ValidationError('Arquivo de vídeo inválido. Use arquivos .mp4 ou .mov.')
+    
 class Aula(models.Model):
     """Modelo de Aulas Postadas por Professores"""
     titulo = models.CharField(max_length=100)
     descricao = models.TextField(blank=True)
     video_url = models.URLField(blank=True)
-    arquivo = models.FileField(upload_to="aulas/", blank=True, null=True)
+    arquivo = models.FileField(upload_to="aulas/", blank=True, null=True, validators=[validate_video])  # Validando vídeo
     data = models.DateField()
     hora = models.TimeField()
     agendada = models.BooleanField(default=False)  # ✅ Usado para controle de visibilidade futura
