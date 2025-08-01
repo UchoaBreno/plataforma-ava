@@ -186,12 +186,6 @@ export default function Home() {
                   )}
                   {a.video_url && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {/* Mostra uma imagem genérica de vídeo */}
-                      <img
-                        src=""
-                        alt="Play Video"
-                        className="object-cover w-full h-24 rounded-lg"
-                      />
                     </div>
                   )}
                   {/* Placeholder caso não haja vídeo ou arquivo */}
