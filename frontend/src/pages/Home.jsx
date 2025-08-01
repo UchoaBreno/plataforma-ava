@@ -22,6 +22,10 @@ export default function Home() {
     totalAulas: 0,
     aulasPendentes: 0,
     aulasConcluidas: 0,
+    totalQuizzes: 0,
+    quizzesPendentes: 0,
+    totalAtividades: 0,
+    atividadesPendentes: 0,
   });
 
   useEffect(() => {
@@ -41,20 +45,25 @@ export default function Home() {
 
   useEffect(() => {
     if (!token || !alunoId) return;
-    carregarPrioridades();
-    const intervalo = setInterval(carregarPrioridades, 60 * 60 * 1000); // Atualiza a cada hora
+    carregarDados();
+    const intervalo = setInterval(carregarDados, 60 * 60 * 1000); // Atualiza a cada hora
     return () => clearInterval(intervalo);
   }, [token, alunoId]);
 
-  async function carregarPrioridades() {
+  async function carregarDados() {
     try {
-      const [aulasRes, entregasRes] = await Promise.all([
+      // Carrega Aulas, Quizzes e Atividades
+      const [aulasRes, entregasRes, quizzesRes, atividadesRes] = await Promise.all([
         axiosInstance.get("aulas-aluno/"),
         axiosInstance.get("entregas/"),
+        axiosInstance.get("quizzes/"),
+        axiosInstance.get("atividades-aluno/"),
       ]);
 
       const aulas = Array.isArray(aulasRes.data) ? aulasRes.data : [];
       const entregas = Array.isArray(entregasRes.data) ? entregasRes.data : [];
+      const quizzes = Array.isArray(quizzesRes.data) ? quizzesRes.data : [];
+      const atividades = Array.isArray(atividadesRes.data) ? atividadesRes.data : [];
 
       const minhasEntregasIds = new Set(
         entregas.filter(e => e.aluno === alunoId).map(e => Number(e.aula))
@@ -92,6 +101,14 @@ export default function Home() {
         }
       });
 
+      // Quizzes
+      const totalQuizzes = quizzes.length;
+      const quizzesPendentes = quizzes.filter(q => !q.respondido).length;
+
+      // Atividades
+      const totalAtividades = atividades.length;
+      const atividadesPendentes = atividades.filter(a => !a.resposta).length;
+
       setAlta(_alta);
       setMedia(_media);
       setBaixa(_baixa);
@@ -99,6 +116,10 @@ export default function Home() {
         totalAulas: aulas.length,
         aulasPendentes,
         aulasConcluidas,
+        totalQuizzes,
+        quizzesPendentes,
+        totalAtividades,
+        atividadesPendentes,
       });
 
       // Verifica a notificação caso uma aula esteja vencendo
@@ -108,7 +129,7 @@ export default function Home() {
         setStatusNotificacao("");
       }
     } catch (err) {
-      console.error("Erro ao carregar aulas:", err.response?.data || err);
+      console.error("Erro ao carregar dados:", err.response?.data || err);
     }
   }
 
@@ -134,6 +155,29 @@ export default function Home() {
           </h2>
           <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
             Você tem <span className="font-semibold">{metrics.aulasPendentes}</span> aulas pendentes de <span className="font-semibold">{metrics.totalAulas}</span>.
+          </p>
+          <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+            Aulas concluídas: <span className="font-semibold">{metrics.aulasConcluidas}</span>
+          </p>
+        </div>
+
+        {/* Exibindo métricas de quizzes */}
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
+          <h2 className="text-xl font-semibold text-green-700 dark:text-green-400 mb-3">
+            Quizzes
+          </h2>
+          <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+            Você tem <span className="font-semibold">{metrics.quizzesPendentes}</span> quizzes pendentes de <span className="font-semibold">{metrics.totalQuizzes}</span>.
+          </p>
+        </div>
+
+        {/* Exibindo métricas de atividades */}
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
+          <h2 className="text-xl font-semibold text-green-700 dark:text-green-400 mb-3">
+            Atividades
+          </h2>
+          <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+            Você tem <span className="font-semibold">{metrics.atividadesPendentes}</span> atividades pendentes de <span className="font-semibold">{metrics.totalAtividades}</span>.
           </p>
         </div>
       </main>

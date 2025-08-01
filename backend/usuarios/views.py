@@ -53,8 +53,38 @@ class EntregaView(ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(aluno=self.request.user)
-
 # ─── Aulas ────────────────────────────────
+
+class HomeMetricsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        aluno = self.request.user
+
+        # Contagem de aulas pendentes e concluídas
+        total_aulas = Aula.objects.filter(professor=aluno).count()
+        entregas = Entrega.objects.filter(aluno=aluno)
+        aulas_concluidas_ids = entregas.values_list('aula', flat=True)
+        aulas_pendentes = total_aulas - len(aulas_concluidas_ids)
+        aulas_concluidas = len(aulas_concluidas_ids)
+
+        # Contagem de quizzes pendentes e totais
+        total_quizzes = Quiz.objects.count()
+        quizzes_pendentes = total_quizzes - len(entregas.filter(aula__quiz__isnull=False))
+
+        # Contagem de atividades pendentes e totais
+        total_atividades = Atividade.objects.filter(professor=aluno).count()
+        atividades_pendentes = total_atividades - len(entregas.filter(aula__atividade__isnull=False))
+
+        return Response({
+            "total_aulas": total_aulas,
+            "aulas_pendentes": aulas_pendentes,
+            "aulas_concluidas": aulas_concluidas,
+            "total_quizzes": total_quizzes,
+            "quizzes_pendentes": quizzes_pendentes,
+            "total_atividades": total_atividades,
+            "atividades_pendentes": atividades_pendentes,
+        })
 
 # ─── Nova View para Métricas das Aulas ─────────────────────────
 class AulaMetricsView(APIView):
@@ -90,7 +120,6 @@ class AulaView(ListCreateAPIView):
         agendada = self.request.data.get("agendada", "false").lower() == "true"
         serializer.save(professor=self.request.user, agendada=agendada)
 
-
 class AulaDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = AulaSerializer
     permission_classes = [IsAuthenticated]
@@ -125,9 +154,6 @@ class AulasDisponiveisView(ListAPIView):
             Q(agendada=True, data__lt=agora.date()) |
             Q(agendada=True, data=agora.date(), hora__lte=agora.time())
         )
-
-
-
 
 # ─── Quizzes ──────────────────────────────
 class QuizListCreateView(generics.ListCreateAPIView):
@@ -294,8 +320,7 @@ class AtividadeDetailView(RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         user = self.request.user
         return Atividade.objects.filter(professor=user) if user.is_staff else Atividade.objects.all()
-
-
+    
 # ─── Fórum ────────────────────────────────
 class ForumAPIView(APIView):
     permission_classes = [IsAuthenticated]
