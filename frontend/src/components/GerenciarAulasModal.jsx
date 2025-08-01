@@ -13,6 +13,7 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
   const [data, setData] = useState("");
   const [hora, setHora] = useState("");
   const [slide, setSlide] = useState(null);
+  const [agendada, setAgendada] = useState(false);
 
   const [erros, setErros] = useState({});
 
@@ -46,6 +47,7 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
     fd.append("data", data);
     fd.append("hora", hora);
     if (slide) fd.append("arquivo", slide);
+    fd.append("agendada", agendada);
 
     try {
       await axiosInstance.post("aulas/", fd);
@@ -57,6 +59,7 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
       setData("");
       setHora("");
       setSlide(null);
+      setAgendada(false);
       setErros({});
     } catch (err) {
       console.error("Erro ao publicar aula:", err.response?.data || err);
@@ -98,7 +101,7 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
         </button>
 
         <div className="flex flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700 p-4">
-          {["listar", "aula"].map((key) => (
+          {["listar", "aula", "agendar"].map((key) => (
             <button
               key={key}
               onClick={() => setAba(key)}
@@ -108,7 +111,11 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
                   : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white"
               }`}
             >
-              {key === "listar" ? "Ver aulas publicadas" : "Publicar aula"}
+              {key === "listar"
+                ? "Ver aulas publicadas"
+                : key === "aula"
+                ? "Publicar aula"
+                : "Agendar aula"}
             </button>
           ))}
         </div>
@@ -150,7 +157,7 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
             </div>
           )}
 
-          {aba === "aula" && (
+          {(aba === "aula" || aba === "agendar") && (
             <form onSubmit={publicarAula} className="space-y-3">
               <input
                 value={titulo}
@@ -193,7 +200,7 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
               {erros.slide && <p className="text-sm text-red-500">Escolha um arquivo PDF</p>}
 
               <button className="rounded bg-green-600 hover:bg-green-700 px-4 py-2 font-medium text-white">
-                Publicar Aula
+                {aba === "agendar" ? "Agendar Aula" : "Publicar Aula"}
               </button>
             </form>
           )}

@@ -59,7 +59,10 @@ class AulaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Aula
         fields = "__all__"
-        extra_kwargs = {"professor": {"read_only": True}}
+        extra_kwargs = {
+            "professor": {"read_only": True},
+            "agendada": {"required": False},  # <- 🔧 Garantir que é opcional no envio
+        }
 
 
 class EntregaSerializer(serializers.ModelSerializer):

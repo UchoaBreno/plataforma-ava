@@ -1,5 +1,8 @@
 from rest_framework.views import APIView
+from django.utils import timezone
 from rest_framework.response import Response
+from django.db.models import Exists, OuterRef, Q
+from rest_framework.parsers import MultiPartParser
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets, generics, permissions
 from rest_framework.generics import (
@@ -49,8 +52,8 @@ class EntregaView(ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(aluno=self.request.user)
 
-
 # ─── Aulas ────────────────────────────────
+
 class AulaView(ListCreateAPIView):
     queryset = Aula.objects.all()
     serializer_class = AulaSerializer
@@ -81,8 +84,16 @@ class AulasDisponiveisView(ListAPIView):
         user = self.request.user
         if user.is_staff:
             return Aula.objects.none()
+
+        agora = timezone.localtime()
         entregas = Entrega.objects.filter(aula=OuterRef('pk'), aluno=user)
-        return Aula.objects.annotate(ja_entregue=Exists(entregas)).filter(ja_entregue=False).order_by('-criada_em')
+
+        return Aula.objects.annotate(
+            ja_entregue=Exists(entregas)
+        ).filter(
+            Q(agendada=False) | Q(agendada=True, data__lte=agora.date(), hora__lte=agora.time()),
+            ja_entregue=False
+        ).order_by('-criada_em')
 
 
 # ─── Quizzes ──────────────────────────────

@@ -19,6 +19,7 @@ class Aula(models.Model):
     arquivo = models.FileField(upload_to="aulas/", blank=True, null=True)
     data = models.DateField()
     hora = models.TimeField()
+    agendada = models.BooleanField(default=False)  # ✅ Campo adicionado
     professor = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="aulas")
     criada_em = models.DateTimeField(auto_now_add=True)
 
