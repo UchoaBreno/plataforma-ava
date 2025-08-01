@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import axiosInstance from "../utils/axiosInstance";
 
-const LIMITE_MEDIA = 7;
-const LIMITE_BAIXA = 31;
+const LIMITE_MEDIA = 7;  // Aulas que vencem nos próximos 7 dias
+const LIMITE_BAIXA = 31;  // Aulas que vencem dentro de 31 dias
 
 export default function Home() {
   const navigate = useNavigate();
@@ -16,6 +16,8 @@ export default function Home() {
   const [alta, setAlta] = useState([]);
   const [media, setMedia] = useState([]);
   const [baixa, setBaixa] = useState([]);
+  const [proximaAula, setProximaAula] = useState(null);  // Para notificações
+  const [statusNotificacao, setStatusNotificacao] = useState(""); // Status de notificação
 
   useEffect(() => {
     if (!token) return;
@@ -31,7 +33,7 @@ export default function Home() {
   useEffect(() => {
     if (!token || !alunoId) return;
     carregarPrioridades();
-    const intervalo = setInterval(carregarPrioridades, 60 * 60 * 1000);
+    const intervalo = setInterval(carregarPrioridades, 60 * 60 * 1000); // Atualiza a cada hora
     return () => clearInterval(intervalo);
   }, [token, alunoId]);
 
@@ -51,21 +53,39 @@ export default function Home() {
 
       const hoje = dayjs().startOf("day");
       const _alta = [], _media = [], _baixa = [];
+      let proximaAulaVencendo = null;
 
-      aulas
-        .filter(a => !minhasEntregasIds.has(Number(a.id)))
-        .forEach(a => {
-          const limite = a.data;
-          if (!limite) return;
-          const diff = dayjs(limite).startOf("day").diff(hoje, "day");
-          if (diff <= 0) _alta.push(a);
-          else if (diff <= LIMITE_MEDIA) _media.push(a);
-          else if (diff <= LIMITE_BAIXA) _baixa.push(a);
-        });
+      aulas.forEach(a => {
+        const limite = a.data;
+        if (!limite) return;
+        const diff = dayjs(limite).startOf("day").diff(hoje, "day");
+        
+        // Aulas em alta prioridade (vence hoje)
+        if (diff <= 0) {
+          _alta.push(a);
+          if (!proximaAulaVencendo) proximaAulaVencendo = a; // Define a primeira aula que vence
+        }
+        // Aulas em média prioridade (próximos 7 dias)
+        else if (diff <= LIMITE_MEDIA) {
+          _media.push(a);
+        }
+        // Aulas em baixa prioridade (até 31 dias)
+        else if (diff <= LIMITE_BAIXA) {
+          _baixa.push(a);
+        }
+      });
 
       setAlta(_alta);
       setMedia(_media);
       setBaixa(_baixa);
+      setProximaAula(proximaAulaVencendo);
+
+      // Verifica a notificação caso uma aula esteja vencendo
+      if (proximaAulaVencendo && dayjs(proximaAulaVencendo.data).isBefore(dayjs().add(1, "day"))) {
+        setStatusNotificacao("Atenção: Aula em alta prioridade vencendo!");
+      } else {
+        setStatusNotificacao("");
+      }
     } catch (err) {
       console.error("Erro ao carregar aulas:", err.response?.data || err);
     }
@@ -84,35 +104,6 @@ export default function Home() {
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             📅 {a.data ? dayjs(a.data).format("DD/MM/YYYY") : ""}
           </p>
-          <div className="mt-2">
-            {/* Se o conteúdo for um slide (PDF ou Imagem) */}
-            {a.arquivo && (
-              <div className="w-full h-24 bg-gray-300 rounded-lg flex items-center justify-center">
-                {/* Aqui verificamos se é um PDF ou imagem e mostramos de acordo */}
-                {a.arquivo.endsWith(".pdf") ? (
-                  <span className="text-white">📄 Slide (PDF)</span>
-                ) : (
-                  <img src={a.arquivo} alt={a.titulo} className="object-cover h-24 w-full rounded-lg" />
-                )}
-              </div>
-            )}
-            {/* Se o conteúdo for um vídeo, mostramos uma imagem genérica */}
-            {a.video_url && (
-              <div className="w-full h-24 bg-gray-300 rounded-lg flex items-center justify-center">
-                <img
-                  src="https://via.placeholder.com/150/0000FF/808080?text=Play"
-                  alt="Play Video"
-                  className="object-cover w-full h-24 rounded-lg"
-                />
-              </div>
-            )}
-            {/* Placeholder caso não haja vídeo ou slide */}
-            {!a.arquivo && !a.video_url && (
-              <div className="h-24 w-full bg-gray-300 rounded-lg flex items-center justify-center text-white">
-                Sem conteúdo
-              </div>
-            )}
-          </div>
         </div>
       ))}
     </div>
@@ -131,13 +122,21 @@ export default function Home() {
   );
 
   return (
-    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div className={`flex min-h-screen ${statusNotificacao ? 'bg-red-100' : 'bg-gray-100'} dark:bg-gray-900 text-gray-900 dark:text-white`}>
       <Sidebar isAluno />
       <main className="ml-64 flex-1 p-4 sm:p-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-400 mb-6">
           Página Inicial
         </h1>
 
+        {/* Notificação de Aula em Alta Prioridade */}
+        {statusNotificacao && (
+          <div className="bg-red-300 text-white p-3 rounded-lg mb-4">
+            {statusNotificacao}
+          </div>
+        )}
+
+        {/* Resumo das aulas e suas prioridades */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           <CardPrioridade
             titulo="Alta prioridade (vence hoje)"
@@ -156,6 +155,7 @@ export default function Home() {
           />
         </div>
 
+        {/* Exibição das aulas recentes */}
         <h2 className="text-xl font-semibold text-green-700 dark:text-green-400 mb-3">
           Aulas Recentes
         </h2>
@@ -173,9 +173,9 @@ export default function Home() {
                 <h3 className="font-semibold text-green-700 dark:text-green-400">{a.titulo}</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-300">{a.descricao}</p>
                 <div className="mt-2">
-                  {/* Verifica se há arquivo ou vídeo para exibir a thumbnail */}
+                  {/* Se o conteúdo for um slide (PDF ou Imagem) */}
                   {a.arquivo && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="w-full h-24 bg-gray-300 rounded-lg flex items-center justify-center">
                       {/* Aqui verificamos se é um PDF ou imagem e mostramos de acordo */}
                       {a.arquivo.endsWith(".pdf") ? (
                         <span className="text-green-700">📄(PDF)</span>
@@ -184,8 +184,14 @@ export default function Home() {
                       )}
                     </div>
                   )}
+                  {/* Se o conteúdo for um vídeo, mostramos uma imagem genérica */}
                   {a.video_url && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="w-full h-24 bg-gray-300 rounded-lg flex items-center justify-center">
+                      <img
+                        src="https://via.placeholder.com/150/0000FF/808080?text=Play"
+                        alt="Play Video"
+                        className="object-cover w-full h-24 rounded-lg"
+                      />
                     </div>
                   )}
                   {/* Placeholder caso não haja vídeo ou arquivo */}
