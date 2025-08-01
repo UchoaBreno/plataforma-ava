@@ -47,7 +47,7 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
     fd.append("data", data);
     fd.append("hora", hora);
     if (slide) fd.append("arquivo", slide);
-    fd.append("agendada", agendada);
+    fd.append("agendada", aba === "agendar" ? "true" : "false");
 
     try {
       await axiosInstance.post("aulas/", fd);
