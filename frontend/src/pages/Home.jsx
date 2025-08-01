@@ -98,13 +98,14 @@ export default function Home() {
             )}
             {/* Se o conteúdo for um vídeo */}
             {a.video_url && (
-              <video
-                controls
-                className="h-24 w-full object-cover rounded-lg"
-                src={a.video_url}
-              >
-                Seu navegador não suporta vídeos.
-              </video>
+              <div className="w-full h-24 bg-gray-300 rounded-lg flex items-center justify-center">
+                <video
+                  controls
+                  className="object-cover w-full h-24 rounded-lg"
+                  src={a.video_url}
+                  poster={`https://img.youtube.com/vi/${a.video_url.split('/')[3]}/0.jpg`} // Captura a miniatura do vídeo
+                />
+              </div>
             )}
             {/* Placeholder caso não haja vídeo ou slide */}
             {!a.arquivo && !a.video_url && (
@@ -175,8 +176,7 @@ export default function Home() {
                 <div className="mt-2">
                   {/* Verifica se há arquivo ou vídeo para exibir a thumbnail */}
                   {a.arquivo && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      
+                    <div className="w-full h-24 bg-gray-300 rounded-lg flex items-center justify-center">
                       {/* Aqui verificamos se é um PDF ou imagem e mostramos de acordo */}
                       {a.arquivo.endsWith(".pdf") ? (
                         <span className="text-green-700">📄(PDF)</span>
@@ -186,13 +186,14 @@ export default function Home() {
                     </div>
                   )}
                   {a.video_url && (
-                    <video
-                      controls
-                      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-                      src={a.video_url}
-                    >
-                      Seu navegador não suporta vídeos.
-                    </video>
+                    <div className="w-full h-24 bg-gray-300 rounded-lg flex items-center justify-center">
+                      <video
+                        controls
+                        className="object-cover w-full h-24 rounded-lg"
+                        src={a.video_url}
+                        poster={`https://img.youtube.com/vi/${a.video_url.split('/')[3]}/0.jpg`} // Captura a miniatura do vídeo
+                      />
+                    </div>
                   )}
                   {/* Placeholder caso não haja vídeo ou arquivo */}
                   {!a.arquivo && !a.video_url && (
