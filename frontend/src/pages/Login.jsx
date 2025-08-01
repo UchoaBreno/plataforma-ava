@@ -58,9 +58,9 @@ export default function Login() {
     } catch (error) {
       console.error("Erro no login:", error);
 
-      let msg = "❌ Usuário ou senha incorretos ou erro no servidor.";
+      let msg = "❌ Usuário ou senha incorretos.";
       if (error.response?.data?.detail) {
-        msg = "❌ " + error.response.data.detail;
+        msg = "❌ Usuário ou senha inválidos " + error.response.data.detail;
       }
 
       setErroLogin(msg);
