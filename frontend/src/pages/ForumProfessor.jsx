@@ -95,7 +95,7 @@ export default function ForumProfessor() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-4 sm:p-6 max-w-4xl mx-auto relative">
       <Sidebar isStaff />
       <main className="ml-64 flex-1 p-4 sm:p-6 max-w-4xl mx-auto relative">
         <button
