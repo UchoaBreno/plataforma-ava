@@ -16,7 +16,6 @@ export default function Home() {
   const [alta, setAlta] = useState([]);
   const [media, setMedia] = useState([]);
   const [baixa, setBaixa] = useState([]);
-  const [videoThumbnails, setVideoThumbnails] = useState({});
 
   useEffect(() => {
     if (!token) return;
@@ -97,20 +96,13 @@ export default function Home() {
                 )}
               </div>
             )}
-            {/* Se o conteúdo for um vídeo */}
+            {/* Se o conteúdo for um vídeo, exibimos uma miniatura genérica */}
             {a.video_url && (
               <div className="w-full h-24 bg-gray-300 rounded-lg flex items-center justify-center">
-                <video
-                  controls
-                  className="object-cover w-full h-24 rounded-lg"
-                  src={a.video_url}
-                  onLoadedMetadata={() => handleVideoThumbnail(a.id, a.video_url)} // Captura o primeiro frame do vídeo
-                />
                 <img
-                  src={videoThumbnails[a.id] || ''} // Exibe a miniatura
-                  alt="Video Thumbnail"
+                  src="https://via.placeholder.com/150/0000FF/808080?text=Play"
+                  alt="Play Video"
                   className="object-cover w-full h-24 rounded-lg"
-                  style={{ display: videoThumbnails[a.id] ? 'block' : 'none' }}
                 />
               </div>
             )}
@@ -125,24 +117,6 @@ export default function Home() {
       ))}
     </div>
   );
-
-  // Função para capturar o primeiro frame do vídeo
-  const handleVideoThumbnail = (id, videoUrl) => {
-    const videoElement = document.createElement('video');
-    videoElement.src = videoUrl;
-
-    // Quando o vídeo estiver carregado, capturamos o primeiro frame
-    videoElement.onloadeddata = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = videoElement.videoWidth;
-      canvas.height = videoElement.videoHeight;
-      ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-
-      const thumbnailUrl = canvas.toDataURL('image/jpeg'); // Captura o primeiro frame como imagem
-      setVideoThumbnails(prev => ({ ...prev, [id]: thumbnailUrl })); // Salva a miniatura no estado
-    };
-  };
 
   const CardPrioridade = ({ titulo, lista, borda }) => (
     <div
@@ -212,11 +186,11 @@ export default function Home() {
                   )}
                   {a.video_url && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <video
-                        controls
+                      {/* Mostra uma miniatura genérica de vídeo */}
+                      <img
+                        src="https://via.placeholder.com/150/0000FF/808080?text=Play"
+                        alt="Play Video"
                         className="object-cover w-full h-24 rounded-lg"
-                        src={a.video_url}
-                        onLoadedMetadata={() => handleVideoThumbnail(a.id, a.video_url)} // Captura o primeiro frame do vídeo
                       />
                     </div>
                   )}
