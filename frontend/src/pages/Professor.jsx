@@ -9,6 +9,7 @@ import VideoCard from "../components/VideoCard";
 export default function Professor() {
   const [aulas, setAulas] = useState([]);
   const [showGerenciar, setShowGerenciar] = useState(false);
+  const [videoThumbnails, setVideoThumbnails] = useState({}); // Para armazenar as miniaturas dos vídeos
 
   const navigate = useNavigate();
 
@@ -32,6 +33,24 @@ export default function Professor() {
     if (!window.confirm("Apagar esta aula?")) return;
     await axiosInstance.delete(`aulas/${id}/`);
     carregarAulas();
+  };
+
+  // Função para capturar o primeiro frame do vídeo
+  const handleVideoThumbnail = (id, videoUrl) => {
+    const videoElement = document.createElement('video');
+    videoElement.src = videoUrl;
+
+    // Quando o vídeo estiver carregado, capturamos o primeiro frame
+    videoElement.onloadeddata = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+      ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+      const thumbnailUrl = canvas.toDataURL('image/jpeg'); // Captura o primeiro frame como imagem
+      setVideoThumbnails(prev => ({ ...prev, [id]: thumbnailUrl })); // Salva a miniatura no estado
+    };
   };
 
   return (
@@ -87,13 +106,20 @@ export default function Professor() {
                 )}
                 {/* Se o conteúdo for um vídeo */}
                 {a.video_url && (
-                  <video
-                    controls
-                    className="h-24 w-full object-cover rounded-lg"
-                    src={a.video_url}
-                  >
-                    Seu navegador não suporta vídeos.
-                  </video>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <video
+                      controls
+                      className="object-cover w-full h-24 rounded-lg"
+                      src={a.video_url}
+                      onLoadedMetadata={() => handleVideoThumbnail(a.id, a.video_url)} // Captura o primeiro frame do vídeo
+                    />
+                    <img
+                      src={videoThumbnails[a.id] || ''}
+                      alt="Video Thumbnail"
+                      className="object-cover w-full h-24 rounded-lg"
+                      style={{ display: videoThumbnails[a.id] ? 'block' : 'none' }}
+                    />
+                  </div>
                 )}
                 {/* Placeholder caso não haja vídeo ou slide */}
                 {!a.arquivo && !a.video_url && (

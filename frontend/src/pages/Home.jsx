@@ -16,6 +16,7 @@ export default function Home() {
   const [alta, setAlta] = useState([]);
   const [media, setMedia] = useState([]);
   const [baixa, setBaixa] = useState([]);
+  const [videoThumbnails, setVideoThumbnails] = useState({});
 
   useEffect(() => {
     if (!token) return;
@@ -103,7 +104,13 @@ export default function Home() {
                   controls
                   className="object-cover w-full h-24 rounded-lg"
                   src={a.video_url}
-                  poster={`https://img.youtube.com/vi/${a.video_url.split('/')[3]}/0.jpg`} // Captura a miniatura do vídeo
+                  onLoadedMetadata={() => handleVideoThumbnail(a.id, a.video_url)} // Captura o primeiro frame do vídeo
+                />
+                <img
+                  src={videoThumbnails[a.id] || ''}
+                  alt="Video Thumbnail"
+                  className="object-cover w-full h-24 rounded-lg"
+                  style={{ display: videoThumbnails[a.id] ? 'block' : 'none' }}
                 />
               </div>
             )}
@@ -118,6 +125,24 @@ export default function Home() {
       ))}
     </div>
   );
+
+  // Função para capturar o primeiro frame do vídeo
+  const handleVideoThumbnail = (id, videoUrl) => {
+    const videoElement = document.createElement('video');
+    videoElement.src = videoUrl;
+
+    // Quando o vídeo estiver carregado, capturamos o primeiro frame
+    videoElement.onloadeddata = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+      ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+      const thumbnailUrl = canvas.toDataURL('image/jpeg'); // Captura o primeiro frame como imagem
+      setVideoThumbnails(prev => ({ ...prev, [id]: thumbnailUrl })); // Salva a miniatura no estado
+    };
+  };
 
   const CardPrioridade = ({ titulo, lista, borda }) => (
     <div
@@ -176,7 +201,7 @@ export default function Home() {
                 <div className="mt-2">
                   {/* Verifica se há arquivo ou vídeo para exibir a thumbnail */}
                   {a.arquivo && (
-                    <div className="w-full h-24 bg-gray-300 rounded-lg flex items-center justify-center">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {/* Aqui verificamos se é um PDF ou imagem e mostramos de acordo */}
                       {a.arquivo.endsWith(".pdf") ? (
                         <span className="text-green-700">📄(PDF)</span>
@@ -186,18 +211,18 @@ export default function Home() {
                     </div>
                   )}
                   {a.video_url && (
-                    <div className="w-full h-24 bg-gray-300 rounded-lg flex items-center justify-center">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       <video
                         controls
                         className="object-cover w-full h-24 rounded-lg"
                         src={a.video_url}
-                        poster={`https://img.youtube.com/vi/${a.video_url.split('/')[3]}/0.jpg`} // Captura a miniatura do vídeo
+                        poster={`https://img.youtube.com/vi/${getYoutubeVideoId(a.video_url)}/0.jpg`} // Captura a miniatura do vídeo
                       />
                     </div>
                   )}
                   {/* Placeholder caso não haja vídeo ou arquivo */}
                   {!a.arquivo && !a.video_url && (
-                    <div className="h-24 w-full text-gray-600 rounded-lg flex items-center justify-center text-white">
+                    <div className="h-24 w-full text-green-700 rounded-lg flex items-center justify-center text-white">
                       Sem conteúdo
                     </div>
                   )}
