@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import dayjs from "dayjs";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 import Sidebar from "../components/Sidebar";
 
@@ -15,6 +16,7 @@ export default function Home() {
   const [baixa, setBaixa] = useState([]);
 
   const [modalAberto, setModalAberto] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("access");
@@ -88,7 +90,8 @@ export default function Home() {
       {lista.map(a => (
         <div
           key={a.id}
-          className="rounded border border-green-300 bg-white dark:bg-gray-800 p-4 shadow"
+          className="cursor-pointer rounded border border-green-300 bg-white dark:bg-gray-800 p-4 shadow hover:bg-green-100 dark:hover:bg-gray-700"
+          onClick={() => navigate("/aulas")}
         >
           <h3 className="text-lg font-semibold text-green-700 dark:text-green-400">{a.titulo}</h3>
           <p className="text-sm text-gray-700 dark:text-gray-300">{a.descricao}</p>
@@ -137,7 +140,8 @@ export default function Home() {
           {[...alta, ...media, ...baixa].slice(0, 6).map(a => (
             <div
               key={a.id}
-              className="rounded border border-green-300 bg-white dark:bg-gray-800 p-3 shadow"
+              className="cursor-pointer rounded border border-green-300 bg-white dark:bg-gray-800 p-3 shadow hover:bg-green-100 dark:hover:bg-gray-700"
+              onClick={() => navigate("/aulas")}
             >
               <h3 className="font-semibold text-green-700 dark:text-green-400">{a.titulo}</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">{a.descricao}</p>
