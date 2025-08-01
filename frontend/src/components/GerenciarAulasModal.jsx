@@ -14,6 +14,8 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
   const [hora, setHora] = useState("");
   const [slide, setSlide] = useState(null);
 
+  const [erros, setErros] = useState({});
+
   const recarregarAulas = async () => {
     try {
       const { data } = await axiosInstance.get("aulas/");
@@ -23,8 +25,21 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
     }
   };
 
+  const validarCampos = () => {
+    const novosErros = {};
+    if (!titulo.trim()) novosErros.titulo = true;
+    if (!descricao.trim()) novosErros.descricao = true;
+    if (!data.trim()) novosErros.data = true;
+    if (!hora.trim()) novosErros.hora = true;
+    if (!slide) novosErros.slide = true;
+    setErros(novosErros);
+    return Object.keys(novosErros).length === 0;
+  };
+
   const publicarAula = async (e) => {
     e.preventDefault();
+    if (!validarCampos()) return;
+
     const fd = new FormData();
     fd.append("titulo", titulo);
     fd.append("descricao", descricao);
@@ -42,9 +57,10 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
       setData("");
       setHora("");
       setSlide(null);
+      setErros({});
     } catch (err) {
       console.error("Erro ao publicar aula:", err.response?.data || err);
-      alert("Erro ao publicar aula.");
+      alert("Erro ao publicar aula. Verifique os campos obrigatórios.");
     }
   };
 
@@ -64,6 +80,13 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
+  const inputClass = (erro) =>
+    `w-full rounded border px-3 py-2 ${
+      erro
+        ? "border-red-500 dark:border-red-400"
+        : "border-gray-300 dark:border-gray-600"
+    } bg-white dark:bg-gray-700`;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2">
       <div className="relative flex h-[80vh] w-full max-w-3xl flex-col rounded-lg bg-white dark:bg-gray-800 text-black dark:text-white shadow-xl">
@@ -75,10 +98,7 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
         </button>
 
         <div className="flex flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700 p-4">
-          {[
-            ["listar", "Ver aulas publicadas"],
-            ["aula", "Publicar aula"],
-          ].map(([key, rotulo]) => (
+          {["listar", "aula"].map((key) => (
             <button
               key={key}
               onClick={() => setAba(key)}
@@ -88,7 +108,7 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
                   : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white"
               }`}
             >
-              {rotulo}
+              {key === "listar" ? "Ver aulas publicadas" : "Publicar aula"}
             </button>
           ))}
         </div>
@@ -135,35 +155,43 @@ export default function GerenciarAulasModal({ isOpen, onClose }) {
               <input
                 value={titulo}
                 onChange={(e) => setTitulo(e.target.value)}
-                className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
+                className={inputClass(erros.titulo)}
                 placeholder="Título"
-                required
               />
+              {erros.titulo && <p className="text-sm text-red-500">Preencha o título</p>}
+
               <textarea
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
-                className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
+                className={inputClass(erros.descricao)}
                 placeholder="Descrição"
               />
+              {erros.descricao && <p className="text-sm text-red-500">Preencha a descrição</p>}
+
               <input
                 type="date"
                 value={data}
                 onChange={(e) => setData(e.target.value)}
-                className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
-                required
+                className={inputClass(erros.data)}
               />
+              {erros.data && <p className="text-sm text-red-500">Preencha a data</p>}
+
               <input
                 type="time"
                 value={hora}
                 onChange={(e) => setHora(e.target.value)}
-                className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
+                className={inputClass(erros.hora)}
               />
+              {erros.hora && <p className="text-sm text-red-500">Preencha o horário</p>}
+
               <input
                 type="file"
                 accept=".pdf"
-                className="w-full text-sm"
+                className={`w-full text-sm ${erros.slide ? "border-red-500 border rounded" : ""}`}
                 onChange={(e) => setSlide(e.target.files[0])}
               />
+              {erros.slide && <p className="text-sm text-red-500">Escolha um arquivo PDF</p>}
+
               <button className="rounded bg-green-600 hover:bg-green-700 px-4 py-2 font-medium text-white">
                 Publicar Aula
               </button>

@@ -59,8 +59,12 @@ export default function Login() {
       console.error("Erro no login:", error);
 
       let msg = "❌ Usuário ou senha incorretos.";
-      if (error.response?.data?.detail) {
-        msg = "❌ Usuário ou senha inválidos " + error.response.data.detail;
+      const detail = error.response?.data?.detail;
+
+      if (detail === "No active account found with the given credentials") {
+        msg = "❌ Conta não encontrada ou credenciais inválidas.";
+      } else if (detail) {
+        msg = "❌ " + detail;
       }
 
       setErroLogin(msg);
