@@ -4,6 +4,9 @@ from rest_framework.response import Response
 from django.db.models import Exists, OuterRef, Q
 from rest_framework.parsers import MultiPartParser
 from rest_framework import serializers
+from .models import Quiz
+from rest_framework import status
+from .serializers import QuizSerializer
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets, generics, permissions
 from .serializers import AulaSerializer, EntregaSerializer
@@ -176,6 +179,12 @@ class QuizListCreateView(generics.ListCreateAPIView):
             serializer.save(criador=self.request.user, pdf=pdf_file)
         else:
             serializer.save(criador=self.request.user)
+
+class QuizListView(APIView):
+    def get(self, request):
+        quizzes = Quiz.objects.all()  # Pega todos os quizzes
+        serializer = QuizSerializer(quizzes, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class QuizDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = QuizSerializer

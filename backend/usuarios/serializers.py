@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate
 from django.core.validators import RegexValidator
 from rest_framework import serializers
+from .models import Quiz
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
