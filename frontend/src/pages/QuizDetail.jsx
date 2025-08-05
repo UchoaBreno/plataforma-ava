@@ -120,7 +120,7 @@ export default function QuizDetail() {
           <div className="mb-6">
             <h2 className="text-xl font-semibold mb-2">Visualizar PDF:</h2>
             <iframe
-              src={quiz.pdf} // Caminho do PDF armazenado
+              src={`${process.env.REACT_APP_API_URL}${quiz.pdf}`} // Garante a URL completa para o PDF
               width="100%"
               height="500px"
               title="Visualizar PDF"
