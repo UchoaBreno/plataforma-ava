@@ -51,9 +51,13 @@ class Entrega(models.Model):
     arquivo = models.FileField(upload_to="entregas/")
     data_envio = models.DateTimeField(auto_now_add=True)
     resposta_texto = models.TextField(blank=True)
+    quiz = models.ForeignKey('Quiz', on_delete=models.CASCADE)
+    comentario = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.aluno.username} → {self.aula.titulo}"
+    def __str__(self):
+        return f"Entrega do Quiz {self.quiz.title}"
 
 
 # ─── Quizzes ───────────────────────────────────────────────────

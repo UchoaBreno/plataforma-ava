@@ -3,6 +3,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from usuarios.views import EnviarAtividadeView
 
 from usuarios.views import (
     # Autenticação e usuários
@@ -64,6 +65,7 @@ urlpatterns = [
 
     # Entregas
     path("api/entregas/", EntregaView.as_view(), name="entregas"),
+    path("api/entregas/enviar/", EnviarAtividadeView.as_view(), name='enviar_atividade'),
 
     # Quizzes
     path("api/quizzes/", QuizListCreateView.as_view(), name="quizzes"),

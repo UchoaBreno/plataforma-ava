@@ -4,7 +4,7 @@ from rest_framework import serializers
 from .models import Quiz
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
+from .models import Entrega
 from .models import (
     Usuario, Aula, Entrega, Quiz, Questao,
     Alternativa, RespostaQuiz, Atividade,
@@ -76,7 +76,8 @@ class EntregaSerializer(serializers.ModelSerializer):
         model = Entrega
         fields = [
             "id", "aluno", "aluno_nome", "aula", "aula_titulo",
-            "arquivo", "data_envio", "resposta_texto",
+            "arquivo", "data_envio", "resposta_texto", "quiz", 
+            "comentario"
         ]
         extra_kwargs = {"aluno": {"read_only": True}}
 

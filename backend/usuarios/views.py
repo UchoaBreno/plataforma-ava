@@ -356,6 +356,26 @@ class AtividadeDetailView(RetrieveUpdateDestroyAPIView):
         user = self.request.user
         return Atividade.objects.filter(professor=user) if user.is_staff else Atividade.objects.all()
     
+
+class EnviarAtividadeView(APIView):
+    def post(self, request, *args, **kwargs):
+        # Verifica se o arquivo foi enviado
+        if 'arquivo' not in request.FILES:
+            return Response({"detail": "Arquivo é necessário!"}, status=status.HTTP_400_BAD_REQUEST)
+
+        arquivo = request.FILES['arquivo']
+        # Pega o quiz e outros dados
+        quiz = request.data.get('quiz')
+        comentario = request.data.get('comentario')
+
+        # Adicionar validação ou lógica para salvar o envio no banco de dados
+        entrega = Entrega.objects.create(
+            quiz_id=quiz,
+            comentario=comentario,
+            arquivo=arquivo,  # Salva o arquivo enviado
+        )
+
+        return Response({"message": "Atividade recebida!"}, status=status.HTTP_200_OK)
 # ─── Fórum ────────────────────────────────
 class ForumAPIView(APIView):
     permission_classes = [IsAuthenticated]
