@@ -62,13 +62,6 @@ export default function QuizDetail() {
     }
   };
 
-  const handleVisualizarConteudo = () => {
-    if (quiz && quiz.pdf) {
-      const pdfUrl = `${process.env.REACT_APP_API_URL}${quiz.pdf}`;
-      window.open(pdfUrl, "_blank"); // Abre o PDF em uma nova aba
-    }
-  };
-
   if (!quiz) {
     return (
       <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
@@ -102,6 +95,12 @@ export default function QuizDetail() {
     );
   }
 
+  const handleVisualizarConteudo = () => {
+    setShowContent(true);
+    const pdfUrl = `${process.env.REACT_APP_API_URL}${quiz.pdf}`;
+    window.open(pdfUrl, "_blank"); // Corrigindo o link do PDF
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <Sidebar isAluno />
@@ -112,7 +111,9 @@ export default function QuizDetail() {
         {/* Exibição do PDF - Clique para visualizar o conteúdo */}
         {quiz.pdf && !showContent && (
           <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-2">Clique aqui para visualizar o conteúdo:</h2>
+            <h2 className="text-xl font-semibold mb-2">
+              Clique aqui para visualizar o conteúdo:
+            </h2>
             <button
               onClick={handleVisualizarConteudo}
               className="text-green-600 hover:underline"
