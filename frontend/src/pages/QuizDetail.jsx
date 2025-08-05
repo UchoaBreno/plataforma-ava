@@ -106,6 +106,8 @@ export default function QuizDetail() {
           </div>
         )}
 
+        <p className="mb-4">{quiz.description}</p> {/* Exibe a descrição do quiz, se houver */}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {quiz.questions.map((question, index) => (
             <div

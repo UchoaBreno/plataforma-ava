@@ -108,7 +108,6 @@ class AulaMetricsView(APIView):
             "aulas_concluidas": aulas_concluidas
         })
     
-    
 
 class AulaView(ListCreateAPIView):
     queryset = Aula.objects.all()
@@ -175,7 +174,6 @@ class QuizDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = QuizSerializer
     permission_classes = [IsAuthenticated]
 
-    # Permissão para garantir que o criador do quiz possa editá-lo
     def get_permissions(self):
         if self.request.method in ['PUT', 'DELETE']:
             # Só o criador ou o administrador pode editar ou excluir o quiz
@@ -190,19 +188,17 @@ class QuizSubmitView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
-        # Busca o quiz correspondente ao ID
         quiz = Quiz.objects.filter(pk=pk).first()
         if not quiz:
             return Response({"error": "Quiz não encontrado"}, status=404)
 
         respostas = request.data.get("answers", {})
-        
+
         # Garantir que todas as perguntas foram respondidas
         if len(respostas) < len(quiz.questions.all()):
             return Response({"error": "Por favor, responda todas as perguntas antes de enviar."}, status=400)
 
         acertos = 0
-        # Verifica as alternativas selecionadas e conta os acertos
         for question_id, alternativa_id in respostas.items():
             try:
                 alt = Alternativa.objects.get(id=alternativa_id, pergunta__id=question_id)
@@ -216,12 +212,14 @@ class QuizSubmitView(APIView):
             aluno=request.user, quiz=quiz, resposta=respostas, nota=acertos
         )
         return Response({"message": "Respostas enviadas.", "score": acertos})
+
 class RespostaQuizView(ListAPIView):
     serializer_class = RespostaQuizSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return RespostaQuiz.objects.filter(aluno=self.request.user)
+
 
 
 # ─── Usuários ─────────────────────────────
@@ -257,6 +255,7 @@ class UsuarioDetailView(RetrieveUpdateDestroyAPIView):
         usuario.is_active = False
         usuario.save()
         return Response({"detail": "Usuário desativado"}, status=204)
+
 
 
 class ChangePasswordView(APIView):
@@ -379,21 +378,6 @@ class ResponderComentarioAPIView(APIView):
             comentario=comentario, autor=request.user, texto=request.data.get("texto")
         )
         return Response({"id": resposta.id})
-
-
-class RespostaComentarioAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def put(self, request, pk):
-        resposta = get_object_or_404(RespostaForum, pk=pk, autor=request.user)
-        resposta.texto = request.data.get("texto", resposta.texto)
-        resposta.save()
-        return Response({"detail": "Resposta atualizada"})
-
-    def delete(self, request, pk):
-        resposta = get_object_or_404(RespostaForum, pk=pk, autor=request.user)
-        resposta.delete()
-        return Response({"detail": "Resposta apagada"})
     
 # ─── Desempenho ───────────────────────────
 class DesempenhoCreateListView(ListCreateAPIView):
