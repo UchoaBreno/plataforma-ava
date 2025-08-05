@@ -97,8 +97,11 @@ export default function QuizDetail() {
 
   const handleVisualizarConteudo = () => {
     setShowContent(true);
-    const pdfUrl = `${process.env.REACT_APP_API_URL}${quiz.pdf}`;
-    window.open(pdfUrl, "_blank"); // Corrigindo o link do PDF
+    // Corrigindo a URL do PDF
+    const pdfUrl = quiz.pdf.startsWith("http")
+      ? quiz.pdf
+      : `${process.env.REACT_APP_API_URL}${quiz.pdf}`;
+    window.open(pdfUrl, "_blank");
   };
 
   return (
