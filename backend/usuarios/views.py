@@ -156,10 +156,12 @@ class AulasDisponiveisView(ListAPIView):
         )
 
 
+
 # ─── Quizzes ──────────────────────────────
 class QuizListCreateView(generics.ListCreateAPIView):
     queryset = Quiz.objects.all().order_by('-created_at')
     serializer_class = QuizSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_permissions(self):
         if self.request.method == 'POST':
@@ -168,25 +170,27 @@ class QuizListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         # Salva o criador do quiz como o usuário autenticado
-        serializer.save(criador=self.request.user)
-
+        pdf_file = self.request.FILES.get("pdf")
+        if pdf_file:
+            # Verifique se o arquivo é válido antes de salvar
+            serializer.save(criador=self.request.user, pdf=pdf_file)
+        else:
+            serializer.save(criador=self.request.user)
 
 class QuizDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = QuizSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Quiz.objects.all()
 
     def get_permissions(self):
         if self.request.method in ['PUT', 'DELETE']:
-            # Só o criador ou o administrador pode editar ou excluir o quiz
             if not self.request.user == self.get_object().criador and not self.request.user.is_staff:
                 return [permissions.IsAdminUser()]
         return [permissions.IsAuthenticated()]
 
-    queryset = Quiz.objects.all()
-
 
 class QuizSubmitView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk):
         quiz = Quiz.objects.filter(pk=pk).first()
@@ -216,7 +220,7 @@ class QuizSubmitView(APIView):
 
 class RespostaQuizView(ListAPIView):
     serializer_class = RespostaQuizSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         return RespostaQuiz.objects.filter(aluno=self.request.user)
@@ -225,7 +229,6 @@ class QuizSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quiz
         fields = ['id', 'title', 'description', 'created_at', 'pdf']  # Adiciona o campo pdf
-
 # ─── Usuários ─────────────────────────────
 class AlunoListView(ListAPIView):
     serializer_class = UsuarioSerializer

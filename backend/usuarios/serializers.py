@@ -10,7 +10,7 @@ from .models import (
     ComentarioForum, RespostaForum, Desempenho, SolicitacaoProfessor
 )
 
-
+# ─── Usuário ─────────────────────────────
 class UsuarioSerializer(serializers.ModelSerializer):
     foto_perfil = serializers.ImageField(required=False, allow_null=True)
 
@@ -53,6 +53,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
         return instance
 
 
+# ─── Aula ────────────────────────────────
 class AulaSerializer(serializers.ModelSerializer):
     arquivo = serializers.FileField(use_url=True, required=False)
     agendada = serializers.BooleanField(required=False)
@@ -65,6 +66,7 @@ class AulaSerializer(serializers.ModelSerializer):
         }
 
 
+# ─── Entrega ─────────────────────────────
 class EntregaSerializer(serializers.ModelSerializer):
     aluno_nome = serializers.CharField(source="aluno.username", read_only=True)
     aula_titulo = serializers.CharField(source="aula.titulo", read_only=True)
@@ -78,12 +80,14 @@ class EntregaSerializer(serializers.ModelSerializer):
         extra_kwargs = {"aluno": {"read_only": True}}
 
 
+# ─── Alternativa ─────────────────────────
 class AlternativaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Alternativa
         fields = ["id", "text"]
 
 
+# ─── Questão ─────────────────────────────
 class QuestaoSerializer(serializers.ModelSerializer):
     choices = AlternativaSerializer(many=True, read_only=True)
 
@@ -92,15 +96,18 @@ class QuestaoSerializer(serializers.ModelSerializer):
         fields = ["id", "text", "choices"]
 
 
+# ─── Quiz ────────────────────────────────
 class QuizSerializer(serializers.ModelSerializer):
     questions = QuestaoSerializer(many=True, read_only=True)
     criador_nome = serializers.CharField(source="criador.username", read_only=True)
+    pdf = serializers.FileField(required=False)
 
     class Meta:
         model = Quiz
-        fields = ["id", "title", "description", "created_at", "questions", "criador_nome"]
+        fields = ["id", "title", "description", "created_at", "questions", "criador_nome", "pdf"]  # Adiciona o campo pdf
 
 
+# ─── Resposta Quiz ───────────────────────
 class RespostaQuizSerializer(serializers.ModelSerializer):
     aluno_nome = serializers.CharField(source="aluno.username", read_only=True)
     quiz_titulo = serializers.CharField(source="quiz.title", read_only=True)
@@ -118,6 +125,7 @@ class RespostaQuizSerializer(serializers.ModelSerializer):
         }
 
 
+# ─── Custom Login Serializer ──────────────
 class CustomLoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
@@ -136,6 +144,7 @@ class CustomLoginSerializer(serializers.Serializer):
         raise serializers.ValidationError("Credenciais inválidas")
 
 
+# ─── Custom Token Serializer ──────────────
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
@@ -146,6 +155,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         return token
 
 
+# ─── Atividade ───────────────────────────
 class AtividadeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Atividade
@@ -153,6 +163,7 @@ class AtividadeSerializer(serializers.ModelSerializer):
         extra_kwargs = {"professor": {"read_only": True}}
 
 
+# ─── Resposta Fórum ──────────────────────
 class RespostaForumSerializer(serializers.ModelSerializer):
     autor_nome = serializers.CharField(source="autor.username", read_only=True)
     autor_username = serializers.CharField(source="autor.username", read_only=True)
@@ -162,6 +173,7 @@ class RespostaForumSerializer(serializers.ModelSerializer):
         fields = ["id", "texto", "autor_nome", "autor_username", "criado_em"]
 
 
+# ─── Comentário Fórum ────────────────────
 class ComentarioForumSerializer(serializers.ModelSerializer):
     autor_nome = serializers.CharField(source="autor.username", read_only=True)
     autor_username = serializers.CharField(source="autor.username", read_only=True)
@@ -172,6 +184,7 @@ class ComentarioForumSerializer(serializers.ModelSerializer):
         fields = ["id", "texto", "autor_nome", "autor_username", "criado_em", "respostas"]
 
 
+# ─── Desempenho ───────────────────────────
 class DesempenhoSerializer(serializers.ModelSerializer):
     aluno_nome = serializers.CharField(source='aluno.username', read_only=True)
 
@@ -180,6 +193,7 @@ class DesempenhoSerializer(serializers.ModelSerializer):
         fields = ['id', 'titulo', 'descricao', 'nota', 'aluno', 'aluno_nome']
 
 
+# ─── Solicitação de Professores ───────────
 class SolicitacaoProfessorSerializer(serializers.ModelSerializer):
     senha = serializers.CharField(write_only=True)
 
