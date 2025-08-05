@@ -17,6 +17,7 @@ export default function QuizDetail() {
   // Estado para o modal de envio de atividade
   const [selQuiz, setSelQuiz] = useState("");
   const [selArquivo, setSelArquivo] = useState(null);
+  const [comentario, setComentario] = useState("");
 
   useEffect(() => {
     axiosInstance
@@ -99,6 +100,11 @@ export default function QuizDetail() {
     }
   };
 
+  // Função para cancelar e voltar para quizzes
+  const handleCancel = () => {
+    navigate("/quizzes");
+  };
+
   if (!quiz) {
     return (
       <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
@@ -154,6 +160,21 @@ export default function QuizDetail() {
           </div>
         )}
 
+        {/* Campo de texto para comentários */}
+        {showContent && (
+          <div className="mb-6">
+            <label className="text-sm text-green-700 dark:text-green-400">
+              Comentário
+            </label>
+            <textarea
+              value={comentario}
+              onChange={(e) => setComentario(e.target.value)}
+              className="w-full mt-2 rounded border p-2"
+              rows="4"
+            ></textarea>
+          </div>
+        )}
+
         {erro && (
           <div className="text-red-700 bg-red-100 dark:bg-red-900/50 dark:text-red-300 border border-red-300 dark:border-red-600 px-4 py-2 rounded text-center mb-4 text-sm">
             {erro}
@@ -184,7 +205,7 @@ export default function QuizDetail() {
           <div className="flex justify-end gap-2">
             <button
               type="button"
-              onClick={() => setShowContent(false)}
+              onClick={handleCancel}
               className="px-3 py-1 rounded bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500"
             >
               Cancelar
@@ -196,46 +217,6 @@ export default function QuizDetail() {
               Enviar
             </button>
           </div>
-        </form>
-
-        {/* Exibição das questões do quiz */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {quiz.questions.map((question, index) => (
-            <div
-              key={question.id}
-              className="p-4 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800"
-            >
-              <p className="font-medium mb-2">
-                {index + 1}. {question.text}
-              </p>
-              <div className="space-y-2">
-                {question.choices.map((choice) => (
-                  <label
-                    key={choice.id}
-                    className="flex items-center space-x-2 cursor-pointer"
-                  >
-                    <input
-                      type="radio"
-                      name={`question-${question.id}`}
-                      value={choice.id}
-                      checked={answers[question.id] === choice.id}
-                      onChange={() => handleChoice(question.id, choice.id)}
-                      required
-                      className="accent-green-600"
-                    />
-                    <span>{choice.text}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          ))}
-          <button
-            type="submit"
-            disabled={submitting}
-            className="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:opacity-50"
-          >
-            {submitting ? "Enviando…" : "Enviar respostas"}
-          </button>
         </form>
       </main>
     </div>
