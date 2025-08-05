@@ -121,6 +121,20 @@ export default function QuizDetail() {
           </div>
         )}
 
+        {/* Link de Download para o PDF */}
+        {showContent && quiz.pdf && (
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-2">Baixe o conteúdo:</h2>
+            <a
+              href={`${process.env.REACT_APP_API_URL}${quiz.pdf}`} // Garante que a URL está correta
+              download
+              className="text-green-600 hover:underline"
+            >
+              Clique aqui para baixar o PDF
+            </a>
+          </div>
+        )}
+
         {erro && (
           <div className="text-red-700 bg-red-100 dark:bg-red-900/50 dark:text-red-300 border border-red-300 dark:border-red-600 px-4 py-2 rounded text-center mb-4 text-sm">
             {erro}
