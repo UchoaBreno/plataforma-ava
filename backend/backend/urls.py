@@ -69,7 +69,7 @@ urlpatterns = [
     path("api/quizzes/", QuizListCreateView.as_view(), name="quizzes"),  # Rota para listar e criar quizzes
     path("api/quizzes/<int:pk>/", QuizDetailView.as_view(), name="quiz_detail"),  # Rota para visualizar detalhes de um quiz
     path("api/quizzes/<int:pk>/submit/", QuizSubmitView.as_view(), name="quiz_submit"),  # Rota para submeter respostas
-    path("api/respostas/", RespostaQuizView.as_view(), name="respostas_quiz"),  # Se necessário, para capturar respostas
+    path("api/respostas/", RespostaQuizView.as_view(), name="respostas_quiz"),  # Para capturar respostas
 
     # Atividades
     path("api/atividades/", AtividadeView.as_view(), name="atividades"),

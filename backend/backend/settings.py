@@ -93,11 +93,12 @@ TIME_ZONE = 'America/Manaus'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
+# Arquivos Estáticos e de Mídia
+STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Diretório para armazenar arquivos de mídia, como PDFs, imagens, etc.
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -113,7 +114,7 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-# CORS Configurações
+# Configurações de CORS (Cross-Origin Resource Sharing)
 CORS_ALLOW_ALL_ORIGINS = False
 
 CORS_ALLOWED_ORIGINS = [
