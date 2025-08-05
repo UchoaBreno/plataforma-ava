@@ -1,23 +1,26 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom"; // Corrigido aqui
+import { useParams, useNavigate } from "react-router-dom"; 
+import jwtDecode from "jwt-decode";  // Certificando-se de importar jwt-decode corretamente
 import Sidebar from "../components/Sidebar";
 import axiosInstance from "../utils/axiosInstance";
 
 export default function QuizDetail() {
-  const { id } = useParams();  // Agora 'useParams' está correto
-  const navigate = useNavigate();  // 'useNavigate' também foi corrigido
+  const { id } = useParams(); 
+  const navigate = useNavigate();
 
-  const token = localStorage.getItem("access");
-
-  const [alunoId, setAlunoId] = useState(null);
   const [quiz, setQuiz] = useState(null);
+  const [answers, setAnswers] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [result, setResult] = useState(null);
   const [erro, setErro] = useState("");
   const [showContent, setShowContent] = useState(false);
+
+  const token = localStorage.getItem("access");
 
   useEffect(() => {
     if (!token) return;
     try {
-      const decoded = jwtDecode(token);
+      const decoded = jwtDecode(token);  // Decodificando o JWT corretamente
       const id = decoded.user_id ?? decoded.id;
       if (id) setAlunoId(id);
     } catch {
