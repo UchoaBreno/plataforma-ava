@@ -66,10 +66,10 @@ urlpatterns = [
     path("api/entregas/", EntregaView.as_view(), name="entregas"),
 
     # Quizzes
-    path("api/quizzes/", QuizListCreateView.as_view(), name="quizzes"),  # Rota para listar e criar quizzes
-    path("api/quizzes/<int:pk>/", QuizDetailView.as_view(), name="quiz_detail"),  # Rota para visualizar detalhes de um quiz
-    path("api/quizzes/<int:pk>/submit/", QuizSubmitView.as_view(), name="quiz_submit"),  # Rota para submeter respostas
-    path("api/respostas/", RespostaQuizView.as_view(), name="respostas_quiz"),  # Para capturar respostas
+    path("api/quizzes/", QuizListCreateView.as_view(), name="quizzes"),
+    path("api/quizzes/<int:pk>/", QuizDetailView.as_view(), name="quiz_detail"),
+    path("api/quizzes/<int:pk>/submit/", QuizSubmitView.as_view(), name="quiz_submit"),
+    path("api/respostas/", RespostaQuizView.as_view(), name="respostas_quiz"),
 
     # Atividades
     path("api/atividades/", AtividadeView.as_view(), name="atividades"),
@@ -89,7 +89,7 @@ urlpatterns = [
     path("api/solicitacoes-professor/", SolicitacaoProfessorCreateView.as_view(), name="solicitacao_professor"),
 
     # Métricas
-    path("api/aulas/metrics/", AulaMetricsView.as_view(), name="aula_metrics"),  # Nova URL para métricas
+    path("api/aulas/metrics/", AulaMetricsView.as_view(), name="aula_metrics"),
 ]
 
 # ViewSets registrados (admin)
