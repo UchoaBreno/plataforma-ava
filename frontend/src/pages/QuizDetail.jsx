@@ -12,6 +12,7 @@ export default function QuizDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
   const [erro, setErro] = useState("");
+  const [showContent, setShowContent] = useState(false); // Controla se o conteúdo do quiz deve ser mostrado
 
   useEffect(() => {
     axiosInstance
@@ -101,8 +102,21 @@ export default function QuizDetail() {
         <h1 className="text-3xl font-bold mb-4">{quiz.title}</h1>
         <p className="mb-4">{quiz.description}</p> {/* Exibe a descrição do quiz */}
 
-        {/* Exibe o PDF, caso haja */}
-        {quiz.pdf && (
+        {/* Se houver PDF, exibe um link para visualizar o conteúdo */}
+        {quiz.pdf && !showContent && (
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-2">Clique aqui para visualizar o conteúdo:</h2>
+            <button
+              onClick={() => setShowContent(true)}
+              className="text-green-600 hover:underline"
+            >
+              Visualizar conteúdo
+            </button>
+          </div>
+        )}
+
+        {/* Exibe o PDF se o aluno clicar em visualizar conteúdo */}
+        {showContent && quiz.pdf && (
           <div className="mb-6">
             <h2 className="text-xl font-semibold mb-2">Visualizar PDF:</h2>
             <iframe
