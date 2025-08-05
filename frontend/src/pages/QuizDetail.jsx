@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
-import dayjs from "dayjs";
-import { jwtDecode } from "jwt-decode";
+import { useParams, useNavigate } from "react-router-dom"; // Corrigido aqui
 import Sidebar from "../components/Sidebar";
 import axiosInstance from "../utils/axiosInstance";
 
 export default function QuizDetail() {
+  const { id } = useParams();  // Agora 'useParams' está correto
+  const navigate = useNavigate();  // 'useNavigate' também foi corrigido
+
   const token = localStorage.getItem("access");
-  const { id } = useParams();
-  const navigate = useNavigate();
 
   const [alunoId, setAlunoId] = useState(null);
   const [quiz, setQuiz] = useState(null);
@@ -41,10 +41,9 @@ export default function QuizDetail() {
     }
   }
 
-  // Funcionalidade de exibição do PDF
   const handleVisualizarConteudo = () => {
     setShowContent(true);
-    window.open(`${process.env.REACT_APP_API_URL}${quiz.pdf}`, "_blank"); // Abre o PDF em nova aba
+    window.open(`${process.env.REACT_APP_API_URL}${quiz.pdf}`, "_blank"); 
   };
 
   return (
@@ -58,7 +57,6 @@ export default function QuizDetail() {
             <h1 className="text-3xl font-bold mb-4">{quiz.title}</h1>
             <p className="mb-4">{quiz.description}</p>
 
-            {/* Exibição do PDF */}
             {quiz.pdf && !showContent && (
               <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-2">Clique aqui para visualizar o conteúdo:</h2>
@@ -71,14 +69,12 @@ export default function QuizDetail() {
               </div>
             )}
 
-            {/* Exibição de erro */}
             {erro && (
               <div className="text-red-700 bg-red-100 dark:bg-red-900/50 dark:text-red-300 border border-red-300 dark:border-red-600 px-4 py-2 rounded text-center mb-4 text-sm">
                 {erro}
               </div>
             )}
 
-            {/* Formulário de respostas do quiz */}
             <form className="space-y-6">
               {quiz.questions.map((question, index) => (
                 <div
