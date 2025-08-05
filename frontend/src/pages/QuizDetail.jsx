@@ -62,6 +62,14 @@ export default function QuizDetail() {
     }
   };
 
+  const handleVisualizarConteudo = () => {
+    if (quiz && quiz.pdf) {
+      setShowContent(true);
+      const pdfUrl = `${process.env.REACT_APP_API_URL}${quiz.pdf}`;
+      window.open(pdfUrl, "_blank");
+    }
+  };
+
   if (!quiz) {
     return (
       <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
@@ -94,12 +102,6 @@ export default function QuizDetail() {
       </div>
     );
   }
-
-  const handleVisualizarConteudo = () => {
-    setShowContent(true);
-    const pdfUrl = `${process.env.REACT_APP_API_URL}${quiz.pdf}`;
-    window.open(pdfUrl, "_blank");
-  };
 
   return (
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
