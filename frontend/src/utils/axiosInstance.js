@@ -29,3 +29,5 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(err);
   }
 );
+
+export default axiosInstance;  // **Aqui é onde exportamos como exportação padrão**
