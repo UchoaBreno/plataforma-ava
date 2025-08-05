@@ -3,6 +3,7 @@ from django.utils import timezone
 from rest_framework.response import Response
 from django.db.models import Exists, OuterRef, Q
 from rest_framework.parsers import MultiPartParser
+from rest_framework import serializers
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets, generics, permissions
 from .serializers import AulaSerializer, EntregaSerializer
@@ -220,7 +221,10 @@ class RespostaQuizView(ListAPIView):
     def get_queryset(self):
         return RespostaQuiz.objects.filter(aluno=self.request.user)
 
-
+class QuizSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Quiz
+        fields = ['id', 'title', 'description', 'created_at', 'pdf']  # Adiciona o campo pdf
 
 # ─── Usuários ─────────────────────────────
 class AlunoListView(ListAPIView):
