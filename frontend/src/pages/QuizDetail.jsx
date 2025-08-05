@@ -99,14 +99,26 @@ export default function QuizDetail() {
       <Sidebar isAluno />
       <main className="ml-64 flex-1 p-6">
         <h1 className="text-3xl font-bold mb-4">{quiz.title}</h1>
+        <p className="mb-4">{quiz.description}</p> {/* Exibe a descrição do quiz */}
+
+        {/* Exibe o PDF, caso haja */}
+        {quiz.pdf && (
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-2">Visualizar PDF:</h2>
+            <iframe
+              src={quiz.pdf} // Caminho do PDF armazenado
+              width="100%"
+              height="500px"
+              title="Visualizar PDF"
+            />
+          </div>
+        )}
 
         {erro && (
           <div className="text-red-700 bg-red-100 dark:bg-red-900/50 dark:text-red-300 border border-red-300 dark:border-red-600 px-4 py-2 rounded text-center mb-4 text-sm">
             {erro}
           </div>
         )}
-
-        <p className="mb-4">{quiz.description}</p> {/* Exibe a descrição do quiz, se houver */}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {quiz.questions.map((question, index) => (
