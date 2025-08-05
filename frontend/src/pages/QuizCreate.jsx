@@ -11,21 +11,34 @@ export default function CriarQuiz() {
   const [erro, setErro] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = async () => {
-    setErro("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();  // Evita o comportamento padrão de submit
 
+    setErro("");  // Limpa os erros anteriores
+
+    // Valida os campos obrigatórios
     if (!titulo.trim() || !descricao.trim()) {
       setErro("Preencha pelo menos o título e a descrição do quiz.");
       return;
     }
 
+    // Cria um objeto FormData para envio
     const formData = new FormData();
     formData.append("title", titulo);
     formData.append("description", descricao);
-    if (arquivo) formData.append("arquivo", arquivo);
-    if (link) formData.append("link_interativo", link);
+
+    // Adiciona o arquivo ao FormData, se houver
+    if (arquivo) {
+      formData.append("pdf", arquivo);  // Usando "pdf" conforme o backend
+    }
+
+    // Adiciona o link, se houver
+    if (link) {
+      formData.append("link_interativo", link);
+    }
 
     try {
+      // Envia os dados do quiz via POST para o backend
       await axiosInstance.post("quizzes/", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
