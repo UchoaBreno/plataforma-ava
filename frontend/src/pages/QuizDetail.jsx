@@ -107,25 +107,17 @@ export default function QuizDetail() {
           <div className="mb-6">
             <h2 className="text-xl font-semibold mb-2">Clique aqui para visualizar o conteúdo:</h2>
             <button
-              onClick={() => setShowContent(true)}
+              onClick={() => {
+                setShowContent(true);
+                window.open(
+                  `${process.env.REACT_APP_API_URL}${quiz.pdf}`, // Abre o PDF em nova aba
+                  "_blank"
+                );
+              }}
               className="text-green-600 hover:underline"
             >
               Visualizar conteúdo
             </button>
-          </div>
-        )}
-
-        {/* Exibe o PDF após clicar para visualizar o conteúdo */}
-        {showContent && quiz.pdf && (
-          <div className="mb-6">
-            <object
-              data={`${process.env.REACT_APP_API_URL}${quiz.pdf}`}
-              type="application/pdf"
-              width="100%"
-              height="600px"
-            >
-              <p>Seu navegador não suporta PDFs. Baixe o arquivo PDF para visualizar.</p>
-            </object>
           </div>
         )}
 
