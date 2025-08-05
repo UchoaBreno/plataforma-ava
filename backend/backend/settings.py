@@ -97,8 +97,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Diretório para armazenar arquivos de mídia, como PDFs, imagens, etc.
+MEDIA_URL = '/media/'  # A URL base para acessar os arquivos de mídia
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # O diretório no sistema de arquivos
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
