@@ -23,6 +23,7 @@ def validate_pdf(value):
     if file_extension not in ['pdf']:
         raise ValidationError('Arquivo inválido. Apenas arquivos PDF são permitidos.')
 
+
 class Aula(models.Model):
     """Modelo de Aulas Postadas por Professores"""
     titulo = models.CharField(max_length=100)

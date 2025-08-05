@@ -102,7 +102,7 @@ export default function QuizDetail() {
         <h1 className="text-3xl font-bold mb-4">{quiz.title}</h1>
         <p className="mb-4">{quiz.description}</p>
 
-        {/* Verificação e exibição do PDF */}
+        {/* Lógica para exibir o PDF como link */}
         {quiz.pdf && !showContent && (
           <div className="mb-6">
             <h2 className="text-xl font-semibold mb-2">Clique aqui para visualizar o conteúdo:</h2>
@@ -115,16 +115,18 @@ export default function QuizDetail() {
           </div>
         )}
 
-        {/* Exibe o PDF se o aluno clicar em visualizar conteúdo */}
+        {/* Exibe o PDF em uma nova aba quando o botão "Visualizar conteúdo" é clicado */}
         {showContent && quiz.pdf && (
           <div className="mb-6">
             <h2 className="text-xl font-semibold mb-2">Visualizar PDF:</h2>
-            <iframe
-              src={`${process.env.REACT_APP_API_URL}${quiz.pdf}`} // Certifique-se de que a URL está correta
-              width="100%"
-              height="500px"
-              title="Visualizar PDF"
-            />
+            <a
+              href={`${process.env.REACT_APP_API_URL}${quiz.pdf}`} // Garante que a URL completa está correta
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-green-600 hover:underline"
+            >
+              Clique aqui para abrir o PDF
+            </a>
           </div>
         )}
 
