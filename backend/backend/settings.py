@@ -163,3 +163,8 @@ DJOSER = {
     'PASSWORD_RESET_CONFIRM_URL': 'reset-password-confirm/{uid}/{token}/',
     'SERIALIZERS': {},
 }
+
+# Definições para o CORS permitir o acesso aos arquivos de mídia
+CORS_ALLOW_HEADERS += [
+    "content-disposition",  # Permitir que os cabeçalhos relacionados a download sejam aceitos
+]

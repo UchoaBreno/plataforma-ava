@@ -64,9 +64,8 @@ export default function QuizDetail() {
 
   const handleVisualizarConteudo = () => {
     if (quiz && quiz.pdf) {
-      setShowContent(true);
       const pdfUrl = `${process.env.REACT_APP_API_URL}${quiz.pdf}`;
-      window.open(pdfUrl, "_blank");
+      window.open(pdfUrl, "_blank"); // Abre o PDF em uma nova aba
     }
   };
 
