@@ -14,6 +14,10 @@ export default function QuizDetail() {
   const [erro, setErro] = useState("");
   const [showContent, setShowContent] = useState(false);
 
+  // Estado para o modal de envio de atividade
+  const [selQuiz, setSelQuiz] = useState("");
+  const [selArquivo, setSelArquivo] = useState(null);
+
   useEffect(() => {
     axiosInstance
       .get(`quizzes/${id}/`)
@@ -62,6 +66,39 @@ export default function QuizDetail() {
     }
   };
 
+  // Função para abrir o PDF
+  const handleVisualizarConteudo = () => {
+    setShowContent(true);
+    const pdfUrl = quiz.pdf.startsWith("http")
+      ? quiz.pdf
+      : `${process.env.REACT_APP_API_URL}${quiz.pdf}`;
+    window.open(pdfUrl, "_blank");
+  };
+
+  // Função para enviar o arquivo da atividade
+  const enviarAtividade = async (e) => {
+    e.preventDefault();
+    if (!selQuiz || !selArquivo) {
+      alert("Escolha o quiz e o arquivo.");
+      return;
+    }
+    const fd = new FormData();
+    fd.append("quiz", parseInt(selQuiz, 10));
+    fd.append("arquivo", selArquivo);
+
+    try {
+      await axiosInstance.post("entregas/", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      alert("Atividade enviada!");
+      setSelQuiz("");
+      setSelArquivo(null);
+    } catch (err) {
+      console.error("Erro ao enviar atividade:", err);
+      alert("Erro ao enviar atividade.");
+    }
+  };
+
   if (!quiz) {
     return (
       <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
@@ -95,15 +132,6 @@ export default function QuizDetail() {
     );
   }
 
-  const handleVisualizarConteudo = () => {
-    setShowContent(true);
-    // Corrigindo a URL do PDF
-    const pdfUrl = quiz.pdf.startsWith("http")
-      ? quiz.pdf
-      : `${process.env.REACT_APP_API_URL}${quiz.pdf}`;
-    window.open(pdfUrl, "_blank");
-  };
-
   return (
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <Sidebar isAluno />
@@ -132,6 +160,45 @@ export default function QuizDetail() {
           </div>
         )}
 
+        {/* Modal para enviar a atividade */}
+        <form onSubmit={enviarAtividade} className="space-y-6">
+          <label className="block text-sm mb-1 text-green-700 dark:text-green-400">Quiz</label>
+          <select
+            value={selQuiz}
+            onChange={(e) => setSelQuiz(e.target.value)}
+            className="w-full mb-3 rounded border px-2 py-1 dark:bg-gray-700 dark:text-white"
+            required
+          >
+            <option value="">-- escolha --</option>
+            <option value={quiz.id}>{quiz.title}</option>
+          </select>
+
+          <label className="block text-sm mb-1 text-green-700 dark:text-green-400">Arquivo</label>
+          <input
+            type="file"
+            onChange={(e) => setSelArquivo(e.target.files[0] || null)}
+            className="mb-4 w-full text-xs"
+            required
+          />
+
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setShowContent(false)}
+              className="px-3 py-1 rounded bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-1 rounded bg-green-600 text-white hover:bg-green-700"
+            >
+              Enviar
+            </button>
+          </div>
+        </form>
+
+        {/* Exibição das questões do quiz */}
         <form onSubmit={handleSubmit} className="space-y-6">
           {quiz.questions.map((question, index) => (
             <div
