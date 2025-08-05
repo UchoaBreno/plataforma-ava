@@ -102,18 +102,6 @@ export default function QuizDetail() {
         <h1 className="text-3xl font-bold mb-4">{quiz.title}</h1>
         <p className="mb-4">{quiz.description}</p>
 
-        {/* Exibição do PDF como link */}
-        {quiz.pdf && !showContent && (
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-2">Clique aqui para visualizar o conteúdo:</h2>
-            <button
-              onClick={() => setShowContent(true)}
-              className="text-green-600 hover:underline"
-            >
-              Visualizar conteúdo
-            </button>
-          </div>
-        )}
 
         {/* Exibe o PDF após clicar para visualizar o conteúdo */}
         {showContent && quiz.pdf && (
