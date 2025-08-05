@@ -14,6 +14,7 @@ export default function QuizDetail() {
   const [result, setResult] = useState(null);
   const [erro, setErro] = useState("");
   const [showContent, setShowContent] = useState(false);
+  const [alunoId, setAlunoId] = useState(null); // Definição da variável alunoId
 
   const token = localStorage.getItem("access");
 
@@ -22,7 +23,7 @@ export default function QuizDetail() {
     try {
       const decoded = jwtDecode(token);  // Decodificando o JWT corretamente
       const id = decoded.user_id ?? decoded.id;
-      if (id) setAlunoId(id);
+      if (id) setAlunoId(id); // Corrigindo a definição de alunoId
     } catch {
       console.error("Token inválido.");
     }
