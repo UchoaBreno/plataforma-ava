@@ -117,16 +117,17 @@ export default function QuizDetail() {
 
         {/* Exibe o PDF se o aluno clicar em visualizar conteúdo */}
         {showContent && quiz.pdf && (
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-2">Visualizar PDF:</h2>
-            <iframe
-              src={`${process.env.REACT_APP_API_URL}${quiz.pdf}`} // Garante a URL completa para o PDF
-              width="100%"
-              height="500px"
-              title="Visualizar PDF"
-            />
-          </div>
-        )}
+  <div className="mb-6">
+    <h2 className="text-xl font-semibold mb-2">Visualizar PDF:</h2>
+    <iframe
+      src={`${process.env.REACT_APP_API_URL}${quiz.pdf}`} // Concatene o URL da API aqui
+      width="100%"
+      height="500px"
+      title="Visualizar PDF"
+    />
+  </div>
+)}
+
 
         {erro && (
           <div className="text-red-700 bg-red-100 dark:bg-red-900/50 dark:text-red-300 border border-red-300 dark:border-red-600 px-4 py-2 rounded text-center mb-4 text-sm">
