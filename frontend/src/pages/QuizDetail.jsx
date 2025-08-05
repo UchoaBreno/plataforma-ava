@@ -8,7 +8,7 @@ export default function QuizDetail() {
   const navigate = useNavigate();
 
   const [quiz, setQuiz] = useState(null);
-  const [answers, setAnswers] = useState({});
+  const [answers, setAnswers] = useState({});  // Respostas do quiz
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
   const [erro, setErro] = useState("");
@@ -34,7 +34,8 @@ export default function QuizDetail() {
     setAnswers((prev) => ({ ...prev, [questionId]: choiceId }));
   };
 
-  const handleSubmit = async (e) => {
+  // Função para enviar o quiz e a atividade
+  const enviarQuiz = async (e) => {
     e.preventDefault();
     setErro("");
     setSubmitting(true);
@@ -42,26 +43,49 @@ export default function QuizDetail() {
     const perguntasRespondidas = Object.keys(answers).length;
     const totalPerguntas = quiz.questions.length;
 
+    // Verifica se todas as perguntas foram respondidas
     if (perguntasRespondidas < totalPerguntas) {
       setErro("⚠️ Responda todas as perguntas antes de enviar.");
       setSubmitting(false);
       return;
     }
 
+    if (!selArquivo) {
+      setErro("⚠️ Você precisa selecionar um arquivo.");
+      setSubmitting(false);
+      return;
+    }
+
     try {
+      // Payload com respostas e arquivo
       const payload = {
         quiz: id,
         respostas: Object.entries(answers).map(([questionId, choiceId]) => ({
           pergunta: questionId,
           alternativa: choiceId,
         })),
+        comentario: comentario,
       };
 
-      const { data } = await axiosInstance.post("respostas/", payload);
-      setResult(data);
+      const formData = new FormData();
+      formData.append("quiz", id);
+      formData.append("comentario", comentario);
+      formData.append("arquivo", selArquivo); // Adiciona o arquivo
+
+      // Envia as respostas do quiz e o arquivo
+      await axiosInstance.post("entregas/", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      alert("Atividade enviada!");
+      setSelQuiz("");
+      setSelArquivo(null);
+      setComentario("");
     } catch (err) {
-      console.error("Erro ao enviar respostas:", err);
-      setErro("❌ Ocorreu um erro ao enviar as respostas.");
+      console.error("Erro ao enviar atividade:", err);
+      setErro("❌ Ocorreu um erro ao enviar a atividade.");
     } finally {
       setSubmitting(false);
     }
@@ -74,30 +98,6 @@ export default function QuizDetail() {
       ? quiz.pdf
       : `${process.env.REACT_APP_API_URL}${quiz.pdf}`;
     window.open(pdfUrl, "_blank");
-  };
-
-  // Função para enviar o arquivo da atividade
-  const enviarAtividade = async (e) => {
-    e.preventDefault();
-    if (!selQuiz || !selArquivo) {
-      alert("Escolha o quiz e o arquivo.");
-      return;
-    }
-    const fd = new FormData();
-    fd.append("quiz", parseInt(selQuiz, 10));
-    fd.append("arquivo", selArquivo);
-
-    try {
-      await axiosInstance.post("entregas/", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      alert("Atividade enviada!");
-      setSelQuiz("");
-      setSelArquivo(null);
-    } catch (err) {
-      console.error("Erro ao enviar atividade:", err);
-      alert("Erro ao enviar atividade.");
-    }
   };
 
   // Função para cancelar e voltar para quizzes
@@ -160,11 +160,11 @@ export default function QuizDetail() {
           </div>
         )}
 
-        {/* Campo de texto para comentários */}
+        {/* Campo de texto para comentários (descrição) */}
         {showContent && (
           <div className="mb-6">
             <label className="text-sm text-green-700 dark:text-green-400">
-              Comentário
+              Descrição ou Resposta ao Quiz
             </label>
             <textarea
               value={comentario}
@@ -182,7 +182,7 @@ export default function QuizDetail() {
         )}
 
         {/* Modal para enviar a atividade */}
-        <form onSubmit={enviarAtividade} className="space-y-6">
+        <form onSubmit={enviarQuiz} className="space-y-6">
           <label className="block text-sm mb-1 text-green-700 dark:text-green-400">Quiz</label>
           <select
             value={selQuiz}
