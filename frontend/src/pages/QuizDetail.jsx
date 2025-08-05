@@ -1,132 +1,177 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import dayjs from "dayjs";
-import { jwtDecode } from "jwt-decode";
+import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import axiosInstance from "../utils/axiosInstance";
 
-export default function QuizzesAluno() {
-  const token = localStorage.getItem("access");
-
-  const [quizzes, setQuizzes] = useState([]);
-  const [showError, setShowError] = useState("");
-  const [showContent, setShowContent] = useState(false); // Controla se o conteúdo do quiz (PDF) deve ser mostrado
-  const [quizSelecionado, setQuizSelecionado] = useState(null); // Para armazenar o quiz selecionado
+export default function QuizDetail() {
+  const { id } = useParams();
   const navigate = useNavigate();
 
-  const fetchQuizzes = async () => {
-    try {
-      const { data } = await axiosInstance.get("quizzes/");
-      setQuizzes(data);
-    } catch (err) {
-      console.error("Erro ao buscar quizzes:", err);
-      setShowError("Não foi possível carregar os quizzes.");
-    }
-  };
+  const [quiz, setQuiz] = useState(null);
+  const [answers, setAnswers] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [result, setResult] = useState(null);
+  const [erro, setErro] = useState("");
+  const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
-    if (!token) {
-      navigate("/login");
+    axiosInstance
+      .get(`quizzes/${id}/`)
+      .then(({ data }) => setQuiz(data))
+      .catch((err) => {
+        console.error("Erro ao carregar quiz:", err);
+        alert("Não foi possível carregar o quiz.");
+        navigate("/quizzes");
+      });
+  }, [id, navigate]);
+
+  const handleChoice = (questionId, choiceId) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: choiceId }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErro("");
+    setSubmitting(true);
+
+    const perguntasRespondidas = Object.keys(answers).length;
+    const totalPerguntas = quiz.questions.length;
+
+    if (perguntasRespondidas < totalPerguntas) {
+      setErro("⚠️ Responda todas as perguntas antes de enviar.");
+      setSubmitting(false);
       return;
     }
 
     try {
-      const decoded = jwtDecode(token);
-    } catch {
-      setShowError("Token inválido.");
-    }
+      const payload = {
+        quiz: id,
+        respostas: Object.entries(answers).map(([questionId, choiceId]) => ({
+          pergunta: questionId,
+          alternativa: choiceId,
+        })),
+      };
 
-    fetchQuizzes();
-  }, [token, navigate]);
-
-  const handleStart = (id) => navigate(`/quizzes/${id}`);
-  const handleSubmit = async (quizId) => {
-    try {
-      // Lógica para enviar respostas aqui (se necessário)
-      alert("Respostas enviadas com sucesso!");
-      setQuizSelecionado(null); // Reseta após o envio
+      const { data } = await axiosInstance.post("respostas/", payload);
+      setResult(data);
     } catch (err) {
       console.error("Erro ao enviar respostas:", err);
-      setShowError("Erro ao enviar respostas.");
+      setErro("❌ Ocorreu um erro ao enviar as respostas.");
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  if (!quiz) {
+    return (
+      <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+        <Sidebar isAluno />
+        <main className="ml-64 flex-1 p-6">Carregando quiz…</main>
+      </div>
+    );
+  }
+
+  if (result) {
+    return (
+      <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+        <Sidebar isAluno />
+        <main className="ml-64 flex-1 p-6">
+          <h1 className="text-3xl font-bold mb-4">Resultado</h1>
+          <p className="text-xl">
+            Você acertou{" "}
+            <span className="font-semibold text-green-600 dark:text-green-400">
+              {result.score}
+            </span>{" "}
+            de {quiz.questions.length} perguntas.
+          </p>
+          <button
+            onClick={() => navigate("/quizzes")}
+            className="mt-6 rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+          >
+            Voltar aos quizzes
+          </button>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <Sidebar isAluno />
       <main className="ml-64 flex-1 p-6">
-        <h1 className="text-3xl font-bold text-green-600 dark:text-green-400 mb-6">
-          Quizzes Disponíveis
-        </h1>
+        <h1 className="text-3xl font-bold mb-4">{quiz.title}</h1>
+        <p className="mb-4">{quiz.description}</p>
 
-        {showError && (
+        {/* Verificação e exibição do PDF */}
+        {quiz.pdf && !showContent && (
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-2">Clique aqui para visualizar o conteúdo:</h2>
+            <button
+              onClick={() => setShowContent(true)}
+              className="text-green-600 hover:underline"
+            >
+              Visualizar conteúdo
+            </button>
+          </div>
+        )}
+
+        {/* Exibe o PDF se o aluno clicar em visualizar conteúdo */}
+        {showContent && quiz.pdf && (
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-2">Visualizar PDF:</h2>
+            <iframe
+              src={`${process.env.REACT_APP_API_URL}${quiz.pdf}`} // Garante a URL completa para o PDF
+              width="100%"
+              height="500px"
+              title="Visualizar PDF"
+            />
+          </div>
+        )}
+
+        {erro && (
           <div className="text-red-700 bg-red-100 dark:bg-red-900/50 dark:text-red-300 border border-red-300 dark:border-red-600 px-4 py-2 rounded text-center mb-4 text-sm">
-            {showError}
+            {erro}
           </div>
         )}
 
-        {quizzes.length === 0 ? (
-          <p className="text-gray-600 dark:text-gray-300">
-            Nenhum quiz disponível no momento.
-          </p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {quizzes.map((q) => (
-              <div
-                key={q.id}
-                className="flex flex-col justify-between rounded border border-green-300 bg-white dark:bg-gray-800 dark:border-gray-600 p-4 shadow hover:shadow-md transition"
-              >
-                <div
-                  onClick={() => setQuizSelecionado(q)} // Define o quiz selecionado ao clicar
-                  className="cursor-pointer"
-                >
-                  <h2 className="text-xl font-semibold text-green-800 dark:text-green-300">
-                    {q.title}
-                  </h2>
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                    Criado em {dayjs(q.created_at).format("DD/MM/YYYY")}
-                  </p>
-                  <p className="text-sm text-gray-700 dark:text-gray-400 mt-1">
-                    {q.description}
-                  </p>
-                </div>
-
-                {q.pdf && !showContent && (
-                  <div className="mt-2">
-                    <button
-                      onClick={() => setShowContent(true)}
-                      className="text-green-600 hover:underline"
-                    >
-                      Visualizar PDF
-                    </button>
-                  </div>
-                )}
-
-                {showContent && q.pdf && (
-                  <div className="mb-6 mt-2">
-                    <iframe
-                      src={`${process.env.REACT_APP_API_URL}${q.pdf}`} // Certifique-se que a URL está correta
-                      width="100%"
-                      height="500px"
-                      title="Visualizar PDF"
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {quiz.questions.map((question, index) => (
+            <div
+              key={question.id}
+              className="p-4 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800"
+            >
+              <p className="font-medium mb-2">
+                {index + 1}. {question.text}
+              </p>
+              <div className="space-y-2">
+                {question.choices.map((choice) => (
+                  <label
+                    key={choice.id}
+                    className="flex items-center space-x-2 cursor-pointer"
+                  >
+                    <input
+                      type="radio"
+                      name={`question-${question.id}`}
+                      value={choice.id}
+                      checked={answers[question.id] === choice.id}
+                      onChange={() => handleChoice(question.id, choice.id)}
+                      required
+                      className="accent-green-600"
                     />
-                  </div>
-                )}
-
-                {quizSelecionado?.id === q.id && (
-                  <div className="mt-4">
-                    <button
-                      onClick={() => handleSubmit(q.id)}
-                      className="bg-green-600 hover:bg-green-700 text-white py-2 px-6 rounded"
-                    >
-                      Enviar Respostas
-                    </button>
-                  </div>
-                )}
+                    <span>{choice.text}</span>
+                  </label>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          ))}
+          <button
+            type="submit"
+            disabled={submitting}
+            className="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:opacity-50"
+          >
+            {submitting ? "Enviando…" : "Enviar respostas"}
+          </button>
+        </form>
       </main>
     </div>
   );
