@@ -155,6 +155,7 @@ class AulasDisponiveisView(ListAPIView):
             Q(agendada=True, data=agora.date(), hora__lte=agora.time())
         )
 
+
 # ─── Quizzes ──────────────────────────────
 class QuizListCreateView(generics.ListCreateAPIView):
     queryset = Quiz.objects.all().order_by('-created_at')
@@ -166,12 +167,22 @@ class QuizListCreateView(generics.ListCreateAPIView):
         return [permissions.AllowAny()]
 
     def perform_create(self, serializer):
+        # Salva o criador do quiz como o usuário autenticado
         serializer.save(criador=self.request.user)
 
 
-class QuizDetailView(RetrieveUpdateDestroyAPIView):
+class QuizDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = QuizSerializer
     permission_classes = [IsAuthenticated]
+
+    # Permissão para garantir que o criador do quiz possa editá-lo
+    def get_permissions(self):
+        if self.request.method in ['PUT', 'DELETE']:
+            # Só o criador ou o administrador pode editar ou excluir o quiz
+            if not self.request.user == self.get_object().criador and not self.request.user.is_staff:
+                return [permissions.IsAdminUser()]
+        return [permissions.IsAuthenticated()]
+
     queryset = Quiz.objects.all()
 
 
@@ -179,23 +190,32 @@ class QuizSubmitView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
+        # Busca o quiz correspondente ao ID
         quiz = Quiz.objects.filter(pk=pk).first()
         if not quiz:
             return Response({"error": "Quiz não encontrado"}, status=404)
 
         respostas = request.data.get("answers", {})
-        acertos = 0
-        for _, alternativa_id in respostas.items():
-            alt = Alternativa.objects.filter(id=alternativa_id).first()
-            if alt and alt.is_correct:
-                acertos += 1
+        
+        # Garantir que todas as perguntas foram respondidas
+        if len(respostas) < len(quiz.questions.all()):
+            return Response({"error": "Por favor, responda todas as perguntas antes de enviar."}, status=400)
 
+        acertos = 0
+        # Verifica as alternativas selecionadas e conta os acertos
+        for question_id, alternativa_id in respostas.items():
+            try:
+                alt = Alternativa.objects.get(id=alternativa_id, pergunta__id=question_id)
+                if alt.is_correct:
+                    acertos += 1
+            except Alternativa.DoesNotExist:
+                continue  # Caso a alternativa não exista, ignore essa pergunta
+
+        # Salva as respostas enviadas e a nota
         RespostaQuiz.objects.create(
             aluno=request.user, quiz=quiz, resposta=respostas, nota=acertos
         )
         return Response({"message": "Respostas enviadas.", "score": acertos})
-
-
 class RespostaQuizView(ListAPIView):
     serializer_class = RespostaQuizSerializer
     permission_classes = [IsAuthenticated]
