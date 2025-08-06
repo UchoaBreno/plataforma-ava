@@ -67,10 +67,12 @@ const enviarQuiz = async (e) => {
       comentario: comentario,
     });
 
-    const formData = new FormData();
-    formData.append("quiz", id);
-    formData.append("comentario", comentario);
-    formData.append("arquivo", selArquivo); // Adiciona o arquivo
+ const formData = new FormData();
+formData.append("quiz", id); 
+formData.append("comentario", comentario);
+formData.append("arquivo", selArquivo);
+formData.append("aula", aulaId);  // Certifique-se de que a aula está sendo passada corretamente
+
 
     // Verificando o FormData antes de enviar
     for (let [key, value] of formData.entries()) {
@@ -78,11 +80,12 @@ const enviarQuiz = async (e) => {
     }
 
     // Envia as respostas do quiz e o arquivo
-    await axiosInstance.post("entregas/", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+ 
+await axiosInstance.post("entregas/", formData, {
+  headers: {
+    "Content-Type": "multipart/form-data",
+  },
+});
 
     alert("Atividade enviada!");
     setSelQuiz("");

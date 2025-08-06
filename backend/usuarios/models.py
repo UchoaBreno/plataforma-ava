@@ -41,13 +41,12 @@ class Aula(models.Model):
 
 # ─── Entregas ──────────────────────────────────────────────────
 class Entrega(models.Model):
-    """Entrega de atividades pelos alunos"""
     aluno = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="entregas")
     aula = models.ForeignKey(Aula, on_delete=models.CASCADE, related_name="entregas")
     arquivo = models.FileField(upload_to="entregas/")
     data_envio = models.DateTimeField(auto_now_add=True)
     resposta_texto = models.TextField(blank=True)
-    quiz = models.ForeignKey('Quiz', on_delete=models.CASCADE, related_name="entregas")  # Relaciona com o quiz
+    quiz = models.ForeignKey('Quiz', on_delete=models.CASCADE, related_name="entregas")
     comentario = models.TextField(null=True, blank=True)
 
     def __str__(self):
