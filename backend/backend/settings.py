@@ -11,6 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Carregar a SECRET_KEY e outras variáveis de ambiente
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-)vw9ds9egj=ov(j-=sqy!*pe4(g1wrv&dg8e082!u7*dx4wt^k')  # Use um valor seguro em produção
 
+# Use a variável de ambiente para DEBUG, caso contrário, use 'True' como default para o ambiente de desenvolvimento
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
@@ -148,6 +149,7 @@ CORS_ALLOW_HEADERS = [
     "user-agent",
     "x-csrftoken",
     "x-requested-with",
+    "content-disposition",  # Permitir que os cabeçalhos relacionados a download sejam aceitos
 ]
 
 SIMPLE_JWT = {
@@ -166,11 +168,6 @@ DJOSER = {
     'PASSWORD_RESET_CONFIRM_URL': 'reset-password-confirm/{uid}/{token}/',
     'SERIALIZERS': {},
 }
-
-# Definições para o CORS permitir o acesso aos arquivos de mídia
-CORS_ALLOW_HEADERS += [
-    "content-disposition",  # Permitir que os cabeçalhos relacionados a download sejam aceitos
-]
 
 # Configuração de segurança para produção
 if not DEBUG:
