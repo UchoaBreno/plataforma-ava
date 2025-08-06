@@ -1,15 +1,13 @@
 from django.contrib.auth import authenticate
 from django.core.validators import RegexValidator
 from rest_framework import serializers
-from .models import Quiz
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import Entrega
 from .models import (
     Usuario, Aula, Entrega, Quiz, Questao,
     Alternativa, RespostaQuiz, Atividade,
     ComentarioForum, RespostaForum, Desempenho, SolicitacaoProfessor
 )
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 # ─── Usuário ─────────────────────────────
 class UsuarioSerializer(serializers.ModelSerializer):
@@ -210,3 +208,15 @@ class AulaMetricsSerializer(serializers.Serializer):
     total_aulas = serializers.IntegerField()
     aulas_pendentes = serializers.IntegerField()
     aulas_concluidas = serializers.IntegerField()
+
+
+# ─── Serializer para Envio de Quiz (Entrega) ────────────────────
+class QuizSubmitSerializer(serializers.Serializer):
+    answers = serializers.DictField(child=serializers.IntegerField())
+    comentario = serializers.CharField(required=False, allow_blank=True)
+    arquivo = serializers.FileField(required=False)
+
+    def validate_answers(self, value):
+        if not value:
+            raise serializers.ValidationError("Você precisa responder todas as perguntas.")
+        return value

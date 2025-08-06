@@ -65,7 +65,7 @@ urlpatterns = [
 
     # Entregas
     path("api/entregas/", EntregaView.as_view(), name="entregas"),
-    path("api/entregas/enviar/", EnviarAtividadeView.as_view(), name='enviar_atividade'),
+    path("api/entregas/enviar/", EnviarAtividadeView.as_view(), name='enviar_atividade'),  # Ajustado
 
     # Quizzes
     path("api/quizzes/", QuizListCreateView.as_view(), name="quizzes"),

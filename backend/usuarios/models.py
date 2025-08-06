@@ -17,15 +17,11 @@ def validate_video(value):
     if file_extension not in ['mp4', 'mov']:
         raise ValidationError('Arquivo de vídeo inválido. Use arquivos .mp4 ou .mov.')
 
-
-
 # Função de validação para PDF
 def validate_pdf(value):
     file_extension = value.name.split('.')[-1].lower()
     if file_extension != 'pdf':
         raise ValidationError('Arquivo inválido. Apenas arquivos PDF são permitidos.')
-
-
 
 class Aula(models.Model):
     """Modelo de Aulas Postadas por Professores"""
@@ -51,13 +47,11 @@ class Entrega(models.Model):
     arquivo = models.FileField(upload_to="entregas/")
     data_envio = models.DateTimeField(auto_now_add=True)
     resposta_texto = models.TextField(blank=True)
-    quiz = models.ForeignKey('Quiz', on_delete=models.CASCADE)
+    quiz = models.ForeignKey('Quiz', on_delete=models.CASCADE, related_name="entregas")  # Relaciona com o quiz
     comentario = models.TextField(null=True, blank=True)
 
     def __str__(self):
-        return f"{self.aluno.username} → {self.aula.titulo}"
-    def __str__(self):
-        return f"Entrega do Quiz {self.quiz.title}"
+        return f"Entrega do Quiz {self.quiz.title} - {self.aluno.username}"
 
 
 # ─── Quizzes ───────────────────────────────────────────────────

@@ -57,6 +57,7 @@ class EntregaView(ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(aluno=self.request.user)
+
 # ─── Aulas ────────────────────────────────
 
 class HomeMetricsView(APIView):
@@ -197,7 +198,15 @@ class QuizDetailView(generics.RetrieveUpdateDestroyAPIView):
                 return [permissions.IsAdminUser()]
         return [permissions.IsAuthenticated()]
 
+class RespostaQuizView(ListAPIView):
+    serializer_class = RespostaQuizSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
+    def get_queryset(self):
+        return RespostaQuiz.objects.filter(aluno=self.request.user)
+
+
+# ─── Quizzes ──────────────────────────────
 class QuizSubmitView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -207,6 +216,8 @@ class QuizSubmitView(APIView):
             return Response({"error": "Quiz não encontrado"}, status=404)
 
         respostas = request.data.get("answers", {})
+        comentario = request.data.get("comentario", "")
+        arquivo = request.FILES.get("arquivo")
 
         # Garantir que todas as perguntas foram respondidas
         if len(respostas) < len(quiz.questions.all()):
@@ -215,17 +226,48 @@ class QuizSubmitView(APIView):
         acertos = 0
         for question_id, alternativa_id in respostas.items():
             try:
-                alt = Alternativa.objects.get(id=alternativa_id, pergunta__id=question_id)
+                alt = Alternativa.objects.get(id=alternativa_id, question__id=question_id)
                 if alt.is_correct:
                     acertos += 1
             except Alternativa.DoesNotExist:
                 continue  # Caso a alternativa não exista, ignore essa pergunta
 
+        # Cria a entrega de quiz
+        entrega = Entrega.objects.create(
+            aluno=request.user,
+            quiz=quiz,
+            arquivo=arquivo,  # Salva o arquivo enviado
+            comentario=comentario  # Salva o comentário
+        )
+
         # Salva as respostas enviadas e a nota
         RespostaQuiz.objects.create(
             aluno=request.user, quiz=quiz, resposta=respostas, nota=acertos
         )
+
         return Response({"message": "Respostas enviadas.", "score": acertos})
+
+# ─── Quiz Listar e Criar ─────────────────────────
+class QuizListCreateView(ListCreateAPIView):
+    queryset = Quiz.objects.all().order_by('-created_at')
+    serializer_class = QuizSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [permissions.IsAuthenticated(), permissions.IsAdminUser()]
+        return [permissions.AllowAny()]
+
+    def perform_create(self, serializer):
+        # Salva o criador do quiz como o usuário autenticado
+        pdf_file = self.request.FILES.get("pdf")
+        if pdf_file:
+            # Verifique se o arquivo é válido antes de salvar
+            serializer.save(criador=self.request.user, pdf=pdf_file)
+        else:
+            serializer.save(criador=self.request.user)
+
+
 
 class RespostaQuizView(ListAPIView):
     serializer_class = RespostaQuizSerializer
@@ -324,7 +366,7 @@ class LoginView(APIView):
         return Response(serializer.errors, status=400)
 
 
-# ─── Atividades ───────────────────────────
+# ─── Atividade View ───────────────────────────────────
 class AtividadeView(ListCreateAPIView):
     serializer_class = AtividadeSerializer
     permission_classes = [IsAuthenticated]
@@ -414,6 +456,7 @@ class ResponderComentarioAPIView(APIView):
             comentario=comentario, autor=request.user, texto=request.data.get("texto")
         )
         return Response({"id": resposta.id})
+
     
 # ─── Desempenho ───────────────────────────
 class DesempenhoCreateListView(ListCreateAPIView):
@@ -443,8 +486,8 @@ class SolicitacaoProfessorAdminViewSet(viewsets.ViewSet):
 
     def list(self, request):
         queryset = SolicitacaoProfessor.objects.all()
-        serializer = SolicitacaoProfessorSerializer(queryset, many=True)
-        return Response(serializer.data)
+    serializer_class = SolicitacaoProfessorSerializer
+    permission_classes = [AllowAny]
 
     @action(detail=True, methods=["post"])
     def aprovar(self, request, pk=None):
