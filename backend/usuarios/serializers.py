@@ -70,9 +70,11 @@ class AulaSerializer(serializers.ModelSerializer):
 # ─── Entrega ─────────────────────────────
 
 class EntregaSerializer(serializers.ModelSerializer):
+    arquivo = serializers.FileField(required=False)
+
     class Meta:
         model = Entrega
-        fields = '__all__'  # ou defina explicitamente os campos que você deseja
+        fields = ['quiz', 'comentario', 'arquivo']
 
 class EntregaViewSet(viewsets.ModelViewSet):
     queryset = Entrega.objects.all()

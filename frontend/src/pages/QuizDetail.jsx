@@ -34,62 +34,67 @@ export default function QuizDetail() {
     setAnswers((prev) => ({ ...prev, [questionId]: choiceId }));
   };
 
-  // Função para enviar o quiz e a atividade
-  const enviarQuiz = async (e) => {
-    e.preventDefault();
-    setErro("");
-    setSubmitting(true);
+// Função para enviar o quiz e a atividade
+const enviarQuiz = async (e) => {
+  e.preventDefault();
+  setErro("");
+  setSubmitting(true);
 
-    const perguntasRespondidas = Object.keys(answers).length;
-    const totalPerguntas = quiz.questions.length;
+  const perguntasRespondidas = Object.keys(answers).length;
+  const totalPerguntas = quiz.questions.length;
 
-    // Verifica se todas as perguntas foram respondidas
-    if (perguntasRespondidas < totalPerguntas) {
-      setErro("⚠️ Responda todas as perguntas antes de enviar.");
-      setSubmitting(false);
-      return;
+  // Verifica se todas as perguntas foram respondidas
+  if (perguntasRespondidas < totalPerguntas) {
+    setErro("⚠️ Responda todas as perguntas antes de enviar.");
+    setSubmitting(false);
+    return;
+  }
+
+  if (!selArquivo) {
+    setErro("⚠️ Você precisa selecionar um arquivo.");
+    setSubmitting(false);
+    return;
+  }
+
+  try {
+    // Log dos dados para verificar
+    console.log({
+      quiz: id,
+      respostas: Object.entries(answers).map(([questionId, choiceId]) => ({
+        pergunta: questionId,
+        alternativa: choiceId,
+      })),
+      comentario: comentario,
+    });
+
+    const formData = new FormData();
+    formData.append("quiz", id);
+    formData.append("comentario", comentario);
+    formData.append("arquivo", selArquivo); // Adiciona o arquivo
+
+    // Verificando o FormData antes de enviar
+    for (let [key, value] of formData.entries()) {
+      console.log(key, value);
     }
 
-    if (!selArquivo) {
-      setErro("⚠️ Você precisa selecionar um arquivo.");
-      setSubmitting(false);
-      return;
-    }
+    // Envia as respostas do quiz e o arquivo
+    await axiosInstance.post("entregas/", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
-    try {
-      // Criando o payload para o envio
-      const payload = {
-        quiz: id,
-        respostas: Object.entries(answers).map(([questionId, choiceId]) => ({
-          pergunta: questionId,
-          alternativa: choiceId,
-        })),
-        comentario: comentario,
-      };
-
-      const formData = new FormData();
-      formData.append("quiz", id);
-      formData.append("comentario", comentario);
-      formData.append("arquivo", selArquivo); // Adiciona o arquivo
-
-      // Envia as respostas do quiz e o arquivo
-      await axiosInstance.post("entregas/", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      alert("Atividade enviada!");
-      setSelQuiz("");
-      setSelArquivo(null);
-      setComentario("");
-    } catch (err) {
-      console.error("Erro ao enviar atividade:", err);
-      setErro("❌ Ocorreu um erro ao enviar a atividade.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    alert("Atividade enviada!");
+    setSelQuiz("");
+    setSelArquivo(null);
+    setComentario("");
+  } catch (err) {
+    console.error("Erro ao enviar atividade:", err);
+    setErro("❌ Ocorreu um erro ao enviar a atividade.");
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   // Função para abrir o PDF
   const handleVisualizarConteudo = () => {

@@ -49,13 +49,10 @@ from .serializers import (
 # ─── Entregas ──────────────────────────────
 class EntregaView(generics.CreateAPIView):
     queryset = Entrega.objects.all()
-    serializer_class = EntregaSerializer  # Certifique-se de que este atributo está presente
-
-    def get_queryset(self):
-        return Entrega.objects.filter(aluno=self.request.user)
+    serializer_class = EntregaSerializer
 
     def perform_create(self, serializer):
-        # Certifique-se de que o aluno está enviando a entrega para o quiz correto
+        # Adiciona o aluno à entrega antes de salvar
         serializer.save(aluno=self.request.user)
 
 # ─── Aulas ────────────────────────────────
