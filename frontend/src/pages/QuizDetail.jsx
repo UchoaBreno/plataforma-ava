@@ -57,7 +57,7 @@ export default function QuizDetail() {
     }
 
     try {
-      // Payload com respostas e arquivo
+      // Criando o payload para o envio
       const payload = {
         quiz: id,
         respostas: Object.entries(answers).map(([questionId, choiceId]) => ({

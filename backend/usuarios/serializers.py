@@ -72,12 +72,13 @@ class EntregaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Entrega
-        fields = [
-            "id", "aluno", "aluno_nome", "aula", "aula_titulo",
-            "arquivo", "data_envio", "resposta_texto", "quiz", 
-            "comentario"
-        ]
+        fields = ["id", "aluno", "aluno_nome", "aula", "aula_titulo", "arquivo", "data_envio", "resposta_texto", "quiz", "comentario"]
         extra_kwargs = {"aluno": {"read_only": True}}
+
+    def validate_arquivo(self, value):
+        if not value:
+            raise serializers.ValidationError("O arquivo é obrigatório para o envio da entrega.")
+        return value
 
 
 # ─── Alternativa ─────────────────────────

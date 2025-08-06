@@ -48,14 +48,13 @@ from .serializers import (
 
 # ─── Entregas ──────────────────────────────
 class EntregaView(ListCreateAPIView):
-    serializer_class = EntregaSerializer
     permission_classes = [IsAuthenticated]
-    parser_classes = [MultiPartParser]
 
     def get_queryset(self):
         return Entrega.objects.filter(aluno=self.request.user)
 
     def perform_create(self, serializer):
+        # Certifique-se de que o aluno está enviando a entrega para o quiz correto
         serializer.save(aluno=self.request.user)
 
 # ─── Aulas ────────────────────────────────
@@ -217,12 +216,7 @@ class QuizSubmitView(APIView):
 
         respostas = request.data.get("answers", {})
         comentario = request.data.get("comentario", "")
-        arquivo = request.FILES.get("arquivo")
-
-        # Garantir que todas as perguntas foram respondidas
-        if len(respostas) < len(quiz.questions.all()):
-            return Response({"error": "Por favor, responda todas as perguntas antes de enviar."}, status=400)
-
+        arquivo = request.FILES.get("arquivo")  # Verificar o arquivo
         acertos = 0
         for question_id, alternativa_id in respostas.items():
             try:
