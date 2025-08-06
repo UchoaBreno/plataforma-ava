@@ -14,7 +14,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-)vw9ds9egj=ov(j-=sqy!*pe4(
 # Use a variável de ambiente para DEBUG, caso contrário, use 'True' como default para o ambiente de desenvolvimento
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,plataforma-ava2.onrender.com').split(',')
 
 INSTALLED_APPS = [
     'corsheaders',
