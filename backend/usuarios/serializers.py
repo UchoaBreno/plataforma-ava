@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate
 from django.core.validators import RegexValidator
-from rest_framework import serializers
+from rest_framework import serializers, viewsets
 from .models import (
     Usuario, Aula, Entrega, Quiz, Questao,
     Alternativa, RespostaQuiz, Atividade,
@@ -67,18 +67,13 @@ class AulaSerializer(serializers.ModelSerializer):
 
 # ─── Entrega ─────────────────────────────
 class EntregaSerializer(serializers.ModelSerializer):
-    aluno_nome = serializers.CharField(source="aluno.username", read_only=True)
-    aula_titulo = serializers.CharField(source="aula.titulo", read_only=True)
-
     class Meta:
         model = Entrega
-        fields = ["id", "aluno", "aluno_nome", "aula", "aula_titulo", "arquivo", "data_envio", "resposta_texto", "quiz", "comentario"]
-        extra_kwargs = {"aluno": {"read_only": True}}
+        fields = '__all__'
 
-    def validate_arquivo(self, value):
-        if not value:
-            raise serializers.ValidationError("O arquivo é obrigatório para o envio da entrega.")
-        return value
+class EntregaViewSet(viewsets.ModelViewSet):
+    queryset = Entrega.objects.all()
+    serializer_class = EntregaSerializer
 
 
 # ─── Alternativa ─────────────────────────
