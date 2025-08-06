@@ -90,6 +90,8 @@ urlpatterns = [
     # Solicitação pública de professor
     path("api/solicitacoes-professor/", SolicitacaoProfessorCreateView.as_view(), name="solicitacao_professor"),
 
+    path('api/entregas/', EntregaView.as_view(), name='entrega-list'),
+    
     # Métricas
     path("api/aulas/metrics/", AulaMetricsView.as_view(), name="aula_metrics"),
 ]

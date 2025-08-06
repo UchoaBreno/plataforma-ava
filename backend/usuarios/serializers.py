@@ -1,6 +1,8 @@
 from django.contrib.auth import authenticate
 from django.core.validators import RegexValidator
 from rest_framework import serializers, viewsets
+from rest_framework import generics
+from .models import Entrega
 from .models import (
     Usuario, Aula, Entrega, Quiz, Questao,
     Alternativa, RespostaQuiz, Atividade,
@@ -66,16 +68,22 @@ class AulaSerializer(serializers.ModelSerializer):
 
 
 # ─── Entrega ─────────────────────────────
+
 class EntregaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Entrega
-        fields = '__all__'
+        fields = '__all__'  # ou defina explicitamente os campos que você deseja
 
 class EntregaViewSet(viewsets.ModelViewSet):
     queryset = Entrega.objects.all()
     serializer_class = EntregaSerializer
 
+class EntregaView(generics.CreateAPIView):
+    queryset = Entrega.objects.all()
 
+    def get_serializer_class(self):
+        return EntregaSerializer  # Retorna o serializer dinamicamente
+    
 # ─── Alternativa ─────────────────────────
 class AlternativaSerializer(serializers.ModelSerializer):
     class Meta:

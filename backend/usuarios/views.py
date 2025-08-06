@@ -47,8 +47,9 @@ from .serializers import (
 )
 
 # ─── Entregas ──────────────────────────────
-class EntregaView(ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
+class EntregaView(generics.CreateAPIView):
+    queryset = Entrega.objects.all()
+    serializer_class = EntregaSerializer  # Certifique-se de que este atributo está presente
 
     def get_queryset(self):
         return Entrega.objects.filter(aluno=self.request.user)
