@@ -12,6 +12,7 @@ export default function QuizDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
   const [erro, setErro] = useState("");
+  const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
     axiosInstance
@@ -61,6 +62,13 @@ export default function QuizDetail() {
     }
   };
 
+  const handleVisualizarConteudo = () => {
+    const pdfUrl = quiz.pdf.startsWith("http")
+      ? quiz.pdf
+      : `${process.env.REACT_APP_API_URL}${quiz.pdf}`;
+    window.open(pdfUrl, "_blank");
+  };
+
   if (!quiz) {
     return (
       <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
@@ -103,6 +111,36 @@ export default function QuizDetail() {
         {erro && (
           <div className="text-red-700 bg-red-100 dark:bg-red-900/50 dark:text-red-300 border border-red-300 dark:border-red-600 px-4 py-2 rounded text-center mb-4 text-sm">
             {erro}
+          </div>
+        )}
+
+        {/* Exibição do PDF - Clique para visualizar o conteúdo */}
+        {quiz.pdf && !showContent && (
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-2">
+              Clique aqui para visualizar o conteúdo:
+            </h2>
+            <button
+              onClick={handleVisualizarConteudo}
+              className="text-green-600 hover:underline"
+            >
+              Visualizar conteúdo
+            </button>
+          </div>
+        )}
+
+        {/* Campo de texto para comentários (descrição) */}
+        {showContent && (
+          <div className="mb-6">
+            <label className="text-sm text-green-700 dark:text-green-400">
+              Descrição ou Resposta ao Quiz
+            </label>
+            <textarea
+              value={comentario}
+              onChange={(e) => setComentario(e.target.value)}
+              className="w-full mt-2 rounded border p-2"
+              rows="4"
+            ></textarea>
           </div>
         )}
 

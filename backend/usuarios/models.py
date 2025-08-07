@@ -47,11 +47,20 @@ class Entrega(models.Model):
 
 
 # ─── Quizzes ───────────────────────────────────────────────────
+def validate_pdf(value):
+    file_extension = value.name.split('.')[-1].lower()  # Obtém a extensão do arquivo
+    if file_extension != 'pdf':
+        raise ValidationError("O arquivo deve ser um PDF.")
+
 class Quiz(models.Model):
-    title = models.CharField(max_length=200)
-    description = models.TextField(blank=True)
+    title = models.CharField(max_length=255)
+    description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-    criador = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="quizzes")
+    criador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    pdf = models.FileField(upload_to='quizzes/pdf/', null=True, blank=True, validators=[validate_pdf])
+
+    def __str__(self):
+        return self.title
 
     def __str__(self):
         return self.title

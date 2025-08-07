@@ -93,12 +93,17 @@ class QuestaoSerializer(serializers.ModelSerializer):
 
 
 class QuizSerializer(serializers.ModelSerializer):
-    questions = QuestaoSerializer(many=True, read_only=True)
     criador_nome = serializers.CharField(source="criador.username", read_only=True)
+    pdf_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Quiz
-        fields = ["id", "title", "description", "created_at", "questions", "criador_nome"]
+        fields = ['id', 'title', 'description', 'created_at', 'criador_nome', 'pdf_url']
+
+    def get_pdf_url(self, obj):
+        if obj.pdf:
+            return obj.pdf.url  # Retorna a URL do arquivo PDF
+        return None
 
 
 class RespostaQuizSerializer(serializers.ModelSerializer):
