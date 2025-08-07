@@ -9,10 +9,11 @@ export default function QuizDetail() {
 
   const [quiz, setQuiz] = useState(null);
   const [answers, setAnswers] = useState({});
+  const [comentario, setComentario] = useState("");  // Comentário inicializado corretamente
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
   const [erro, setErro] = useState("");
-  const [showContent, setShowContent] = useState(false);
+  const [showContent, setShowContent] = useState(false);  // Controle de visualização do conteúdo
 
   useEffect(() => {
     axiosInstance
@@ -50,6 +51,7 @@ export default function QuizDetail() {
           pergunta: questionId,
           alternativa: choiceId,
         })),
+        comentario: comentario,  // Envia o comentário
       };
 
       const { data } = await axiosInstance.post("respostas/", payload);
@@ -63,6 +65,7 @@ export default function QuizDetail() {
   };
 
   const handleVisualizarConteudo = () => {
+    setShowContent(true);  // Garante que o conteúdo será mostrado
     const pdfUrl = quiz.pdf.startsWith("http")
       ? quiz.pdf
       : `${process.env.REACT_APP_API_URL}${quiz.pdf}`;
