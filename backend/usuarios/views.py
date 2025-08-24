@@ -479,8 +479,8 @@ class SolicitacaoProfessorAdminViewSet(viewsets.ViewSet):
 # ───────────────────────────────────────────────────────────────
 class PasswordResetRequestView(APIView):
     """
-    POST: { "identifier": "<username ou email>" }
-    Envia e-mail com link para redefinição: FRONTEND_RESET_URL?uid=<uidb64>&token=<token>
+    POST /api/password-reset/request/
+    Body: { "identifier": "<username ou email>" }
     """
     permission_classes = [AllowAny]
 
@@ -488,44 +488,56 @@ class PasswordResetRequestView(APIView):
         serializer = PasswordResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user = serializer.user  # definido pelo serializer
-        uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
-        token = token_generator.make_token(user)
+        user = serializer.user  # definido no serializer
 
-        # Monta link para o frontend
+        # 1) Checa se há e-mail no cadastro
+        if not user.email:
+            return Response(
+                {"detail": "Usuário não possui e-mail cadastrado."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 2) Checa URL do frontend p/ compor link
         base_url = getattr(settings, "FRONTEND_RESET_URL", "").rstrip("/")
         if not base_url:
             return Response(
                 {"detail": "FRONTEND_RESET_URL não configurada no settings."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+        uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+        token = token_generator.make_token(user)
         reset_link = f"{base_url}?uid={uidb64}&token={token}"
 
         subject = "Redefinição de senha — Plataforma AVA"
         message = (
             f"Olá, {user.get_full_name() or user.username}!\n\n"
-            f"Você (ou alguém) solicitou redefinir sua senha na Plataforma AVA.\n"
-            f"Para continuar, acesse o link abaixo:\n\n{reset_link}\n\n"
-            "Se você não solicitou, pode ignorar este e‑mail.\n\n"
-            "Atenciosamente,\nEquipe Plataforma AVA"
+            f"Para redefinir sua senha, acesse:\n{reset_link}\n\n"
+            "Se não foi você, ignore este e-mail.\n"
+            "Equipe Plataforma AVA"
         )
 
         try:
-            send_mail(
+            sent = send_mail(
                 subject=subject,
                 message=message,
                 from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
-                recipient_list=[user.email] if user.email else [],
-                fail_silently=False,
+                recipient_list=[user.email],
+                fail_silently=False,  # queremos erro explícito em dev
             )
+            if sent == 0:
+                return Response(
+                    {"detail": "Não foi possível enviar o e-mail de redefinição."},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
         except Exception as e:
+            # Retorna motivo útil (credenciais SMTP, porta errada, etc.)
             return Response(
-                {"detail": f"Falha ao enviar e‑mail: {e}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                {"detail": f"Falha ao enviar e-mail: {e.__class__.__name__}: {e}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-        return Response({"detail": "E‑mail de redefinição enviado com sucesso."}, status=200)
-
+        return Response({"detail": "E-mail de redefinição enviado com sucesso."}, status=200)
 
 class PasswordResetConfirmView(APIView):
     """
