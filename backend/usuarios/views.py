@@ -48,8 +48,11 @@ from .serializers import (
     PasswordResetConfirmSerializer,
 )
 
+import logging
+
 User = get_user_model()
 token_generator = PasswordResetTokenGenerator()
+logger = logging.getLogger(__name__)
 
 # ───────────────────────────────────────────────────────────────
 # ENTREGAS
@@ -75,8 +78,6 @@ class HomeMetricsView(APIView):
     def get(self, request):
         aluno = request.user
 
-        # Total de aulas “atribuídas” para o fluxo atual: como não há vínculo explícito,
-        # mantemos a contagem por professor==aluno (modelo original do seu código).
         total_aulas = Aula.objects.filter(professor=aluno).count()
 
         entregas = Entrega.objects.filter(aluno=aluno)
@@ -480,30 +481,43 @@ class SolicitacaoProfessorAdminViewSet(viewsets.ViewSet):
 class PasswordResetRequestView(APIView):
     """
     POST /api/password-reset/request/
-    Body: { "identifier": "<username ou email>" }
+    Body pode ser: {"identifier": "..."} ou {"email": "..."} ou {"username": "..."}
+    Sempre retorna 200 com mensagem genérica. Se possível, envia o e-mail.
     """
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = PasswordResetRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        # Aceita identifier/email/username para evitar 400 por nome de campo
+        value = (
+            (request.data.get("identifier") or "").strip()
+            or (request.data.get("email") or "").strip()
+            or (request.data.get("username") or "").strip()
+        )
 
-        user = serializer.user  # definido no serializer
+        ok_msg = {"detail": "Se o e-mail existir, enviaremos instruções."}
 
-        # 1) Checa se há e-mail no cadastro
-        if not user.email:
-            return Response(
-                {"detail": "Usuário não possui e-mail cadastrado."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        if not value:
+            if settings.DEBUG:
+                logger.warning("Password reset sem identifier/email/username no body.")
+            return Response(ok_msg, status=status.HTTP_200_OK)
 
-        # 2) Checa URL do frontend p/ compor link
-        base_url = getattr(settings, "FRONTEND_RESET_URL", "").rstrip("/")
+        # Busca por username exato ou email (case-insensitive)
+        user = (
+            User.objects.filter(username=value).first()
+            or User.objects.filter(email__iexact=value).first()
+        )
+
+        # Se não existir usuário OU ele não tiver e-mail, ainda assim retornamos 200.
+        if not user or not user.email:
+            if settings.DEBUG:
+                logger.warning("Password reset ignorado: user inexistente ou sem e-mail.")
+            return Response(ok_msg, status=status.HTTP_200_OK)
+
+        base_url = (getattr(settings, "FRONTEND_RESET_URL", "") or "").rstrip("/")
         if not base_url:
-            return Response(
-                {"detail": "FRONTEND_RESET_URL não configurada no settings."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            if settings.DEBUG:
+                logger.error("FRONTEND_RESET_URL não configurada.")
+            return Response(ok_msg, status=status.HTTP_200_OK)
 
         uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
         token = token_generator.make_token(user)
@@ -518,26 +532,19 @@ class PasswordResetRequestView(APIView):
         )
 
         try:
-            sent = send_mail(
+            send_mail(
                 subject=subject,
                 message=message,
-                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
+                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None) or getattr(settings, "EMAIL_HOST_USER", None),
                 recipient_list=[user.email],
-                fail_silently=False,  # queremos erro explícito em dev
+                fail_silently=False,
             )
-            if sent == 0:
-                return Response(
-                    {"detail": "Não foi possível enviar o e-mail de redefinição."},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
         except Exception as e:
-            # Retorna motivo útil (credenciais SMTP, porta errada, etc.)
-            return Response(
-                {"detail": f"Falha ao enviar e-mail: {e.__class__.__name__}: {e}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            if settings.DEBUG:
+                logger.exception("Falha ao enviar e-mail de reset: %s", e)
 
-        return Response({"detail": "E-mail de redefinição enviado com sucesso."}, status=200)
+        return Response(ok_msg, status=status.HTTP_200_OK)
+
 
 class PasswordResetConfirmView(APIView):
     """
@@ -546,12 +553,13 @@ class PasswordResetConfirmView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = PasswordResetConfirmSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        # Mantém o serializer se você preferir, mas aqui validamos diretamente
+        uidb64 = (request.data.get("uid") or "").strip()
+        token = (request.data.get("token") or "").strip()
+        new_password = request.data.get("new_password")
 
-        uidb64 = serializer.validated_data["uid"]
-        token = serializer.validated_data["token"]
-        new_password = serializer.validated_data["new_password"]
+        if not uidb64 or not token or not new_password:
+            return Response({"detail": "Dados inválidos."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
@@ -562,8 +570,7 @@ class PasswordResetConfirmView(APIView):
         if not token_generator.check_token(user, token):
             return Response({"detail": "Token inválido ou expirado."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Define a nova senha usando os validadores do Django (já validados no serializer)
         user.set_password(new_password)
         user.save()
 
-        return Response({"detail": "Senha redefinida com sucesso."}, status=200)
+        return Response({"detail": "Senha redefinida com sucesso."}, status=status.HTTP_200_OK)
