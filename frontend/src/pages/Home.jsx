@@ -129,9 +129,13 @@ export default function Home() {
         atividadesPendentes,
       });
 
-      // Notificação (se há alta prioridade)
-      if (_alta.length > 0) {
+      // Notificação (aulas OU atividades vencendo)
+      if (_alta.length > 0 && altaAtividades.length > 0) {
+        setStatusNotificacao("Atenção: Aulas e atividades com prazo vencendo!");
+      } else if (_alta.length > 0) {
         setStatusNotificacao("Atenção: Aula em alta prioridade vencendo!");
+      } else if (altaAtividades.length > 0) {
+        setStatusNotificacao("Atenção: Atividade com prazo vencendo!");
       } else {
         setStatusNotificacao("");
       }
@@ -143,8 +147,10 @@ export default function Home() {
   return (
     <div
       className={`flex min-h-screen ${
-        statusNotificacao ? "bg-red-500" : "bg-gray-100"
-      } dark:bg-gray-900 text-gray-900 dark:text-white`}
+        statusNotificacao
+          ? "bg-red-600 dark:bg-red-700"
+          : "bg-gray-100 dark:bg-gray-900"
+      } text-gray-900 dark:text-white`}
     >
       <Sidebar isAluno />
       <main className="ml-64 flex-1 p-4 sm:p-6">
