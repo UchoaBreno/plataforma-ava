@@ -111,15 +111,9 @@ export default function Home() {
       const totalQuizzes = quizzes.length;
       const quizzesPendentes = quizzes.filter((q) => !q.respondido).length;
 
-      // Atividades (checa vencimento também)
+      // Atividades
       const totalAtividades = atividades.length;
       const atividadesPendentes = atividades.filter((a) => !a.resposta).length;
-      const altaAtividades = atividades.filter((a) => {
-        const prazo = a?.data_entrega;
-        if (!prazo) return false;
-        const diff = dayjs(prazo).startOf("day").diff(hoje, "day");
-        return diff <= 0; // pra hoje ou vencida
-      });
 
       // Seta estados
       setAlta(_alta);
@@ -135,13 +129,9 @@ export default function Home() {
         atividadesPendentes,
       });
 
-      // Notificação (aulas OU atividades vencendo)
-      if (_alta.length > 0 && altaAtividades.length > 0) {
-        setStatusNotificacao("Atenção: Aulas e atividades com prazo vencendo!");
-      } else if (_alta.length > 0) {
+      // Notificação (se há alta prioridade)
+      if (_alta.length > 0) {
         setStatusNotificacao("Atenção: Aula em alta prioridade vencendo!");
-      } else if (altaAtividades.length > 0) {
-        setStatusNotificacao("Atenção: Atividade com prazo vencendo!");
       } else {
         setStatusNotificacao("");
       }
@@ -153,10 +143,8 @@ export default function Home() {
   return (
     <div
       className={`flex min-h-screen ${
-        statusNotificacao
-          ? "bg-red-600 dark:bg-red-700"
-          : "bg-gray-100 dark:bg-gray-900"
-      } text-gray-900 dark:text-white`}
+  statusNotificacao ? "bg-red-600 dark:bg-red-700" : "bg-gray-100 dark:bg-gray-900"
+} text-gray-900 dark:text-white`}
     >
       <Sidebar isAluno />
       <main className="ml-64 flex-1 p-4 sm:p-6">
@@ -164,9 +152,9 @@ export default function Home() {
           Bem-vindo à sua tela inicial, {alunoNome}!
         </h1>
 
-        {/* Notificação */}
+        {/* Notificação de Aula em Alta Prioridade */}
         {statusNotificacao && (
-          <div className="bg-red-600 text-white p-3 rounded-lg mb-4">
+          <div className="bg-red-300 text-white p-3 rounded-lg mb-4">
             {statusNotificacao}
           </div>
         )}
@@ -188,7 +176,7 @@ export default function Home() {
         {/* Quizzes */}
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
           <h2 className="text-xl font-semibold text-green-700 dark:text-green-400 mb-3">
-            The Quizzes
+            Quizzes
           </h2>
           <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
             Você tem <span className="font-semibold">{metrics.quizzesPendentes}</span> quizzes pendentes de{" "}
