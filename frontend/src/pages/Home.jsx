@@ -111,9 +111,15 @@ export default function Home() {
       const totalQuizzes = quizzes.length;
       const quizzesPendentes = quizzes.filter((q) => !q.respondido).length;
 
-      // Atividades
+      // Atividades (checa vencimento também)
       const totalAtividades = atividades.length;
       const atividadesPendentes = atividades.filter((a) => !a.resposta).length;
+      const altaAtividades = atividades.filter((a) => {
+        const prazo = a?.data_entrega;
+        if (!prazo) return false;
+        const diff = dayjs(prazo).startOf("day").diff(hoje, "day");
+        return diff <= 0; // pra hoje ou vencida
+      });
 
       // Seta estados
       setAlta(_alta);
@@ -158,9 +164,9 @@ export default function Home() {
           Bem-vindo à sua tela inicial, {alunoNome}!
         </h1>
 
-        {/* Notificação de Aula em Alta Prioridade */}
+        {/* Notificação */}
         {statusNotificacao && (
-          <div className="bg-red-300 text-white p-3 rounded-lg mb-4">
+          <div className="bg-red-600 text-white p-3 rounded-lg mb-4">
             {statusNotificacao}
           </div>
         )}
@@ -182,7 +188,7 @@ export default function Home() {
         {/* Quizzes */}
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
           <h2 className="text-xl font-semibold text-green-700 dark:text-green-400 mb-3">
-            Quizzes
+            The Quizzes
           </h2>
           <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
             Você tem <span className="font-semibold">{metrics.quizzesPendentes}</span> quizzes pendentes de{" "}
