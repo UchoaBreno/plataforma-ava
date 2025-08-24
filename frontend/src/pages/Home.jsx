@@ -122,22 +122,16 @@ export default function Home() {
         atividadesPendentes,
       });
 
-      // Verifica a notificação caso uma aula esteja vencendo
-      if (_alta.length > 0) {
-        setStatusNotificacao("Atenção: Aula em alta prioridade vencendo!");
-      } else {
-        setStatusNotificacao("");
-      }
-    } catch (err) {
-      console.error("Erro ao carregar dados:", err.response?.data || err);
-    }
-  }
+return (
+  <div
+    className={`flex min-h-screen ${
+      statusNotificacao ? "bg-red-500" : "bg-gray-100"
+    } dark:bg-gray-900 text-gray-900 dark:text-white`}
+  >
+    <Sidebar isAluno />
+    <main className="ml-64 flex-1 p-4 sm:p-6">
+      <h1 className="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-400 mb-6">
 
-  return (
-    <div className={`flex min-h-screen ${statusNotificacao ? 'bg-red-100' : 'bg-gray-100'} dark:bg-gray-900 text-gray-900 dark:text-white`}>
-      <Sidebar isAluno />
-      <main className="ml-64 flex-1 p-4 sm:p-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-400 mb-6">
           Bem-vindo à sua tela inicial, {alunoNome}!
         </h1>
 
