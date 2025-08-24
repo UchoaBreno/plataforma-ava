@@ -134,7 +134,7 @@ export default function Home() {
   }
 
   return (
-    <div className={`flex min-h-screen ${statusNotificacao ? 'bg-red-100' : 'bg-gray-100'} dark:bg-gray-900 text-gray-900 dark:text-white`}>
+    <div className={`flex min-h-screen ${statusNotificacao ? 'bg-red-600' : 'bg-gray-100'} dark:bg-gray-900 text-gray-900 dark:text-white`}>
       <Sidebar isAluno />
       <main className="ml-64 flex-1 p-4 sm:p-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-400 mb-6">
