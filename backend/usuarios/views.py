@@ -1,25 +1,29 @@
-from rest_framework.views import APIView
-from django.utils import timezone
-from rest_framework.response import Response
-from django.db.models import Exists, OuterRef, Q
-from rest_framework.parsers import MultiPartParser
+from django.conf import settings
+from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.db.models import Exists, OuterRef, Q
+from django.utils.timezone import now
+
+from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+
 from rest_framework import status, viewsets, generics, permissions
-from .serializers import AulaSerializer, EntregaSerializer
-from .models import Usuario, Entrega, Aula  # Adicione o modelo Usuario e Aula
+from rest_framework.decorators import action
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
     ListAPIView
 )
-from rest_framework.decorators import action
+from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import (
     IsAuthenticated, IsAdminUser, AllowAny
 )
-from rest_framework.parsers import MultiPartParser
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
-from django.db.models import OuterRef, Exists
-from django.utils.timezone import now
 
 from .models import (
     Usuario, Aula, Entrega, Quiz, RespostaQuiz,
@@ -40,9 +44,16 @@ from .serializers import (
     ComentarioForumSerializer,
     DesempenhoSerializer,
     SolicitacaoProfessorSerializer,
+    PasswordResetRequestSerializer,
+    PasswordResetConfirmSerializer,
 )
 
-# ─── Entregas ──────────────────────────────
+User = get_user_model()
+token_generator = PasswordResetTokenGenerator()
+
+# ───────────────────────────────────────────────────────────────
+# ENTREGAS
+# ───────────────────────────────────────────────────────────────
 class EntregaView(ListCreateAPIView):
     serializer_class = EntregaSerializer
     permission_classes = [IsAuthenticated]
@@ -53,28 +64,33 @@ class EntregaView(ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(aluno=self.request.user)
-# ─── Aulas ────────────────────────────────
 
+
+# ───────────────────────────────────────────────────────────────
+# MÉTRICAS DA HOME
+# ───────────────────────────────────────────────────────────────
 class HomeMetricsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        aluno = self.request.user
+        aluno = request.user
 
-        # Contagem de aulas pendentes e concluídas
+        # Total de aulas “atribuídas” para o fluxo atual: como não há vínculo explícito,
+        # mantemos a contagem por professor==aluno (modelo original do seu código).
         total_aulas = Aula.objects.filter(professor=aluno).count()
+
         entregas = Entrega.objects.filter(aluno=aluno)
         aulas_concluidas_ids = entregas.values_list('aula', flat=True)
-        aulas_pendentes = total_aulas - len(aulas_concluidas_ids)
         aulas_concluidas = len(aulas_concluidas_ids)
+        aulas_pendentes = max(total_aulas - aulas_concluidas, 0)
 
-        # Contagem de quizzes pendentes e totais
         total_quizzes = Quiz.objects.count()
-        quizzes_pendentes = total_quizzes - len(entregas.filter(aula__quiz__isnull=False))
+        quizzes_respondidos = RespostaQuiz.objects.filter(aluno=aluno).values_list("quiz_id", flat=True).distinct().count()
+        quizzes_pendentes = max(total_quizzes - quizzes_respondidos, 0)
 
-        # Contagem de atividades pendentes e totais
         total_atividades = Atividade.objects.filter(professor=aluno).count()
-        atividades_pendentes = total_atividades - len(entregas.filter(aula__atividade__isnull=False))
+        atividades_entregues = entregas.filter(aula__atividade__isnull=False).count()
+        atividades_pendentes = max(total_atividades - atividades_entregues, 0)
 
         return Response({
             "total_aulas": total_aulas,
@@ -86,30 +102,30 @@ class HomeMetricsView(APIView):
             "atividades_pendentes": atividades_pendentes,
         })
 
-# ─── Nova View para Métricas das Aulas ─────────────────────────
+
+# ───────────────────────────────────────────────────────────────
+# MÉTRICAS DAS AULAS
+# ───────────────────────────────────────────────────────────────
 class AulaMetricsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # Contagem de aulas total
         total_aulas = Aula.objects.filter(professor=request.user).count()
-
-        # Aulas pendentes (aulas que ainda não foram entregues)
         entregas = Entrega.objects.filter(aluno=request.user)
         aulas_concluidas_ids = entregas.values_list('aula', flat=True)
-        aulas_pendentes = total_aulas - len(aulas_concluidas_ids)
-
-        # Aulas concluídas
         aulas_concluidas = len(aulas_concluidas_ids)
+        aulas_pendentes = max(total_aulas - aulas_concluidas, 0)
 
         return Response({
             "total_aulas": total_aulas,
             "aulas_pendentes": aulas_pendentes,
             "aulas_concluidas": aulas_concluidas
         })
-    
-    
 
+
+# ───────────────────────────────────────────────────────────────
+# AULAS
+# ───────────────────────────────────────────────────────────────
 class AulaView(ListCreateAPIView):
     queryset = Aula.objects.all()
     serializer_class = AulaSerializer
@@ -117,8 +133,9 @@ class AulaView(ListCreateAPIView):
     parser_classes = [MultiPartParser]
 
     def perform_create(self, serializer):
-        agendada = self.request.data.get("agendada", "false").lower() == "true"
+        agendada = str(self.request.data.get("agendada", "false")).lower() == "true"
         serializer.save(professor=self.request.user, agendada=agendada)
+
 
 class AulaDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = AulaSerializer
@@ -132,7 +149,6 @@ class AulaDetailView(RetrieveUpdateDestroyAPIView):
         return Aula.objects.none()
 
 
-# ─── Aulas Disponíveis ─────────────────────
 class AulasDisponiveisView(ListAPIView):
     serializer_class = AulaSerializer
     permission_classes = [IsAuthenticated]
@@ -145,17 +161,19 @@ class AulasDisponiveisView(ListAPIView):
         agora = timezone.localtime()
         entregas = Entrega.objects.filter(aula=OuterRef('pk'), aluno=user)
 
-        return Aula.objects.annotate(
-            ja_entregue=Exists(entregas)
-        ).filter(
-            ja_entregue=False
-        ).filter(
-            Q(agendada=False) |
-            Q(agendada=True, data__lt=agora.date()) |
-            Q(agendada=True, data=agora.date(), hora__lte=agora.time())
-        )
+        return (Aula.objects
+                .annotate(ja_entregue=Exists(entregas))
+                .filter(ja_entregue=False)
+                .filter(
+                    Q(agendada=False) |
+                    Q(agendada=True, data__lt=agora.date()) |
+                    Q(agendada=True, data=agora.date(), hora__lte=agora.time())
+                ))
 
-# ─── Quizzes ──────────────────────────────
+
+# ───────────────────────────────────────────────────────────────
+# QUIZZES
+# ───────────────────────────────────────────────────────────────
 class QuizListCreateView(generics.ListCreateAPIView):
     queryset = Quiz.objects.all().order_by('-created_at')
     serializer_class = QuizSerializer
@@ -187,7 +205,7 @@ class QuizSubmitView(APIView):
         acertos = 0
         for _, alternativa_id in respostas.items():
             alt = Alternativa.objects.filter(id=alternativa_id).first()
-            if alt and alt.is_correct:
+            if alt and getattr(alt, "is_correct", False):
                 acertos += 1
 
         RespostaQuiz.objects.create(
@@ -204,7 +222,9 @@ class RespostaQuizView(ListAPIView):
         return RespostaQuiz.objects.filter(aluno=self.request.user)
 
 
-# ─── Usuários ─────────────────────────────
+# ───────────────────────────────────────────────────────────────
+# USUÁRIOS
+# ───────────────────────────────────────────────────────────────
 class AlunoListView(ListAPIView):
     serializer_class = UsuarioSerializer
     permission_classes = [IsAuthenticated]
@@ -264,19 +284,27 @@ class ChangePasswordView(APIView):
         return Response({"detail": "Senha alterada com sucesso!"}, status=status.HTTP_200_OK)
 
 
-# ─── Foto Perfil ──────────────────────────
+# ───────────────────────────────────────────────────────────────
+# FOTO DE PERFIL
+# ───────────────────────────────────────────────────────────────
 class AtualizarFotoPerfilView(APIView):
     parser_classes = [MultiPartParser]
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         user = request.user
-        user.foto_perfil = request.data.get("foto_perfil")
+        file = request.data.get("foto_perfil")
+        if not file:
+            return Response({"detail": "Envie o arquivo 'foto_perfil'."}, status=400)
+        user.foto_perfil = file
         user.save()
-        return Response({"foto_url": user.foto_perfil.url})
+        url = getattr(user.foto_perfil, "url", None)
+        return Response({"foto_url": url})
 
 
-# ─── Login/Token ──────────────────────────
+# ───────────────────────────────────────────────────────────────
+# LOGIN / TOKENS
+# ───────────────────────────────────────────────────────────────
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
@@ -289,7 +317,9 @@ class LoginView(APIView):
         return Response(serializer.errors, status=400)
 
 
-# ─── Atividades ───────────────────────────
+# ───────────────────────────────────────────────────────────────
+# ATIVIDADES
+# ───────────────────────────────────────────────────────────────
 class AtividadeView(ListCreateAPIView):
     serializer_class = AtividadeSerializer
     permission_classes = [IsAuthenticated]
@@ -320,8 +350,11 @@ class AtividadeDetailView(RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         user = self.request.user
         return Atividade.objects.filter(professor=user) if user.is_staff else Atividade.objects.all()
-    
-# ─── Fórum ────────────────────────────────
+
+
+# ───────────────────────────────────────────────────────────────
+# FÓRUM
+# ───────────────────────────────────────────────────────────────
 class ForumAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -374,8 +407,11 @@ class RespostaComentarioAPIView(APIView):
         resposta = get_object_or_404(RespostaForum, pk=pk, autor=request.user)
         resposta.delete()
         return Response({"detail": "Resposta apagada"})
-    
-# ─── Desempenho ───────────────────────────
+
+
+# ───────────────────────────────────────────────────────────────
+# DESEMPENHO
+# ───────────────────────────────────────────────────────────────
 class DesempenhoCreateListView(ListCreateAPIView):
     serializer_class = DesempenhoSerializer
     permission_classes = [IsAuthenticated]
@@ -391,7 +427,9 @@ class DesempenhoDetailView(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
 
 
-# ─── Solicitação de Professores ───────────
+# ───────────────────────────────────────────────────────────────
+# SOLICITAÇÃO DE PROFESSORES
+# ───────────────────────────────────────────────────────────────
 class SolicitacaoProfessorCreateView(ListCreateAPIView):
     queryset = SolicitacaoProfessor.objects.all()
     serializer_class = SolicitacaoProfessorSerializer
@@ -434,3 +472,86 @@ class SolicitacaoProfessorAdminViewSet(viewsets.ViewSet):
             return Response({"detail": "Não encontrada"}, status=404)
         solicitacao.delete()
         return Response({"detail": "Rejeitada"})
+
+
+# ───────────────────────────────────────────────────────────────
+# 🔐 ESQUECI MINHA SENHA — NOVO
+# ───────────────────────────────────────────────────────────────
+class PasswordResetRequestView(APIView):
+    """
+    POST: { "identifier": "<username ou email>" }
+    Envia e-mail com link para redefinição: FRONTEND_RESET_URL?uid=<uidb64>&token=<token>
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.user  # definido pelo serializer
+        uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+        token = token_generator.make_token(user)
+
+        # Monta link para o frontend
+        base_url = getattr(settings, "FRONTEND_RESET_URL", "").rstrip("/")
+        if not base_url:
+            return Response(
+                {"detail": "FRONTEND_RESET_URL não configurada no settings."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        reset_link = f"{base_url}?uid={uidb64}&token={token}"
+
+        subject = "Redefinição de senha — Plataforma AVA"
+        message = (
+            f"Olá, {user.get_full_name() or user.username}!\n\n"
+            f"Você (ou alguém) solicitou redefinir sua senha na Plataforma AVA.\n"
+            f"Para continuar, acesse o link abaixo:\n\n{reset_link}\n\n"
+            "Se você não solicitou, pode ignorar este e‑mail.\n\n"
+            "Atenciosamente,\nEquipe Plataforma AVA"
+        )
+
+        try:
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
+                recipient_list=[user.email] if user.email else [],
+                fail_silently=False,
+            )
+        except Exception as e:
+            return Response(
+                {"detail": f"Falha ao enviar e‑mail: {e}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        return Response({"detail": "E‑mail de redefinição enviado com sucesso."}, status=200)
+
+
+class PasswordResetConfirmView(APIView):
+    """
+    POST: { "uid": "<uidb64>", "token": "<token>", "new_password": "<nova senha>" }
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        uidb64 = serializer.validated_data["uid"]
+        token = serializer.validated_data["token"]
+        new_password = serializer.validated_data["new_password"]
+
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except Exception:
+            return Response({"detail": "Link inválido."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not token_generator.check_token(user, token):
+            return Response({"detail": "Token inválido ou expirado."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Define a nova senha usando os validadores do Django (já validados no serializer)
+        user.set_password(new_password)
+        user.save()
+
+        return Response({"detail": "Senha redefinida com sucesso."}, status=200)

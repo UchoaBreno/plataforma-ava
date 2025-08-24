@@ -20,7 +20,7 @@ from usuarios.views import (
     AtividadeView, AtividadeDetailView, AtividadesDisponiveisView,
 
     # Fórum
-    ForumAPIView, ResponderComentarioAPIView,
+    ForumAPIView, ResponderComentarioAPIView, RespostaComentarioAPIView,  # <- adicionado
 
     # Desempenho
     DesempenhoCreateListView, DesempenhoDetailView,
@@ -30,6 +30,9 @@ from usuarios.views import (
 
     # Métricas
     AulaMetricsView,
+
+    # 🔐 Reset de senha por e-mail (NOVO)
+    PasswordResetRequestView, PasswordResetConfirmView,
 )
 
 # DRF Router para ViewSets
@@ -44,12 +47,20 @@ urlpatterns = [
     # Admin
     path("admin/", admin.site.urls),
 
-    # Autenticação
+    # Autenticação (JWT + login clássico do seu backend)
     path("api/login/", LoginView.as_view(), name="login"),
     path("api/token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/change_password/", ChangePasswordView.as_view(), name="change_password"),
+
+    # Djoser (opcional; mantém endpoints de auth/usuarios + jwt do Djoser)
     path("api/", include("djoser.urls")),
     path("api/", include("djoser.urls.jwt")),
+
+    # 🔐 Reset de senha por e-mail (NOVO)
+    # POST /api/password-reset/request/  -> recebe identifier (username ou e-mail) e envia e-mail com link/token
+    path("api/password-reset/request/", PasswordResetRequestView.as_view(), name="password_reset_request"),
+    # POST /api/password-reset/confirm/  -> recebe uid, token, new_password e efetiva a troca
+    path("api/password-reset/confirm/", PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
 
     # Usuários
     path("api/usuarios/", UsuarioListCreateView.as_view(), name="usuarios"),
@@ -80,6 +91,8 @@ urlpatterns = [
     path("api/forum/", ForumAPIView.as_view(), name="forum"),
     path("api/forum/<int:pk>/", ForumAPIView.as_view(), name="forum_detail"),
     path("api/forum/<int:pk>/responder/", ResponderComentarioAPIView.as_view(), name="forum_responder"),
+    # Editar/apagar uma resposta específica do fórum (por quem postou)
+    path("api/forum/respostas/<int:pk>/", RespostaComentarioAPIView.as_view(), name="forum_resposta_detail"),
 
     # Desempenho
     path("api/desempenhos/", DesempenhoCreateListView.as_view(), name="desempenhos"),
@@ -89,7 +102,7 @@ urlpatterns = [
     path("api/solicitacoes-professor/", SolicitacaoProfessorCreateView.as_view(), name="solicitacao_professor"),
 
     # Métricas
-    path("api/aulas/metrics/", AulaMetricsView.as_view(), name="aula_metrics"),  # Nova URL para métricas
+    path("api/aulas/metrics/", AulaMetricsView.as_view(), name="aula_metrics"),
 ]
 
 # ViewSets registrados (admin)

@@ -117,7 +117,7 @@ export default function CriarAulaModal({ isOpen, onClose, onSaved }) {
               checked={agendar}
               onChange={(e) => setAgendar(e.target.checked)}
             />
-            Agendar aula
+            Agendar aula remota
           </label>
 
           {agendar && (
@@ -143,6 +143,17 @@ export default function CriarAulaModal({ isOpen, onClose, onSaved }) {
             onChange={(e) => setSlide(e.target.files[0])}
             className="w-full text-sm"
           />
+
+          <div>
+            <label className="block mb-1 text-sm">Link Interativo</label>
+            <input
+              type="url"
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+              className="w-full p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-gray-100"
+              placeholder="https://exemplo.com/jogo"
+            />
+          </div>
 
           <div className="flex justify-between">
             <button

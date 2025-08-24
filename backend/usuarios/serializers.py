@@ -1,5 +1,6 @@
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 from django.core.validators import RegexValidator
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -10,6 +11,11 @@ from .models import (
     ComentarioForum, RespostaForum, Desempenho, SolicitacaoProfessor
 )
 
+User = get_user_model()
+
+# =========================
+# Usuários
+# =========================
 
 class UsuarioSerializer(serializers.ModelSerializer):
     foto_perfil = serializers.ImageField(required=False, allow_null=True)
@@ -30,6 +36,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
         extra_kwargs = {"password": {"write_only": True, "required": False}}
 
     def validate_username(self, value):
+        # Permite manter o mesmo username no update
         if self.instance and self.instance.username == value:
             return value
         if Usuario.objects.filter(username=value).exists():
@@ -37,9 +44,13 @@ class UsuarioSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        password = validated_data.pop("password")
+        password = validated_data.pop("password", None)
         user = Usuario(**validated_data)
-        user.set_password(password)
+        if password:
+            user.set_password(password)
+        else:
+            # Garante que um usuário criado sem password não fique com senha em texto puro
+            user.set_unusable_password()
         user.save()
         return user
 
@@ -53,6 +64,10 @@ class UsuarioSerializer(serializers.ModelSerializer):
         return instance
 
 
+# =========================
+# Aulas / Entregas
+# =========================
+
 class AulaSerializer(serializers.ModelSerializer):
     arquivo = serializers.FileField(use_url=True, required=False)
     agendada = serializers.BooleanField(required=False)
@@ -60,9 +75,7 @@ class AulaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Aula
         fields = "__all__"
-        extra_kwargs = {
-            "professor": {"read_only": True},
-        }
+        extra_kwargs = {"professor": {"read_only": True}}
 
 
 class EntregaSerializer(serializers.ModelSerializer):
@@ -77,6 +90,10 @@ class EntregaSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {"aluno": {"read_only": True}}
 
+
+# =========================
+# Quizzes
+# =========================
 
 class AlternativaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -101,8 +118,13 @@ class QuizSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'description', 'created_at', 'criador_nome', 'pdf_url']
 
     def get_pdf_url(self, obj):
-        if obj.pdf:
-            return obj.pdf.url  # Retorna a URL do arquivo PDF
+        # Evita AttributeError caso o campo não exista no modelo
+        pdf_field = getattr(obj, "pdf", None)
+        if pdf_field:
+            try:
+                return pdf_field.url
+            except Exception:
+                return None
         return None
 
 
@@ -122,6 +144,10 @@ class RespostaQuizSerializer(serializers.ModelSerializer):
             "respondido_em": {"read_only": True},
         }
 
+
+# =========================
+# Autenticação (login / JWT)
+# =========================
 
 class CustomLoginSerializer(serializers.Serializer):
     username = serializers.CharField()
@@ -151,12 +177,20 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         return token
 
 
+# =========================
+# Atividades
+# =========================
+
 class AtividadeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Atividade
         fields = "__all__"
         extra_kwargs = {"professor": {"read_only": True}}
 
+
+# =========================
+# Fórum
+# =========================
 
 class RespostaForumSerializer(serializers.ModelSerializer):
     autor_nome = serializers.CharField(source="autor.username", read_only=True)
@@ -177,6 +211,10 @@ class ComentarioForumSerializer(serializers.ModelSerializer):
         fields = ["id", "texto", "autor_nome", "autor_username", "criado_em", "respostas"]
 
 
+# =========================
+# Desempenho
+# =========================
+
 class DesempenhoSerializer(serializers.ModelSerializer):
     aluno_nome = serializers.CharField(source='aluno.username', read_only=True)
 
@@ -184,6 +222,10 @@ class DesempenhoSerializer(serializers.ModelSerializer):
         model = Desempenho
         fields = ['id', 'titulo', 'descricao', 'nota', 'aluno', 'aluno_nome']
 
+
+# =========================
+# Solicitação de Professor
+# =========================
 
 class SolicitacaoProfessorSerializer(serializers.ModelSerializer):
     senha = serializers.CharField(write_only=True)
@@ -194,8 +236,58 @@ class SolicitacaoProfessorSerializer(serializers.ModelSerializer):
         read_only_fields = ["aprovado", "data_solicitacao"]
 
 
-# ─── Nova Serializer para Métricas das Aulas ────────────────────
+# =========================
+# Métricas
+# =========================
+
 class AulaMetricsSerializer(serializers.Serializer):
     total_aulas = serializers.IntegerField()
     aulas_pendentes = serializers.IntegerField()
     aulas_concluidas = serializers.IntegerField()
+
+
+# =========================
+# 🔐 Esqueci minha senha (Password Reset por e‑mail)
+# =========================
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    """
+    Recebe 'identifier' (username ou e-mail).
+    Valida a existência do usuário e expõe .user para a view usar.
+    """
+    identifier = serializers.CharField()
+
+    def validate(self, attrs):
+        identifier = attrs.get("identifier", "").strip()
+        if not identifier:
+            raise serializers.ValidationError({"identifier": "Informe seu usuário ou e‑mail."})
+
+        # Procura por username exato ou e-mail case-insensitive
+        user = (
+            User.objects.filter(username=identifier).first()
+            or User.objects.filter(email__iexact=identifier).first()
+        )
+        if not user:
+            # Mensagem genérica para não vazar existência do usuário
+            raise serializers.ValidationError({"identifier": "Usuário/e‑mail não encontrado."})
+
+        # Armazena para a view
+        self.user = user
+        return attrs
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    """
+    Recebe uid, token e new_password. A view faz:
+      - decodificar uid
+      - validar token (PasswordResetTokenGenerator)
+      - set_password(new_password)
+    """
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True, min_length=6)
+
+    def validate_new_password(self, value):
+        # Usa validadores do Django (força de senha)
+        validate_password(value)
+        return value

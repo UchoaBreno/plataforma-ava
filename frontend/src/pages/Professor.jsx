@@ -70,7 +70,7 @@ export default function Professor() {
             Gerenciar Aulas
           </h2>
           <p className="text-gray-600 dark:text-gray-300">
-            Clique para ver, editar ou publicar aulas / atividades.
+            Clique para ver, editar ou publicar aulas.
           </p>
         </div>
 
