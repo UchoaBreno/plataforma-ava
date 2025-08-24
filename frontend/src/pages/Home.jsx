@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import axiosInstance from "../utils/axiosInstance";
 
-const LIMITE_MEDIA = 7;   // Aulas que vencem nos próximos 7 dias
+const LIMITE_MEDIA = 7;  // Aulas que vencem nos próximos 7 dias
 const LIMITE_BAIXA = 31;  // Aulas que vencem dentro de 31 dias
 
 export default function Home() {
@@ -13,11 +13,11 @@ export default function Home() {
   const token = localStorage.getItem("access");
 
   const [alunoId, setAlunoId] = useState(null);
-  const [alunoNome, setAlunoNome] = useState("");
+  const [alunoNome, setAlunoNome] = useState("");  // Para armazenar o nome do aluno
   const [alta, setAlta] = useState([]);
   const [media, setMedia] = useState([]);
   const [baixa, setBaixa] = useState([]);
-  const [statusNotificacao, setStatusNotificacao] = useState("");
+  const [statusNotificacao, setStatusNotificacao] = useState(""); // Status de notificação
   const [metrics, setMetrics] = useState({
     totalAulas: 0,
     aulasPendentes: 0,
@@ -28,34 +28,31 @@ export default function Home() {
     atividadesPendentes: 0,
   });
 
-  // Decodifica token para pegar id e nome
   useEffect(() => {
     if (!token) return;
     try {
       const decoded = jwtDecode(token);
       const id = decoded.user_id ?? decoded.id;
-      const nome = decoded.first_name || decoded.username || "";
+      const nome = decoded.first_name || decoded.username;  // Captura o nome do aluno
       if (id) {
         setAlunoId(id);
-        setAlunoNome(nome);
+        setAlunoNome(nome);  // Salva o nome do aluno
       }
-    } catch (e) {
+    } catch {
       console.error("Token inválido.");
     }
   }, [token]);
 
-  // Carrega dados periodicamente
   useEffect(() => {
     if (!token || !alunoId) return;
     carregarDados();
-    const intervalo = setInterval(carregarDados, 60 * 60 * 1000); // 1h
+    const intervalo = setInterval(carregarDados, 60 * 60 * 1000); // Atualiza a cada hora
     return () => clearInterval(intervalo);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, alunoId]);
 
   async function carregarDados() {
     try {
-      // Carrega Aulas, Entregas, Quizzes e Atividades
+      // Carrega Aulas, Quizzes e Atividades
       const [aulasRes, entregasRes, quizzesRes, atividadesRes] = await Promise.all([
         axiosInstance.get("aulas-aluno/"),
         axiosInstance.get("entregas/"),
@@ -69,39 +66,36 @@ export default function Home() {
       const atividades = Array.isArray(atividadesRes.data) ? atividadesRes.data : [];
 
       const minhasEntregasIds = new Set(
-        entregas.filter((e) => e.aluno === alunoId).map((e) => Number(e.aula))
+        entregas.filter(e => e.aluno === alunoId).map(e => Number(e.aula))
       );
 
       const hoje = dayjs().startOf("day");
-      const _alta = [];
-      const _media = [];
-      const _baixa = [];
+      const _alta = [], _media = [], _baixa = [];
       let aulasConcluidas = 0;
       let aulasPendentes = 0;
 
-      aulas.forEach((a) => {
+      aulas.forEach(a => {
         const limite = a.data;
         if (!limite) return;
-
         const diff = dayjs(limite).startOf("day").diff(hoje, "day");
 
-        // Alta prioridade (vence hoje ou já venceu)
+        // Aulas em alta prioridade (vence hoje)
         if (diff <= 0) {
           _alta.push(a);
           aulasPendentes++;
         }
-        // Média prioridade (até 7 dias)
+        // Aulas em média prioridade (próximos 7 dias)
         else if (diff <= LIMITE_MEDIA) {
           _media.push(a);
           aulasPendentes++;
         }
-        // Baixa prioridade (até 31 dias)
+        // Aulas em baixa prioridade (até 31 dias)
         else if (diff <= LIMITE_BAIXA) {
           _baixa.push(a);
           aulasPendentes++;
         }
 
-        // Já entregue?
+        // Verifica se a aula já foi entregue
         if (minhasEntregasIds.has(Number(a.id))) {
           aulasConcluidas++;
         }
@@ -109,13 +103,12 @@ export default function Home() {
 
       // Quizzes
       const totalQuizzes = quizzes.length;
-      const quizzesPendentes = quizzes.filter((q) => !q.respondido).length;
+      const quizzesPendentes = quizzes.filter(q => !q.respondido).length;
 
       // Atividades
       const totalAtividades = atividades.length;
-      const atividadesPendentes = atividades.filter((a) => !a.resposta).length;
+      const atividadesPendentes = atividades.filter(a => !a.resposta).length;
 
-      // Seta estados
       setAlta(_alta);
       setMedia(_media);
       setBaixa(_baixa);
@@ -129,23 +122,19 @@ export default function Home() {
         atividadesPendentes,
       });
 
-      // Notificação (se há alta prioridade)
+      // Verifica a notificação caso uma aula esteja vencendo
       if (_alta.length > 0) {
         setStatusNotificacao("Atenção: Aula em alta prioridade vencendo!");
       } else {
         setStatusNotificacao("");
       }
     } catch (err) {
-      console.error("Erro ao carregar dados:", err?.response?.data || err);
+      console.error("Erro ao carregar dados:", err.response?.data || err);
     }
   }
 
   return (
-    <div
-      className={`flex min-h-screen ${
-  statusNotificacao ? "bg-red-600 dark:bg-red-700" : "bg-gray-100 dark:bg-gray-900"
-} text-gray-900 dark:text-white`}
-    >
+    <div className={`flex min-h-screen ${statusNotificacao ? 'bg-red-600' : 'bg-gray-100'} dark:bg-gray-900 text-gray-900 dark:text-white`}>
       <Sidebar isAluno />
       <main className="ml-64 flex-1 p-4 sm:p-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-400 mb-6">
@@ -159,39 +148,36 @@ export default function Home() {
           </div>
         )}
 
-        {/* Métricas de Aulas */}
+        {/* Exibindo as métricas */}
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
           <h2 className="text-xl font-semibold text-green-700 dark:text-green-400 mb-3">
             Resumo da sua atividade
           </h2>
           <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-            Você tem <span className="font-semibold">{metrics.aulasPendentes}</span> aulas pendentes de{" "}
-            <span className="font-semibold">{metrics.totalAulas}</span>.
+            Você tem <span className="font-semibold">{metrics.aulasPendentes}</span> aulas pendentes de <span className="font-semibold">{metrics.totalAulas}</span>.
           </p>
           <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
             Aulas concluídas: <span className="font-semibold">{metrics.aulasConcluidas}</span>
           </p>
         </div>
 
-        {/* Quizzes */}
+        {/* Exibindo métricas de quizzes */}
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
           <h2 className="text-xl font-semibold text-green-700 dark:text-green-400 mb-3">
             Quizzes
           </h2>
           <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-            Você tem <span className="font-semibold">{metrics.quizzesPendentes}</span> quizzes pendentes de{" "}
-            <span className="font-semibold">{metrics.totalQuizzes}</span>.
+            Você tem <span className="font-semibold">{metrics.quizzesPendentes}</span> quizzes pendentes de <span className="font-semibold">{metrics.totalQuizzes}</span>.
           </p>
         </div>
 
-        {/* Atividades */}
+        {/* Exibindo métricas de atividades */}
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
           <h2 className="text-xl font-semibold text-green-700 dark:text-green-400 mb-3">
             Atividades
           </h2>
           <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-            Você tem <span className="font-semibold">{metrics.atividadesPendentes}</span> atividades pendentes de{" "}
-            <span className="font-semibold">{metrics.totalAtividades}</span>.
+            Você tem <span className="font-semibold">{metrics.atividadesPendentes}</span> atividades pendentes de <span className="font-semibold">{metrics.totalAtividades}</span>.
           </p>
         </div>
       </main>
