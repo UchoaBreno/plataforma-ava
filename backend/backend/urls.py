@@ -20,7 +20,7 @@ from usuarios.views import (
     AtividadeView, AtividadeDetailView, AtividadesDisponiveisView,
 
     # Fórum
-    ForumAPIView, ResponderComentarioAPIView, RespostaComentarioAPIView,  # <- adicionado
+    ForumAPIView, ResponderComentarioAPIView, RespostaComentarioAPIView,
 
     # Desempenho
     DesempenhoCreateListView, DesempenhoDetailView,
@@ -28,10 +28,7 @@ from usuarios.views import (
     # Solicitação de professor
     SolicitacaoProfessorCreateView, SolicitacaoProfessorAdminViewSet,
 
-    # Métricas
-    AulaMetricsView,
-
-    # 🔐 Reset de senha por e-mail (NOVO)
+    # 🔐 Reset de senha por e-mail
     PasswordResetRequestView, PasswordResetConfirmView,
 )
 
@@ -40,26 +37,24 @@ router = DefaultRouter()
 router.register(
     r"api/admin/solicitacoes-professor",
     SolicitacaoProfessorAdminViewSet,
-    basename="admin-solicitacoes-professor"
+    basename="admin-solicitacoes-professor",
 )
 
 urlpatterns = [
     # Admin
     path("admin/", admin.site.urls),
 
-    # Autenticação (JWT + login clássico do seu backend)
+    # Autenticação (JWT + login clássico)
     path("api/login/", LoginView.as_view(), name="login"),
     path("api/token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/change_password/", ChangePasswordView.as_view(), name="change_password"),
 
-    # Djoser (opcional; mantém endpoints de auth/usuarios + jwt do Djoser)
+    # Djoser (opcional)
     path("api/", include("djoser.urls")),
     path("api/", include("djoser.urls.jwt")),
 
-    # 🔐 Reset de senha por e-mail (NOVO)
-    # POST /api/password-reset/request/  -> recebe identifier (username ou e-mail) e envia e-mail com link/token
+    # 🔐 Reset de senha por e-mail
     path("api/password-reset/request/", PasswordResetRequestView.as_view(), name="password_reset_request"),
-    # POST /api/password-reset/confirm/  -> recebe uid, token, new_password e efetiva a troca
     path("api/password-reset/confirm/", PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
 
     # Usuários
@@ -91,7 +86,6 @@ urlpatterns = [
     path("api/forum/", ForumAPIView.as_view(), name="forum"),
     path("api/forum/<int:pk>/", ForumAPIView.as_view(), name="forum_detail"),
     path("api/forum/<int:pk>/responder/", ResponderComentarioAPIView.as_view(), name="forum_responder"),
-    # Editar/apagar uma resposta específica do fórum (por quem postou)
     path("api/forum/respostas/<int:pk>/", RespostaComentarioAPIView.as_view(), name="forum_resposta_detail"),
 
     # Desempenho
@@ -100,9 +94,6 @@ urlpatterns = [
 
     # Solicitação pública de professor
     path("api/solicitacoes-professor/", SolicitacaoProfessorCreateView.as_view(), name="solicitacao_professor"),
-
-    # Métricas
-    path("api/aulas/metrics/", AulaMetricsView.as_view(), name="aula_metrics"),
 ]
 
 # ViewSets registrados (admin)

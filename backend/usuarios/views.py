@@ -15,21 +15,30 @@ from rest_framework.decorators import action
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
-    ListAPIView
+    ListAPIView,
 )
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import (
-    IsAuthenticated, IsAdminUser, AllowAny
+    IsAuthenticated,
+    IsAdminUser,
+    AllowAny,
 )
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .models import (
-    Usuario, Aula, Entrega, Quiz, RespostaQuiz,
-    Atividade, Alternativa,
-    ComentarioForum, RespostaForum, Desempenho,
-    SolicitacaoProfessor
+    Usuario,
+    Aula,
+    Entrega,
+    Quiz,
+    RespostaQuiz,
+    Atividade,
+    Alternativa,
+    ComentarioForum,
+    RespostaForum,
+    Desempenho,
+    SolicitacaoProfessor,
 )
 
 from .serializers import (
@@ -44,8 +53,8 @@ from .serializers import (
     ComentarioForumSerializer,
     DesempenhoSerializer,
     SolicitacaoProfessorSerializer,
-    PasswordResetRequestSerializer,
-    PasswordResetConfirmSerializer,
+    PasswordResetRequestSerializer,   # mantidos (mesmo sem uso direto)
+    PasswordResetConfirmSerializer,   # mantidos (mesmo sem uso direto)
 )
 
 import logging
@@ -81,27 +90,34 @@ class HomeMetricsView(APIView):
         total_aulas = Aula.objects.filter(professor=aluno).count()
 
         entregas = Entrega.objects.filter(aluno=aluno)
-        aulas_concluidas_ids = entregas.values_list('aula', flat=True)
+        aulas_concluidas_ids = entregas.values_list("aula", flat=True)
         aulas_concluidas = len(aulas_concluidas_ids)
         aulas_pendentes = max(total_aulas - aulas_concluidas, 0)
 
         total_quizzes = Quiz.objects.count()
-        quizzes_respondidos = RespostaQuiz.objects.filter(aluno=aluno).values_list("quiz_id", flat=True).distinct().count()
+        quizzes_respondidos = (
+            RespostaQuiz.objects.filter(aluno=aluno)
+            .values_list("quiz_id", flat=True)
+            .distinct()
+            .count()
+        )
         quizzes_pendentes = max(total_quizzes - quizzes_respondidos, 0)
 
         total_atividades = Atividade.objects.filter(professor=aluno).count()
         atividades_entregues = entregas.filter(aula__atividade__isnull=False).count()
         atividades_pendentes = max(total_atividades - atividades_entregues, 0)
 
-        return Response({
-            "total_aulas": total_aulas,
-            "aulas_pendentes": aulas_pendentes,
-            "aulas_concluidas": aulas_concluidas,
-            "total_quizzes": total_quizzes,
-            "quizzes_pendentes": quizzes_pendentes,
-            "total_atividades": total_atividades,
-            "atividades_pendentes": atividades_pendentes,
-        })
+        return Response(
+            {
+                "total_aulas": total_aulas,
+                "aulas_pendentes": aulas_pendentes,
+                "aulas_concluidas": aulas_concluidas,
+                "total_quizzes": total_quizzes,
+                "quizzes_pendentes": quizzes_pendentes,
+                "total_atividades": total_atividades,
+                "atividades_pendentes": atividades_pendentes,
+            }
+        )
 
 
 # ───────────────────────────────────────────────────────────────
@@ -113,15 +129,17 @@ class AulaMetricsView(APIView):
     def get(self, request):
         total_aulas = Aula.objects.filter(professor=request.user).count()
         entregas = Entrega.objects.filter(aluno=request.user)
-        aulas_concluidas_ids = entregas.values_list('aula', flat=True)
+        aulas_concluidas_ids = entregas.values_list("aula", flat=True)
         aulas_concluidas = len(aulas_concluidas_ids)
         aulas_pendentes = max(total_aulas - aulas_concluidas, 0)
 
-        return Response({
-            "total_aulas": total_aulas,
-            "aulas_pendentes": aulas_pendentes,
-            "aulas_concluidas": aulas_concluidas
-        })
+        return Response(
+            {
+                "total_aulas": total_aulas,
+                "aulas_pendentes": aulas_pendentes,
+                "aulas_concluidas": aulas_concluidas,
+            }
+        )
 
 
 # ───────────────────────────────────────────────────────────────
@@ -160,27 +178,28 @@ class AulasDisponiveisView(ListAPIView):
             return Aula.objects.none()
 
         agora = timezone.localtime()
-        entregas = Entrega.objects.filter(aula=OuterRef('pk'), aluno=user)
+        entregas = Entrega.objects.filter(aula=OuterRef("pk"), aluno=user)
 
-        return (Aula.objects
-                .annotate(ja_entregue=Exists(entregas))
-                .filter(ja_entregue=False)
-                .filter(
-                    Q(agendada=False) |
-                    Q(agendada=True, data__lt=agora.date()) |
-                    Q(agendada=True, data=agora.date(), hora__lte=agora.time())
-                ))
+        return (
+            Aula.objects.annotate(ja_entregue=Exists(entregas))
+            .filter(ja_entregue=False)
+            .filter(
+                Q(agendada=False)
+                | Q(agendada=True, data__lt=agora.date())
+                | Q(agendada=True, data=agora.date(), hora__lte=agora.time())
+            )
+        )
 
 
 # ───────────────────────────────────────────────────────────────
 # QUIZZES
 # ───────────────────────────────────────────────────────────────
 class QuizListCreateView(generics.ListCreateAPIView):
-    queryset = Quiz.objects.all().order_by('-created_at')
+    queryset = Quiz.objects.all().order_by("-created_at")
     serializer_class = QuizSerializer
 
     def get_permissions(self):
-        if self.request.method == 'POST':
+        if self.request.method == "POST":
             return [permissions.IsAuthenticated(), permissions.IsAdminUser()]
         return [permissions.AllowAny()]
 
@@ -269,20 +288,32 @@ class ChangePasswordView(APIView):
         new_password = request.data.get("new_password")
 
         if not username or not old_password or not new_password:
-            return Response({"detail": "Todos os campos são obrigatórios."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Todos os campos são obrigatórios."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
             user = Usuario.objects.get(username=username)
         except Usuario.DoesNotExist:
-            return Response({"detail": "Usuário não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Usuário não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         if not user.check_password(old_password):
-            return Response({"detail": "Senha antiga incorreta."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Senha antiga incorreta."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         user.set_password(new_password)
         user.save()
 
-        return Response({"detail": "Senha alterada com sucesso!"}, status=status.HTTP_200_OK)
+        return Response(
+            {"detail": "Senha alterada com sucesso!"},
+            status=status.HTTP_200_OK,
+        )
 
 
 # ───────────────────────────────────────────────────────────────
@@ -327,7 +358,11 @@ class AtividadeView(ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Atividade.objects.filter(professor=user) if user.is_staff else Atividade.objects.none()
+        return (
+            Atividade.objects.filter(professor=user)
+            if user.is_staff
+            else Atividade.objects.none()
+        )
 
     def perform_create(self, serializer):
         serializer.save(professor=self.request.user)
@@ -340,7 +375,9 @@ class AtividadesDisponiveisView(ListAPIView):
     def get_queryset(self):
         user = self.request.user
         if user.is_authenticated and not user.is_staff:
-            return Atividade.objects.filter(data_entrega__gte=now()).order_by("data_entrega")
+            return Atividade.objects.filter(data_entrega__gte=now()).order_by(
+                "data_entrega"
+            )
         return Atividade.objects.none()
 
 
@@ -350,7 +387,11 @@ class AtividadeDetailView(RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Atividade.objects.filter(professor=user) if user.is_staff else Atividade.objects.all()
+        return (
+            Atividade.objects.filter(professor=user)
+            if user.is_staff
+            else Atividade.objects.all()
+        )
 
 
 # ───────────────────────────────────────────────────────────────
@@ -371,13 +412,17 @@ class ForumAPIView(APIView):
         return Response({"id": comentario.id})
 
     def put(self, request, pk):
-        comentario = get_object_or_404(ComentarioForum, pk=pk, autor=request.user)
+        comentario = get_object_or_404(
+            ComentarioForum, pk=pk, autor=request.user
+        )
         comentario.texto = request.data.get("texto", comentario.texto)
         comentario.save()
         return Response({"detail": "Comentário atualizado"})
 
     def delete(self, request, pk):
-        comentario = get_object_or_404(ComentarioForum, pk=pk, autor=request.user)
+        comentario = get_object_or_404(
+            ComentarioForum, pk=pk, autor=request.user
+        )
         comentario.delete()
         return Response({"detail": "Comentário apagado"})
 
@@ -399,13 +444,17 @@ class RespostaComentarioAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def put(self, request, pk):
-        resposta = get_object_or_404(RespostaForum, pk=pk, autor=request.user)
+        resposta = get_object_or_404(
+            RespostaForum, pk=pk, autor=request.user
+        )
         resposta.texto = request.data.get("texto", resposta.texto)
         resposta.save()
         return Response({"detail": "Resposta atualizada"})
 
     def delete(self, request, pk):
-        resposta = get_object_or_404(RespostaForum, pk=pk, autor=request.user)
+        resposta = get_object_or_404(
+            RespostaForum, pk=pk, autor=request.user
+        )
         resposta.delete()
         return Response({"detail": "Resposta apagada"})
 
@@ -419,7 +468,11 @@ class DesempenhoCreateListView(ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Desempenho.objects.all() if user.is_staff else Desempenho.objects.filter(aluno=user)
+        return (
+            Desempenho.objects.all()
+            if user.is_staff
+            else Desempenho.objects.filter(aluno=user)
+        )
 
 
 class DesempenhoDetailView(RetrieveUpdateDestroyAPIView):
@@ -498,7 +551,9 @@ class PasswordResetRequestView(APIView):
 
         if not value:
             if settings.DEBUG:
-                logger.warning("Password reset sem identifier/email/username no body.")
+                logger.warning(
+                    "Password reset sem identifier/email/username no body."
+                )
             return Response(ok_msg, status=status.HTTP_200_OK)
 
         # Busca por username exato ou email (case-insensitive)
@@ -510,7 +565,9 @@ class PasswordResetRequestView(APIView):
         # Se não existir usuário OU ele não tiver e-mail, ainda assim retornamos 200.
         if not user or not user.email:
             if settings.DEBUG:
-                logger.warning("Password reset ignorado: user inexistente ou sem e-mail.")
+                logger.warning(
+                    "Password reset ignorado: user inexistente ou sem e-mail."
+                )
             return Response(ok_msg, status=status.HTTP_200_OK)
 
         base_url = (getattr(settings, "FRONTEND_RESET_URL", "") or "").rstrip("/")
@@ -531,11 +588,21 @@ class PasswordResetRequestView(APIView):
             "Equipe Plataforma AVA"
         )
 
+        # 🔧 IMPORTANTE: ajustar o remetente para evitar 530 no Gmail
+        from_email = (
+            getattr(settings, "DEFAULT_FROM_EMAIL", None)
+            or getattr(settings, "EMAIL_HOST_USER", None)
+        )
+        email_host = str(getattr(settings, "EMAIL_HOST", "")).lower()
+        if "gmail.com" in email_host:
+            # Gmail exige que o 'from' seja o próprio EMAIL_HOST_USER
+            from_email = getattr(settings, "EMAIL_HOST_USER", from_email)
+
         try:
             send_mail(
                 subject=subject,
                 message=message,
-                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None) or getattr(settings, "EMAIL_HOST_USER", None),
+                from_email=from_email,
                 recipient_list=[user.email],
                 fail_silently=False,
             )
@@ -553,24 +620,31 @@ class PasswordResetConfirmView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        # Mantém o serializer se você preferir, mas aqui validamos diretamente
         uidb64 = (request.data.get("uid") or "").strip()
         token = (request.data.get("token") or "").strip()
         new_password = request.data.get("new_password")
 
         if not uidb64 or not token or not new_password:
-            return Response({"detail": "Dados inválidos."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Dados inválidos."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk=uid)
         except Exception:
-            return Response({"detail": "Link inválido."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Link inválido."}, status=400)
 
         if not token_generator.check_token(user, token):
-            return Response({"detail": "Token inválido ou expirado."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Token inválido ou expirado."}, status=400
+            )
 
         user.set_password(new_password)
         user.save()
 
-        return Response({"detail": "Senha redefinida com sucesso."}, status=status.HTTP_200_OK)
+        return Response(
+            {"detail": "Senha redefinida com sucesso."},
+            status=status.HTTP_200_OK,
+        )
