@@ -37,19 +37,19 @@ router = DefaultRouter()
 router.register(
     r"api/admin/solicitacoes-professor",
     SolicitacaoProfessorAdminViewSet,
-    basename="admin-solicitacoes-professor",
+    basename="admin-solicitacoes-professor"
 )
 
 urlpatterns = [
     # Admin
     path("admin/", admin.site.urls),
 
-    # Autenticação (JWT + login clássico)
+    # Autenticação (JWT + login do seu backend)
     path("api/login/", LoginView.as_view(), name="login"),
     path("api/token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/change_password/", ChangePasswordView.as_view(), name="change_password"),
 
-    # Djoser (opcional)
+    # Djoser (mantém)
     path("api/", include("djoser.urls")),
     path("api/", include("djoser.urls.jwt")),
 
@@ -91,14 +91,11 @@ urlpatterns = [
     # Desempenho
     path("api/desempenhos/", DesempenhoCreateListView.as_view(), name="desempenhos"),
     path("api/desempenhos/<int:pk>/", DesempenhoDetailView.as_view(), name="desempenho_detail"),
-
-    # Solicitação pública de professor
-    path("api/solicitacoes-professor/", SolicitacaoProfessorCreateView.as_view(), name="solicitacao_professor"),
 ]
 
 # ViewSets registrados (admin)
 urlpatterns += router.urls
 
-# Servir arquivos de mídia durante o desenvolvimento
+# Media em dev
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
