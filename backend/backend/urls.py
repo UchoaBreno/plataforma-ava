@@ -32,7 +32,7 @@ from usuarios.views import (
     PasswordResetRequestView, PasswordResetConfirmView,
 )
 
-# DRF Router para ViewSets
+# DRF Router para ViewSets (área administrativa)
 router = DefaultRouter()
 router.register(
     r"api/admin/solicitacoes-professor",
@@ -91,6 +91,13 @@ urlpatterns = [
     # Desempenho
     path("api/desempenhos/", DesempenhoCreateListView.as_view(), name="desempenhos"),
     path("api/desempenhos/<int:pk>/", DesempenhoDetailView.as_view(), name="desempenho_detail"),
+
+    # 🔓 Público: receber solicitações de professor (usado pelo seu frontend)
+    path(
+        "api/solicitacoes-professor/",
+        SolicitacaoProfessorCreateView.as_view(),
+        name="solicitacao_professor",
+    ),
 ]
 
 # ViewSets registrados (admin)
