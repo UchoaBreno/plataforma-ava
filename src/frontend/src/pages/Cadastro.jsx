@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios'; // ou '../utils/axiosInstance' se você estiver usando o instance global
+import axiosInstance from '../utils/axiosInstance'; // ✅ use a instância
 import { useNavigate } from 'react-router-dom';
 
 export default function Cadastro() {
@@ -36,9 +36,7 @@ export default function Cadastro() {
     }
 
     if (!validarUsername(trimmedUsername)) {
-      setErroCadastro(
-        "O nome de usuário só pode conter letras, números e os caracteres @/./+/-/_"
-      );
+      setErroCadastro("O nome de usuário só pode conter letras, números e os caracteres @/./+/-/_");
       return;
     }
 
@@ -51,10 +49,10 @@ export default function Cadastro() {
           username: trimmedUsername,
           senha: senha
         };
-        await axios.post(
-          'https://plataforma-ava2.onrender.com/api/solicitacoes-professor/',
-          payloadProfessor
-        );
+
+        // ✅ rota relativa via axiosInstance
+        await axiosInstance.post('solicitacoes-professor/', payloadProfessor);
+
         setMensagem('✅ Solicitação enviada! Aguarde a aprovação do administrador.');
       } else {
         const payloadAluno = {
@@ -64,10 +62,10 @@ export default function Cadastro() {
           username: trimmedUsername,
           password: senha
         };
-        await axios.post(
-          'https://plataforma-ava2.onrender.com/api/usuarios/',
-          payloadAluno
-        );
+
+        // ✅ rota relativa via axiosInstance
+        await axiosInstance.post('usuarios/', payloadAluno);
+
         setMensagem('✅ Conta de aluno criada com sucesso!');
       }
 
@@ -76,20 +74,13 @@ export default function Cadastro() {
       console.error('Erro ao criar conta:', err.response?.data || err.message);
 
       let msg = 'Erro ao criar conta. Verifique os dados e tente novamente.';
-
       if (err.response?.data) {
         const data = err.response.data;
-        if (typeof data === 'string') {
-          msg = data;
-        } else if (data.detail) {
-          msg = data.detail;
-        } else if (data.username?.length > 0) {
-          msg = `Usuário: ${data.username[0]}`;
-        } else if (data.email?.length > 0) {
-          msg = `Email: ${data.email[0]}`;
-        }
+        if (typeof data === 'string') msg = data;
+        else if (data.detail) msg = data.detail;
+        else if (data.username?.length > 0) msg = `Usuário: ${data.username[0]}`;
+        else if (data.email?.length > 0) msg = `Email: ${data.email[0]}`;
       }
-
       setErroCadastro("❌ " + msg);
     }
   };
@@ -101,9 +92,7 @@ export default function Cadastro() {
           B-High<span className="text-green-500">Education</span>
         </h2>
         <p className="text-black dark:text-gray-300">Crie sua conta</p>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          Preencha os campos abaixo
-        </p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Preencha os campos abaixo</p>
 
         {mensagem && (
           <div className="text-green-700 bg-green-100 dark:bg-green-900/50 dark:text-green-300 border border-green-300 dark:border-green-600 px-4 py-2 rounded text-center mb-4 text-sm">
@@ -117,74 +106,36 @@ export default function Cadastro() {
           </div>
         )}
 
-        <input
-          className="w-full mb-3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-black dark:text-white"
-          placeholder="Nome"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-        />
-        <input
-          className="w-full mb-3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-black dark:text-white"
-          placeholder="Sobrenome"
-          value={sobrenome}
-          onChange={(e) => setSobrenome(e.target.value)}
-        />
-        <input
-          className="w-full mb-3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-black dark:text-white"
-          placeholder="E-mail"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          className="w-full mb-3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-black dark:text-white"
-          placeholder="Usuário"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-        <input
-          className="w-full mb-4 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-black dark:text-white"
-          type="password"
-          placeholder="Senha"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-        />
+        <input className="w-full mb-3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-black dark:text-white"
+               placeholder="Nome" value={nome} onChange={(e) => setNome(e.target.value)} />
+        <input className="w-full mb-3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-black dark:text-white"
+               placeholder="Sobrenome" value={sobrenome} onChange={(e) => setSobrenome(e.target.value)} />
+        <input className="w-full mb-3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-black dark:text-white"
+               placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input className="w-full mb-3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-black dark:text-white"
+               placeholder="Usuário" value={username} onChange={(e) => setUsername(e.target.value)} />
+        <input className="w-full mb-4 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-black dark:text-white"
+               type="password" placeholder="Senha" value={senha} onChange={(e) => setSenha(e.target.value)} />
 
         <div className="flex flex-col gap-2 mb-4 text-black dark:text-white">
           <label className="flex items-center">
-            <input
-              type="radio"
-              name="role"
-              value="aluno"
-              checked={role === 'aluno'}
-              onChange={() => setRole('aluno')}
-              className="mr-2"
-            />
+            <input type="radio" name="role" value="aluno" checked={role === 'aluno'}
+                   onChange={() => setRole('aluno')} className="mr-2" />
             Sou aluno
           </label>
           <label className="flex items-center">
-            <input
-              type="radio"
-              name="role"
-              value="professor"
-              checked={role === 'professor'}
-              onChange={() => setRole('professor')}
-              className="mr-2"
-            />
+            <input type="radio" name="role" value="professor" checked={role === 'professor'}
+                   onChange={() => setRole('professor')} className="mr-2" />
             Sou professor (aguarda aprovação do admin)
           </label>
         </div>
 
-        <button
-          onClick={handleCadastro}
-          className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-500 mb-3"
-        >
+        <button onClick={handleCadastro} className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-500 mb-3">
           Cadastrar
         </button>
 
-        <button
-          onClick={() => navigate('/login')}
-          className="w-full border border-gray-400 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-black dark:text-white py-2 rounded"
-        >
+        <button onClick={() => navigate('/login')}
+                className="w-full border border-gray-400 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-black dark:text-white py-2 rounded">
           Já tenho uma conta
         </button>
       </div>
