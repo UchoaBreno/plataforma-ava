@@ -1,15 +1,16 @@
 from django.contrib.auth import authenticate
 from django.core.validators import RegexValidator
-from rest_framework import serializers, viewsets
-from rest_framework import generics
-from .models import Entrega
+from rest_framework import serializers
+
 from .models import (
     Usuario, Aula, Entrega, Quiz, Questao,
     Alternativa, RespostaQuiz, Atividade,
     ComentarioForum, RespostaForum, Desempenho, SolicitacaoProfessor
 )
+
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
 
 # ─── Usuário ─────────────────────────────
 class UsuarioSerializer(serializers.ModelSerializer):
@@ -28,7 +29,9 @@ class UsuarioSerializer(serializers.ModelSerializer):
             "id", "username", "first_name", "last_name", "email",
             "is_staff", "foto_perfil", "password"
         ]
-        extra_kwargs = {"password": {"write_only": True, "required": False}}
+        extra_kwargs = {
+            "password": {"write_only": True, "required": True}
+        }
 
     def validate_username(self, value):
         if self.instance and self.instance.username == value:
@@ -38,7 +41,9 @@ class UsuarioSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        password = validated_data.pop("password")
+        password = validated_data.pop("password", None)
+        if not password:
+            raise serializers.ValidationError({"password": "Senha é obrigatória."})
         user = Usuario(**validated_data)
         user.set_password(password)
         user.save()
@@ -68,7 +73,6 @@ class AulaSerializer(serializers.ModelSerializer):
 
 
 # ─── Entrega ─────────────────────────────
-
 class EntregaSerializer(serializers.ModelSerializer):
     arquivo = serializers.FileField(required=False)
 
@@ -76,16 +80,7 @@ class EntregaSerializer(serializers.ModelSerializer):
         model = Entrega
         fields = ['quiz', 'comentario', 'arquivo']
 
-class EntregaViewSet(viewsets.ModelViewSet):
-    queryset = Entrega.objects.all()
-    serializer_class = EntregaSerializer
 
-class EntregaView(generics.CreateAPIView):
-    queryset = Entrega.objects.all()
-
-    def get_serializer_class(self):
-        return EntregaSerializer  # Retorna o serializer dinamicamente
-    
 # ─── Alternativa ─────────────────────────
 class AlternativaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -95,7 +90,7 @@ class AlternativaSerializer(serializers.ModelSerializer):
 
 # ─── Questão ─────────────────────────────
 class QuestaoSerializer(serializers.ModelSerializer):
-    choices = AlternativaSerializer(many=True, read_only=True)
+    choices = AlternativaSerializer(many=True, read_only=True)  # assume related_name='choices'
 
     class Meta:
         model = Questao
@@ -110,7 +105,7 @@ class QuizSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Quiz
-        fields = ["id", "title", "description", "created_at", "questions", "criador_nome", "pdf"]  # Adiciona o campo pdf
+        fields = ["id", "title", "description", "created_at", "questions", "criador_nome", "pdf"]
 
 
 # ─── Resposta Quiz ───────────────────────
@@ -131,7 +126,7 @@ class RespostaQuizSerializer(serializers.ModelSerializer):
         }
 
 
-# ─── Custom Login Serializer ──────────────
+# ─── Custom Login Serializer ─────────────
 class CustomLoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
@@ -150,7 +145,7 @@ class CustomLoginSerializer(serializers.Serializer):
         raise serializers.ValidationError("Credenciais inválidas")
 
 
-# ─── Custom Token Serializer ──────────────
+# ─── Custom Token Serializer ─────────────
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
@@ -190,7 +185,7 @@ class ComentarioForumSerializer(serializers.ModelSerializer):
         fields = ["id", "texto", "autor_nome", "autor_username", "criado_em", "respostas"]
 
 
-# ─── Desempenho ───────────────────────────
+# ─── Desempenho ──────────────────────────
 class DesempenhoSerializer(serializers.ModelSerializer):
     aluno_nome = serializers.CharField(source='aluno.username', read_only=True)
 
@@ -199,8 +194,12 @@ class DesempenhoSerializer(serializers.ModelSerializer):
         fields = ['id', 'titulo', 'descricao', 'nota', 'aluno', 'aluno_nome']
 
 
-# ─── Solicitação de Professores ───────────
+# ─── Solicitação de Professores ──────────
 class SolicitacaoProfessorSerializer(serializers.ModelSerializer):
+    """
+    Usado tanto no endpoint público de criação (/api/solicitacoes-professor/)
+    quanto nas rotas admin (listar/aprovar/rejeitar).
+    """
     senha = serializers.CharField(write_only=True)
 
     class Meta:
@@ -208,15 +207,23 @@ class SolicitacaoProfessorSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = ["aprovado", "data_solicitacao"]
 
+    def validate(self, attrs):
+        # Garantir campos essenciais (ajuste conforme seu Model)
+        required = ["nome", "sobrenome", "email", "username", "senha"]
+        missing = [f for f in required if not attrs.get(f)]
+        if missing and self.instance is None:  # só na criação
+            raise serializers.ValidationError({m: "Campo obrigatório." for m in missing})
+        return attrs
 
-# ─── Nova Serializer para Métricas das Aulas ────────────────────
+
+# ─── Métricas das Aulas ───────────────────
 class AulaMetricsSerializer(serializers.Serializer):
     total_aulas = serializers.IntegerField()
     aulas_pendentes = serializers.IntegerField()
     aulas_concluidas = serializers.IntegerField()
 
 
-# ─── Serializer para Envio de Quiz (Entrega) ────────────────────
+# ─── Envio de Quiz (Entrega) ─────────────
 class QuizSubmitSerializer(serializers.Serializer):
     answers = serializers.DictField(child=serializers.IntegerField())
     comentario = serializers.CharField(required=False, allow_blank=True)

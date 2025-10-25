@@ -3,14 +3,8 @@ from django.utils import timezone
 from rest_framework.response import Response
 from django.db.models import Exists, OuterRef, Q
 from rest_framework.parsers import MultiPartParser
-from rest_framework import serializers
-from .models import Quiz
-from rest_framework import status
-from .serializers import QuizSerializer
+from rest_framework import serializers, status, viewsets, generics, permissions
 from django.shortcuts import get_object_or_404
-from rest_framework import status, viewsets, generics, permissions
-from .serializers import AulaSerializer, EntregaSerializer
-from .models import Usuario, Entrega, Aula  # Adicione o modelo Usuario e Aula
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
@@ -20,9 +14,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import (
     IsAuthenticated, IsAdminUser, AllowAny
 )
-from rest_framework.parsers import MultiPartParser
 from rest_framework_simplejwt.views import TokenObtainPairView
-from django.db.models import OuterRef, Exists
 from django.utils.timezone import now
 
 from .models import (
@@ -52,65 +44,29 @@ class EntregaView(generics.CreateAPIView):
     serializer_class = EntregaSerializer
 
     def perform_create(self, serializer):
-        # Adiciona o aluno à entrega antes de salvar
         serializer.save(aluno=self.request.user)
 
-# ─── Aulas ────────────────────────────────
 
-class HomeMetricsView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        aluno = self.request.user
-
-        # Contagem de aulas pendentes e concluídas
-        total_aulas = Aula.objects.filter(professor=aluno).count()
-        entregas = Entrega.objects.filter(aluno=aluno)
-        aulas_concluidas_ids = entregas.values_list('aula', flat=True)
-        aulas_pendentes = total_aulas - len(aulas_concluidas_ids)
-        aulas_concluidas = len(aulas_concluidas_ids)
-
-        # Contagem de quizzes pendentes e totais
-        total_quizzes = Quiz.objects.count()
-        quizzes_pendentes = total_quizzes - len(entregas.filter(aula__quiz__isnull=False))
-
-        # Contagem de atividades pendentes e totais
-        total_atividades = Atividade.objects.filter(professor=aluno).count()
-        atividades_pendentes = total_atividades - len(entregas.filter(aula__atividade__isnull=False))
-
-        return Response({
-            "total_aulas": total_aulas,
-            "aulas_pendentes": aulas_pendentes,
-            "aulas_concluidas": aulas_concluidas,
-            "total_quizzes": total_quizzes,
-            "quizzes_pendentes": quizzes_pendentes,
-            "total_atividades": total_atividades,
-            "atividades_pendentes": atividades_pendentes,
-        })
-
-# ─── Nova View para Métricas das Aulas ─────────────────────────
+# ─── Métricas ─────────────────────────────
 class AulaMetricsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # Contagem de aulas total
         total_aulas = Aula.objects.filter(professor=request.user).count()
-
-        # Aulas pendentes (aulas que ainda não foram entregues)
         entregas = Entrega.objects.filter(aluno=request.user)
         aulas_concluidas_ids = entregas.values_list('aula', flat=True)
-        aulas_pendentes = total_aulas - len(aulas_concluidas_ids)
 
-        # Aulas concluídas
         aulas_concluidas = len(aulas_concluidas_ids)
+        aulas_pendentes = max(total_aulas - aulas_concluidas, 0)
 
         return Response({
             "total_aulas": total_aulas,
             "aulas_pendentes": aulas_pendentes,
             "aulas_concluidas": aulas_concluidas
         })
-    
 
+
+# ─── Aulas ────────────────────────────────
 class AulaView(ListCreateAPIView):
     queryset = Aula.objects.all()
     serializer_class = AulaSerializer
@@ -120,6 +76,7 @@ class AulaView(ListCreateAPIView):
     def perform_create(self, serializer):
         agendada = self.request.data.get("agendada", "false").lower() == "true"
         serializer.save(professor=self.request.user, agendada=agendada)
+
 
 class AulaDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = AulaSerializer
@@ -133,7 +90,6 @@ class AulaDetailView(RetrieveUpdateDestroyAPIView):
         return Aula.objects.none()
 
 
-# ─── Aulas Disponíveis ─────────────────────
 class AulasDisponiveisView(ListAPIView):
     serializer_class = AulaSerializer
     permission_classes = [IsAuthenticated]
@@ -157,7 +113,6 @@ class AulasDisponiveisView(ListAPIView):
         )
 
 
-
 # ─── Quizzes ──────────────────────────────
 class QuizListCreateView(generics.ListCreateAPIView):
     queryset = Quiz.objects.all().order_by('-created_at')
@@ -170,19 +125,12 @@ class QuizListCreateView(generics.ListCreateAPIView):
         return [permissions.AllowAny()]
 
     def perform_create(self, serializer):
-        # Salva o criador do quiz como o usuário autenticado
         pdf_file = self.request.FILES.get("pdf")
         if pdf_file:
-            # Verifique se o arquivo é válido antes de salvar
             serializer.save(criador=self.request.user, pdf=pdf_file)
         else:
             serializer.save(criador=self.request.user)
 
-class QuizListView(APIView):
-    def get(self, request):
-        quizzes = Quiz.objects.all()  # Pega todos os quizzes
-        serializer = QuizSerializer(quizzes, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class QuizDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = QuizSerializer
@@ -195,15 +143,7 @@ class QuizDetailView(generics.RetrieveUpdateDestroyAPIView):
                 return [permissions.IsAdminUser()]
         return [permissions.IsAuthenticated()]
 
-class RespostaQuizView(ListAPIView):
-    serializer_class = RespostaQuizSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
-    def get_queryset(self):
-        return RespostaQuiz.objects.filter(aluno=self.request.user)
-
-
-# ─── Quizzes ──────────────────────────────
 class QuizSubmitView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -214,51 +154,29 @@ class QuizSubmitView(APIView):
 
         respostas = request.data.get("answers", {})
         comentario = request.data.get("comentario", "")
-        arquivo = request.FILES.get("arquivo")  # Verificar o arquivo
+        arquivo = request.FILES.get("arquivo")
         acertos = 0
+
         for question_id, alternativa_id in respostas.items():
             try:
                 alt = Alternativa.objects.get(id=alternativa_id, question__id=question_id)
                 if alt.is_correct:
                     acertos += 1
             except Alternativa.DoesNotExist:
-                continue  # Caso a alternativa não exista, ignore essa pergunta
+                continue
 
-        # Cria a entrega de quiz
-        entrega = Entrega.objects.create(
+        Entrega.objects.create(
             aluno=request.user,
             quiz=quiz,
-            arquivo=arquivo,  # Salva o arquivo enviado
-            comentario=comentario  # Salva o comentário
+            arquivo=arquivo,
+            comentario=comentario
         )
 
-        # Salva as respostas enviadas e a nota
         RespostaQuiz.objects.create(
             aluno=request.user, quiz=quiz, resposta=respostas, nota=acertos
         )
 
         return Response({"message": "Respostas enviadas.", "score": acertos})
-
-# ─── Quiz Listar e Criar ─────────────────────────
-class QuizListCreateView(ListCreateAPIView):
-    queryset = Quiz.objects.all().order_by('-created_at')
-    serializer_class = QuizSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_permissions(self):
-        if self.request.method == 'POST':
-            return [permissions.IsAuthenticated(), permissions.IsAdminUser()]
-        return [permissions.AllowAny()]
-
-    def perform_create(self, serializer):
-        # Salva o criador do quiz como o usuário autenticado
-        pdf_file = self.request.FILES.get("pdf")
-        if pdf_file:
-            # Verifique se o arquivo é válido antes de salvar
-            serializer.save(criador=self.request.user, pdf=pdf_file)
-        else:
-            serializer.save(criador=self.request.user)
-
 
 
 class RespostaQuizView(ListAPIView):
@@ -268,10 +186,7 @@ class RespostaQuizView(ListAPIView):
     def get_queryset(self):
         return RespostaQuiz.objects.filter(aluno=self.request.user)
 
-class QuizSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Quiz
-        fields = ['id', 'title', 'description', 'created_at', 'pdf']  # Adiciona o campo pdf
+
 # ─── Usuários ─────────────────────────────
 class AlunoListView(ListAPIView):
     serializer_class = UsuarioSerializer
@@ -307,7 +222,6 @@ class UsuarioDetailView(RetrieveUpdateDestroyAPIView):
         return Response({"detail": "Usuário desativado"}, status=204)
 
 
-
 class ChangePasswordView(APIView):
     permission_classes = [AllowAny]
 
@@ -329,11 +243,9 @@ class ChangePasswordView(APIView):
 
         user.set_password(new_password)
         user.save()
-
         return Response({"detail": "Senha alterada com sucesso!"}, status=status.HTTP_200_OK)
 
 
-# ─── Foto Perfil ──────────────────────────
 class AtualizarFotoPerfilView(APIView):
     parser_classes = [MultiPartParser]
     permission_classes = [IsAuthenticated]
@@ -345,7 +257,6 @@ class AtualizarFotoPerfilView(APIView):
         return Response({"foto_url": user.foto_perfil.url})
 
 
-# ─── Login/Token ──────────────────────────
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
@@ -358,7 +269,7 @@ class LoginView(APIView):
         return Response(serializer.errors, status=400)
 
 
-# ─── Atividade View ───────────────────────────────────
+# ─── Atividades ───────────────────────────
 class AtividadeView(ListCreateAPIView):
     serializer_class = AtividadeSerializer
     permission_classes = [IsAuthenticated]
@@ -389,27 +300,26 @@ class AtividadeDetailView(RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         user = self.request.user
         return Atividade.objects.filter(professor=user) if user.is_staff else Atividade.objects.all()
-    
+
 
 class EnviarAtividadeView(APIView):
     def post(self, request, *args, **kwargs):
-        # Verifica se o arquivo foi enviado
         if 'arquivo' not in request.FILES:
             return Response({"detail": "Arquivo é necessário!"}, status=status.HTTP_400_BAD_REQUEST)
 
         arquivo = request.FILES['arquivo']
-        # Pega o quiz e outros dados
         quiz = request.data.get('quiz')
         comentario = request.data.get('comentario')
 
-        # Adicionar validação ou lógica para salvar o envio no banco de dados
-        entrega = Entrega.objects.create(
+        Entrega.objects.create(
             quiz_id=quiz,
             comentario=comentario,
-            arquivo=arquivo,  # Salva o arquivo enviado
+            arquivo=arquivo,
         )
 
         return Response({"message": "Atividade recebida!"}, status=status.HTTP_200_OK)
+
+
 # ─── Fórum ────────────────────────────────
 class ForumAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -449,7 +359,7 @@ class ResponderComentarioAPIView(APIView):
         )
         return Response({"id": resposta.id})
 
-    
+
 # ─── Desempenho ───────────────────────────
 class DesempenhoCreateListView(ListCreateAPIView):
     serializer_class = DesempenhoSerializer
@@ -478,8 +388,8 @@ class SolicitacaoProfessorAdminViewSet(viewsets.ViewSet):
 
     def list(self, request):
         queryset = SolicitacaoProfessor.objects.all()
-    serializer_class = SolicitacaoProfessorSerializer
-    permission_classes = [AllowAny]
+        serializer = SolicitacaoProfessorSerializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=["post"])
     def aprovar(self, request, pk=None):

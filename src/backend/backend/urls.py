@@ -3,6 +3,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+
 from usuarios.views import EnviarAtividadeView
 
 from usuarios.views import (
@@ -33,7 +34,7 @@ from usuarios.views import (
     AulaMetricsView,
 )
 
-# DRF Router para ViewSets
+# DRF Router para ViewSets (admin)
 router = DefaultRouter()
 router.register(
     r"api/admin/solicitacoes-professor",
@@ -65,7 +66,7 @@ urlpatterns = [
 
     # Entregas
     path("api/entregas/", EntregaView.as_view(), name="entregas"),
-    path("api/entregas/enviar/", EnviarAtividadeView.as_view(), name='enviar_atividade'),  # Ajustado
+    path("api/entregas/enviar/", EnviarAtividadeView.as_view(), name="enviar_atividade"),
 
     # Quizzes
     path("api/quizzes/", QuizListCreateView.as_view(), name="quizzes"),
@@ -87,11 +88,9 @@ urlpatterns = [
     path("api/desempenhos/", DesempenhoCreateListView.as_view(), name="desempenhos"),
     path("api/desempenhos/<int:pk>/", DesempenhoDetailView.as_view(), name="desempenho_detail"),
 
-    # Solicitação pública de professor
+    # ✅ Solicitação pública de professor (criação)
     path("api/solicitacoes-professor/", SolicitacaoProfessorCreateView.as_view(), name="solicitacao_professor"),
 
-    path('api/entregas/', EntregaView.as_view(), name='entrega-list'),
-    
     # Métricas
     path("api/aulas/metrics/", AulaMetricsView.as_view(), name="aula_metrics"),
 ]
