@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Plataforma AVA (PIBIC)
 
 Um Ambiente Virtual de Aprendizado (AVA) desenvolvido em React (front-end) e Django REST Framework (back-end) para fins de pesquisa PIBIC. Permite que **professores** publiquem aulas e acompanhem entregas de atividades, e que **alunos** vejam suas prioridades e façam entregas.
@@ -181,5 +182,3 @@ REACT_APP_API_BASE_URL=http://127.0.0.1:8000/api
 ---
 
 ## 📄 Licença
-
-Este projeto está licenciado sob a MIT License.

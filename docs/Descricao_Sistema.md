@@ -1,0 +1,5 @@
+### **Descrição do Sistema**
+
+O B-High Education é um Ambiente Virtual de Aprendizagem (AVA) desenvolvido para auxiliar professores e instituições de ensino superior na adoção e implementação da modalidade de ensino híbrido, conhecida como b-learning. O principal objetivo da plataforma é integrar as Tecnologias de Informação e Comunicação (TIC) ao ambiente educacional, oferecendo uma solução que combina as vantagens do ensino tradicional com a flexibilidade das ferramentas online, visando transformar a maneira como os alunos aprendem e se preparam para o mercado de trabalho.
+
+A plataforma foi projetada com interfaces distintas para professores e alunos, cada uma com funcionalidades específicas para suas necessidades. Para os **professores**, o sistema permite a criação e gerenciamento de aulas, a elaboração e publicação de quizzes, o acompanhamento do desempenho dos alunos por meio de relatórios e a comunicação direta através de ferramentas como chats e fóruns. Para os **alunos**, a plataforma oferece um ambiente para acessar os materiais de aula, responder e submeter os quizzes, além de interagir com os professores e colegas.
